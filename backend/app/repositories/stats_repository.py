@@ -10,9 +10,7 @@ def get_answer_totals(session: Session, user_id: int) -> Row:
     statement = (
         select(
             func.count(UserAnswer.id).label("total_answered"),
-            func.coalesce(func.sum(case((UserAnswer.is_correct.is_(True), 1), else_=0)), 0).label(
-                "correct_answered"
-            ),
+            func.coalesce(func.sum(case((UserAnswer.is_correct.is_(True), 1), else_=0)), 0).label("correct_answered"),
         )
         .join(PracticeSession, PracticeSession.id == UserAnswer.session_id)
         .join(Question, Question.id == UserAnswer.question_id)
@@ -30,9 +28,7 @@ def get_answer_totals_by_part(session: Session, user_id: int) -> list[Row]:
         select(
             Question.part.label("part"),
             func.count(UserAnswer.id).label("total_answered"),
-            func.coalesce(func.sum(case((UserAnswer.is_correct.is_(True), 1), else_=0)), 0).label(
-                "correct_answered"
-            ),
+            func.coalesce(func.sum(case((UserAnswer.is_correct.is_(True), 1), else_=0)), 0).label("correct_answered"),
         )
         .join(PracticeSession, PracticeSession.id == UserAnswer.session_id)
         .join(Question, Question.id == UserAnswer.question_id)
@@ -47,14 +43,11 @@ def get_answer_totals_by_part(session: Session, user_id: int) -> list[Row]:
 
 
 def list_completed_session_stats_inputs(session: Session, user_id: int) -> list[Row]:
-    statement = (
-        select(
-            PracticeSession.mode.label("mode"),
-            PracticeSession.started_at.label("started_at"),
-            PracticeSession.completed_at.label("completed_at"),
-        )
-        .where(PracticeSession.user_id == user_id, PracticeSession.status == "completed")
-    )
+    statement = select(
+        PracticeSession.mode.label("mode"),
+        PracticeSession.started_at.label("started_at"),
+        PracticeSession.completed_at.label("completed_at"),
+    ).where(PracticeSession.user_id == user_id, PracticeSession.status == "completed")
     return list(session.execute(statement).all())
 
 

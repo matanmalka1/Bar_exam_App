@@ -157,12 +157,8 @@ def _create_exam_session(session: Session, payload: SessionCreateIn) -> Practice
         rng.shuffle(pool)
         ordered = pool[:EXAM_QUESTIONS_PER_PART]
     else:
-        b_pool = practice_session_repository.select_official_exam_questions(
-            session, exam_date=exam_date, part="B"
-        )
-        c_pool = practice_session_repository.select_official_exam_questions(
-            session, exam_date=exam_date, part="C"
-        )
+        b_pool = practice_session_repository.select_official_exam_questions(session, exam_date=exam_date, part="B")
+        c_pool = practice_session_repository.select_official_exam_questions(session, exam_date=exam_date, part="C")
         if len(b_pool) < EXAM_QUESTIONS_PER_PART:
             raise SessionError(422, f"insufficient part B questions for exam {payload.exam_date} (need 40)")
         if len(c_pool) < EXAM_QUESTIONS_PER_PART:
@@ -304,9 +300,7 @@ def complete_session(session: Session, session_id: int) -> SessionCompleteOut:
     correct_count = sum(1 for a in answers if a.is_correct)
     score_denominator = _score_denominator(ps, rows)
     score = (
-        (Decimal(correct_count * 100) / Decimal(score_denominator)).quantize(
-            Decimal("0.01"), rounding=ROUND_HALF_UP
-        )
+        (Decimal(correct_count * 100) / Decimal(score_denominator)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         if score_denominator > 0
         else Decimal("0.00")
     )
