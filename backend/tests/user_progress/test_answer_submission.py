@@ -5,10 +5,10 @@ from .helpers import dev_user
 
 
 def test_submit_answer_practice_mode(client: TestClient):
-    user_id = dev_user(client)
+    dev_user(client)
     sid = client.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B"},
+        json={"mode": "practice", "exam_date": "2025-04", "part": "B"},
     ).json()["id"]
     response = client.post(
         f"/api/v1/practice-sessions/{sid}/answers",
@@ -23,10 +23,10 @@ def test_submit_answer_practice_mode(client: TestClient):
 
 
 def test_submit_answer_upsert(client: TestClient):
-    user_id = dev_user(client)
+    dev_user(client)
     sid = client.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B"},
+        json={"mode": "practice", "exam_date": "2025-04", "part": "B"},
     ).json()["id"]
     client.post(
         f"/api/v1/practice-sessions/{sid}/answers",
@@ -45,10 +45,10 @@ def test_submit_answer_upsert(client: TestClient):
 
 
 def test_submit_answer_after_complete_returns_409(client: TestClient):
-    user_id = dev_user(client)
+    dev_user(client)
     sid = client.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B"},
+        json={"mode": "practice", "exam_date": "2025-04", "part": "B"},
     ).json()["id"]
     client.post(f"/api/v1/practice-sessions/{sid}/complete")
     r = client.post(
@@ -59,10 +59,10 @@ def test_submit_answer_after_complete_returns_409(client: TestClient):
 
 
 def test_submit_answer_for_question_not_in_session(client: TestClient):
-    user_id = dev_user(client)
+    dev_user(client)
     sid = client.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B"},
+        json={"mode": "practice", "exam_date": "2025-04", "part": "B"},
     ).json()["id"]
     r = client.post(
         f"/api/v1/practice-sessions/{sid}/answers",
@@ -72,10 +72,10 @@ def test_submit_answer_for_question_not_in_session(client: TestClient):
 
 
 def test_complete_session_score(client: TestClient):
-    user_id = dev_user(client)
+    dev_user(client)
     sid = client.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B"},
+        json={"mode": "practice", "exam_date": "2025-04", "part": "B"},
     ).json()["id"]
     for n in range(1, 4):
         client.post(
@@ -93,10 +93,10 @@ def test_complete_session_score(client: TestClient):
 
 
 def test_complete_twice_returns_409(client: TestClient):
-    user_id = dev_user(client)
+    dev_user(client)
     sid = client.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B"},
+        json={"mode": "practice", "exam_date": "2025-04", "part": "B"},
     ).json()["id"]
     client.post(f"/api/v1/practice-sessions/{sid}/complete")
     r = client.post(f"/api/v1/practice-sessions/{sid}/complete")

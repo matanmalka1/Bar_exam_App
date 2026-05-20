@@ -6,10 +6,13 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.auth.security import hash_password
 from app.models.practice_session import PracticeSession
 from app.models.question import Question
 from app.models.user import User
 from app.models.user_answer import UserAnswer
+
+PASSWORD = "stats-pass"
 
 QuestionFactory = Callable[..., Question]
 ClientBuilder = Callable[[Callable[[Session], None]], AbstractContextManager[TestClient]]
@@ -23,8 +26,17 @@ def _user(user_id: int = 1) -> User:
         id=user_id,
         full_name=f"משתמש {user_id}",
         email=f"user-{user_id}@example.com",
-        password_hash="!",
+        password_hash=hash_password(PASSWORD),
     )
+
+
+def _auth(client: TestClient, user_id: int = 1) -> None:
+    r = client.post(
+        "/api/v1/auth/login",
+        json={"email": f"user-{user_id}@example.com", "password": PASSWORD},
+    )
+    assert r.status_code == 200, r.text
+    client.headers["Authorization"] = f"Bearer {r.json()['access_token']}"
 
 
 def _session(
@@ -64,7 +76,8 @@ def _answer(answer_id: int, *, session_id: int, question_id: int, is_correct: bo
 
 
 def _stats(client: TestClient, user_id: int = 1) -> dict:
-    response = client.get(f"/api/v1/users/{user_id}/stats/overview")
+    _auth(client, user_id)
+    response = client.get("/api/v1/users/me/stats/overview")
     assert response.status_code == 200
     return response.json()
 
@@ -91,12 +104,10 @@ def test_user_with_no_completed_sessions_returns_empty_stats(
     }
 
 
-def test_unknown_user_returns_404(client_builder: ClientBuilder) -> None:
+def test_stats_unauthenticated_returns_401(client_builder: ClientBuilder) -> None:
     with client_builder(lambda session: None) as client:
-        response = client.get("/api/v1/users/999/stats/overview")
-
-    assert response.status_code == 404
-    assert response.json()["detail"] == "user not found"
+        response = client.get("/api/v1/users/me/stats/overview")
+    assert response.status_code == 401
 
 
 def test_total_answered_counts_answer_events_and_rounds_success_rate(
@@ -274,7 +285,7 @@ def test_active_mistakes_count_matches_mistakes_endpoint(
 
     with client_builder(seed) as client:
         stats = _stats(client)
-        mistakes_response = client.get("/api/v1/users/1/mistakes")
+        mistakes_response = client.get("/api/v1/users/me/mistakes")
         assert mistakes_response.status_code == 200
         mistakes = mistakes_response.json()
 
@@ -305,7 +316,7 @@ def test_active_mistakes_use_answered_at_not_updated_at(
 
     with client_builder(seed) as client:
         body = _stats(client)
-        mistakes_response = client.get("/api/v1/users/1/mistakes")
+        mistakes_response = client.get("/api/v1/users/me/mistakes")
         assert mistakes_response.status_code == 200
 
     assert body["active_mistakes_count"] == 0

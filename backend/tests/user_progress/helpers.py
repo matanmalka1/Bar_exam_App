@@ -39,7 +39,7 @@ def dev_user(client: TestClient) -> int:
 def seed_mistakes(client: TestClient, user_id: int, wrong_ids: list[str]) -> None:
     sid = client.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B"},
+        json={"mode": "practice", "exam_date": "2025-04", "part": "B"},
     ).json()["id"]
     for stable_id in wrong_ids:
         client.post(

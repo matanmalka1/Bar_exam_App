@@ -27,9 +27,14 @@ class AnswerError(Exception):
         self.detail = detail
 
 
-def submit_answer(session: Session, session_id: int, payload: AnswerSubmitIn) -> AnswerPracticeOut | AnswerExamOut:
+def submit_answer(
+    session: Session,
+    session_id: int,
+    user_id: int,
+    payload: AnswerSubmitIn,
+) -> AnswerPracticeOut | AnswerExamOut:
     ps = practice_session_repository.get_session_by_id(session, session_id)
-    if ps is None:
+    if ps is None or ps.user_id != user_id:
         raise AnswerError(404, "session not found")
     if ps.status != "active":
         raise AnswerError(409, f"session is {ps.status}")

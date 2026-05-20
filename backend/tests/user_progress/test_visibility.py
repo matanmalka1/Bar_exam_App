@@ -4,10 +4,10 @@ from .helpers import dev_user
 
 
 def test_practice_unanswered_hides_answer_key_in_detail(client: TestClient):
-    user_id = dev_user(client)
+    dev_user(client)
     sid = client.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B"},
+        json={"mode": "practice", "exam_date": "2025-04", "part": "B"},
     ).json()["id"]
     client.post(
         f"/api/v1/practice-sessions/{sid}/answers",
@@ -23,10 +23,10 @@ def test_practice_unanswered_hides_answer_key_in_detail(client: TestClient):
 
 
 def test_simulation_mode_hides_answer_key_during_active(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "simulation"},
+        json={"mode": "simulation"},
     ).json()["id"]
     detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
     first_stable_id = detail["questions"][0]["stable_id"]
@@ -47,10 +47,10 @@ def test_simulation_mode_hides_answer_key_during_active(client_multi: TestClient
 
 
 def test_simulation_mode_exposes_answer_key_after_complete(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "simulation"},
+        json={"mode": "simulation"},
     ).json()["id"]
     detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
     first_stable_id = detail["questions"][0]["stable_id"]
@@ -66,10 +66,10 @@ def test_simulation_mode_exposes_answer_key_after_complete(client_multi: TestCli
 
 
 def test_simulation_active_hides_is_correct_in_session_detail(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "simulation"},
+        json={"mode": "simulation"},
     ).json()["id"]
     detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
     first_stable_id = detail["questions"][0]["stable_id"]
@@ -84,10 +84,10 @@ def test_simulation_active_hides_is_correct_in_session_detail(client_multi: Test
 
 
 def test_simulation_completed_exposes_is_correct_in_session_detail(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "simulation"},
+        json={"mode": "simulation"},
     ).json()["id"]
     detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
     b_question = next(q for q in detail["questions"] if "_B_" in q["stable_id"])

@@ -4,11 +4,11 @@ from .helpers import dev_user
 
 
 def test_question_count_returns_exactly_n_unique(client: TestClient):
-    user_id = dev_user(client)
+    dev_user(client)
     response = client.post(
         "/api/v1/practice-sessions",
         json={
-            "user_id": user_id,
+            
             "mode": "practice",
             "exam_date": "2025-04",
             "part": "B",
@@ -27,11 +27,11 @@ def test_question_count_returns_exactly_n_unique(client: TestClient):
 
 
 def test_question_count_exceeds_pool_returns_422(client: TestClient):
-    user_id = dev_user(client)
+    dev_user(client)
     response = client.post(
         "/api/v1/practice-sessions",
         json={
-            "user_id": user_id,
+            
             "mode": "practice",
             "exam_date": "2025-04",
             "part": "B",
@@ -42,11 +42,11 @@ def test_question_count_exceeds_pool_returns_422(client: TestClient):
 
 
 def test_exam_date_restricts_selection(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     response = client_multi.post(
         "/api/v1/practice-sessions",
         json={
-            "user_id": user_id,
+            
             "mode": "practice",
             "exam_date": "2025-06",
             "part": "B",
@@ -61,11 +61,11 @@ def test_exam_date_restricts_selection(client_multi: TestClient):
 
 
 def test_subject_pool_spans_all_exams_when_date_omitted(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     response = client_multi.post(
         "/api/v1/practice-sessions",
         json={
-            "user_id": user_id,
+            
             "mode": "practice",
             "part": "B",
             "question_count": 40,
@@ -81,14 +81,14 @@ def test_subject_pool_spans_all_exams_when_date_omitted(client_multi: TestClient
 
 
 def test_second_session_prefers_unseen(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     s1 = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "part": "B", "question_count": 40},
+        json={"mode": "practice", "part": "B", "question_count": 40},
     ).json()
     s2 = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "part": "B", "question_count": 40},
+        json={"mode": "practice", "part": "B", "question_count": 40},
     ).json()
     d1 = client_multi.get(f"/api/v1/practice-sessions/{s1['id']}").json()
     d2 = client_multi.get(f"/api/v1/practice-sessions/{s2['id']}").json()
@@ -99,17 +99,17 @@ def test_second_session_prefers_unseen(client_multi: TestClient):
 
 
 def test_unseen_pool_insufficient_fills_from_seen(client: TestClient):
-    user_id = dev_user(client)
+    dev_user(client)
     s1 = client.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B", "question_count": 7},
+        json={"mode": "practice", "exam_date": "2025-04", "part": "B", "question_count": 7},
     ).json()
     d1 = client.get(f"/api/v1/practice-sessions/{s1['id']}").json()
     seen = {q["stable_id"] for q in d1["questions"]}
 
     s2 = client.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B", "question_count": 5},
+        json={"mode": "practice", "exam_date": "2025-04", "part": "B", "question_count": 5},
     ).json()
     d2 = client.get(f"/api/v1/practice-sessions/{s2['id']}").json()
     ids2 = [q["stable_id"] for q in d2["questions"]]

@@ -39,28 +39,25 @@ class SessionError(Exception):
         self.detail = detail
 
 
-def create_session(session: Session, payload: SessionCreateIn) -> SessionSummaryOut:
-    # TODO(auth): user_id comes from the request body — replace with verified identity.
-    if user_repository.get_by_id(session, payload.user_id) is None:
-        raise SessionError(404, "user not found")
+def create_session(session: Session, user_id: int, payload: SessionCreateIn) -> SessionSummaryOut:
 
     if payload.mode == "exam":
-        ps = _create_exam_session(session, payload)
+        ps = _create_exam_session(session, user_id, payload)
     elif payload.mode == "simulation":
-        ps = _create_simulation_session(session, payload)
+        ps = _create_simulation_session(session, user_id, payload)
     elif payload.mode == "mistakes":
-        ps = _create_mistakes_session(session, payload)
+        ps = _create_mistakes_session(session, user_id, payload)
     elif payload.mode == "bookmarks":
-        ps = _create_bookmarks_session(session, payload)
+        ps = _create_bookmarks_session(session, user_id, payload)
     else:
-        ps = _create_practice_session(session, payload)
+        ps = _create_practice_session(session, user_id, payload)
 
     session.commit()
     session.refresh(ps)
     return _summary(ps)
 
 
-def _create_practice_session(session: Session, payload: SessionCreateIn) -> PracticeSession:
+def _create_practice_session(session: Session, user_id: int, payload: SessionCreateIn) -> PracticeSession:
     exam_date = _parse_exam_date(payload.exam_date) if payload.exam_date else None
     candidates = practice_session_repository.select_candidate_questions(
         session,
@@ -75,12 +72,12 @@ def _create_practice_session(session: Session, payload: SessionCreateIn) -> Prac
 
     ordered = _select_questions(
         candidates,
-        seen_ids=practice_session_repository.list_seen_question_ids(session, payload.user_id),
+        seen_ids=practice_session_repository.list_seen_question_ids(session, user_id),
         question_count=payload.question_count,
     )
     return _persist_session(
         session,
-        user_id=payload.user_id,
+        user_id=user_id,
         mode="practice",
         exam_date=exam_date,
         part=payload.part,
@@ -88,9 +85,9 @@ def _create_practice_session(session: Session, payload: SessionCreateIn) -> Prac
     )
 
 
-def _create_mistakes_session(session: Session, payload: SessionCreateIn) -> PracticeSession:
+def _create_mistakes_session(session: Session, user_id: int, payload: SessionCreateIn) -> PracticeSession:
     _reject_filters(payload, mode="mistakes")
-    pool = answer_repository.list_active_mistake_questions(session, payload.user_id)
+    pool = answer_repository.list_active_mistake_questions(session, user_id)
     if not pool:
         raise SessionError(422, "no active mistakes to practice")
     if payload.question_count is not None and payload.question_count > len(pool):
@@ -98,12 +95,12 @@ def _create_mistakes_session(session: Session, payload: SessionCreateIn) -> Prac
 
     pool = _select_questions(
         pool,
-        seen_ids=practice_session_repository.list_seen_question_ids(session, payload.user_id),
+        seen_ids=practice_session_repository.list_seen_question_ids(session, user_id),
         question_count=payload.question_count,
     )
     return _persist_session(
         session,
-        user_id=payload.user_id,
+        user_id=user_id,
         mode="mistakes",
         exam_date=None,
         part=None,
@@ -111,9 +108,9 @@ def _create_mistakes_session(session: Session, payload: SessionCreateIn) -> Prac
     )
 
 
-def _create_bookmarks_session(session: Session, payload: SessionCreateIn) -> PracticeSession:
+def _create_bookmarks_session(session: Session, user_id: int, payload: SessionCreateIn) -> PracticeSession:
     _reject_filters(payload, mode="bookmarks")
-    pool = bookmark_repository.list_bookmarked_questions(session, payload.user_id)
+    pool = bookmark_repository.list_bookmarked_questions(session, user_id)
     if not pool:
         raise SessionError(422, "no bookmarked questions to practice")
     if payload.question_count is not None and payload.question_count > len(pool):
@@ -121,12 +118,12 @@ def _create_bookmarks_session(session: Session, payload: SessionCreateIn) -> Pra
 
     pool = _select_questions(
         pool,
-        seen_ids=practice_session_repository.list_seen_question_ids(session, payload.user_id),
+        seen_ids=practice_session_repository.list_seen_question_ids(session, user_id),
         question_count=payload.question_count,
     )
     return _persist_session(
         session,
-        user_id=payload.user_id,
+        user_id=user_id,
         mode="bookmarks",
         exam_date=None,
         part=None,
@@ -134,7 +131,7 @@ def _create_bookmarks_session(session: Session, payload: SessionCreateIn) -> Pra
     )
 
 
-def _create_exam_session(session: Session, payload: SessionCreateIn) -> PracticeSession:
+def _create_exam_session(session: Session, user_id: int, payload: SessionCreateIn) -> PracticeSession:
     if payload.exam_date is None:
         raise SessionError(422, "exam mode requires exam_date")
     if payload.question_count is not None:
@@ -170,7 +167,7 @@ def _create_exam_session(session: Session, payload: SessionCreateIn) -> Practice
 
     return _persist_session(
         session,
-        user_id=payload.user_id,
+        user_id=user_id,
         mode="exam",
         exam_date=exam_date,
         part=payload.part,
@@ -178,7 +175,7 @@ def _create_exam_session(session: Session, payload: SessionCreateIn) -> Practice
     )
 
 
-def _create_simulation_session(session: Session, payload: SessionCreateIn) -> PracticeSession:
+def _create_simulation_session(session: Session, user_id: int, payload: SessionCreateIn) -> PracticeSession:
     if payload.exam_date is not None:
         raise SessionError(422, "simulation mode does not accept exam_date")
     if payload.part is not None:
@@ -195,14 +192,14 @@ def _create_simulation_session(session: Session, payload: SessionCreateIn) -> Pr
     if len(c_pool) < EXAM_QUESTIONS_PER_PART:
         raise SessionError(422, "insufficient active part C questions for simulation (need 40)")
 
-    seen_ids = practice_session_repository.list_seen_question_ids(session, payload.user_id)
+    seen_ids = practice_session_repository.list_seen_question_ids(session, user_id)
     b_chosen = _select_questions(b_pool, seen_ids=seen_ids, question_count=EXAM_QUESTIONS_PER_PART)
     c_chosen = _select_questions(c_pool, seen_ids=seen_ids, question_count=EXAM_QUESTIONS_PER_PART)
     ordered = b_chosen + c_chosen
     assert len(ordered) == EXAM_TOTAL_QUESTIONS
     return _persist_session(
         session,
-        user_id=payload.user_id,
+        user_id=user_id,
         mode="simulation",
         exam_date=None,
         part=None,
@@ -240,9 +237,9 @@ def _reject_filters(payload: SessionCreateIn, *, mode: str) -> None:
         raise SessionError(422, f"{mode} mode does not accept include_invalidated")
 
 
-def get_session_detail(session: Session, session_id: int) -> SessionDetailOut:
+def get_session_detail(session: Session, session_id: int, user_id: int) -> SessionDetailOut:
     ps = practice_session_repository.get_session_by_id(session, session_id)
-    if ps is None:
+    if ps is None or ps.user_id != user_id:
         raise SessionError(404, "session not found")
     rows = practice_session_repository.get_session_questions(session, session_id)
     answers = {a.question_id: a for a in answer_repository.list_session_answers(session, session_id)}
@@ -288,9 +285,9 @@ def list_user_sessions(session: Session, user_id: int, status: str | None) -> li
     return [_summary(s) for s in sessions]
 
 
-def complete_session(session: Session, session_id: int) -> SessionCompleteOut:
+def complete_session(session: Session, session_id: int, user_id: int) -> SessionCompleteOut:
     ps = practice_session_repository.get_session_by_id(session, session_id)
-    if ps is None:
+    if ps is None or ps.user_id != user_id:
         raise SessionError(404, "session not found")
     if ps.status != "active":
         raise SessionError(409, f"session is {ps.status}")

@@ -8,12 +8,13 @@ from app.schemas.question import QuestionOptions
 
 
 class SessionCreateIn(BaseModel):
-    user_id: int
     mode: Literal["exam", "simulation", "practice", "mistakes", "bookmarks"]
     exam_date: str | None = Field(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
     part: Literal["B", "C"] | None = None
     question_count: int | None = Field(default=None, gt=0)
     include_invalidated: bool = False
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class SessionSummaryOut(BaseModel):

@@ -4,37 +4,37 @@ from .helpers import dev_user
 
 
 def test_exam_mode_requires_exam_date(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     r = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam"},
+        json={"mode": "exam"},
     )
     assert r.status_code == 422
 
 
 def test_exam_mode_rejects_question_count(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     r = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-04", "question_count": 50},
+        json={"mode": "exam", "exam_date": "2025-04", "question_count": 50},
     )
     assert r.status_code == 422
 
 
 def test_exam_mode_rejects_include_invalidated_true(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     r = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-04", "include_invalidated": True},
+        json={"mode": "exam", "exam_date": "2025-04", "include_invalidated": True},
     )
     assert r.status_code == 422
 
 
 def test_exam_full_returns_40b_40c_from_single_exam_date(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     r = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-06"},
+        json={"mode": "exam", "exam_date": "2025-06"},
     )
     assert r.status_code == 201
     sid = r.json()["id"]
@@ -48,10 +48,10 @@ def test_exam_full_returns_40b_40c_from_single_exam_date(client_multi: TestClien
 
 
 def test_exam_part_b_returns_only_b_from_exam_date(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     r = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-12", "part": "B"},
+        json={"mode": "exam", "exam_date": "2025-12", "part": "B"},
     )
     assert r.status_code == 201
     sid = r.json()["id"]
@@ -64,10 +64,10 @@ def test_exam_part_b_returns_only_b_from_exam_date(client_multi: TestClient):
 
 
 def test_exam_does_not_mix_exam_dates(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-04"},
+        json={"mode": "exam", "exam_date": "2025-04"},
     ).json()["id"]
     detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
     prefixes = {q["stable_id"].rsplit("_", 2)[0] for q in detail["questions"]}
@@ -75,19 +75,19 @@ def test_exam_does_not_mix_exam_dates(client_multi: TestClient):
 
 
 def test_exam_insufficient_total_pool_returns_422(client_exam_insufficient: TestClient):
-    user_id = dev_user(client_exam_insufficient)
+    dev_user(client_exam_insufficient)
     r = client_exam_insufficient.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-04"},
+        json={"mode": "exam", "exam_date": "2025-04"},
     )
     assert r.status_code == 422
 
 
 def test_exam_hides_answer_key_during_active(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-04"},
+        json={"mode": "exam", "exam_date": "2025-04"},
     ).json()["id"]
     detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
     first_stable_id = detail["questions"][0]["stable_id"]
@@ -101,10 +101,10 @@ def test_exam_hides_answer_key_during_active(client_multi: TestClient):
 
 
 def test_exam_exposes_answer_key_after_complete(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-04"},
+        json={"mode": "exam", "exam_date": "2025-04"},
     ).json()["id"]
     client_multi.post(f"/api/v1/practice-sessions/{sid}/complete")
     detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
@@ -114,10 +114,10 @@ def test_exam_exposes_answer_key_after_complete(client_multi: TestClient):
 
 
 def test_exam_completion_returns_part_breakdown_and_mistakes(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-04"},
+        json={"mode": "exam", "exam_date": "2025-04"},
     ).json()["id"]
     body = client_multi.post(f"/api/v1/practice-sessions/{sid}/complete").json()
     assert body["total_questions"] == 80
@@ -130,10 +130,10 @@ def test_exam_completion_returns_part_breakdown_and_mistakes(client_multi: TestC
 
 
 def test_exam_part_b_completion_breakdown_only_b(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-04", "part": "B"},
+        json={"mode": "exam", "exam_date": "2025-04", "part": "B"},
     ).json()["id"]
     body = client_multi.post(f"/api/v1/practice-sessions/{sid}/complete").json()
     assert set(body["part_breakdown"].keys()) == {"B"}
@@ -141,10 +141,10 @@ def test_exam_part_b_completion_breakdown_only_b(client_multi: TestClient):
 
 
 def test_exam_invalidated_question_excluded_from_score_and_mistakes(client_multi: TestClient):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-12", "part": "B"},
+        json={"mode": "exam", "exam_date": "2025-12", "part": "B"},
     ).json()["id"]
     detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
     invalidated = next(q for q in detail["questions"] if q["stable_id"] == "2025-12_B_020")
@@ -176,10 +176,10 @@ def test_exam_invalidated_question_excluded_from_score_and_mistakes(client_multi
 def test_answer_invalidated_exam_question_returns_422_and_does_not_increment_answered_count(
     client_multi: TestClient,
 ):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-12", "part": "B"},
+        json={"mode": "exam", "exam_date": "2025-12", "part": "B"},
     ).json()["id"]
     before = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
     assert before["answered_count"] == 0
@@ -200,10 +200,10 @@ def test_answer_invalidated_exam_question_returns_422_and_does_not_increment_ans
 def test_completion_still_excludes_invalidated_from_score_and_mistakes_after_rejected_answer(
     client_multi: TestClient,
 ):
-    user_id = dev_user(client_multi)
+    dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
-        json={"user_id": user_id, "mode": "exam", "exam_date": "2025-12", "part": "B"},
+        json={"mode": "exam", "exam_date": "2025-12", "part": "B"},
     ).json()["id"]
     client_multi.post(
         f"/api/v1/practice-sessions/{sid}/answers",
@@ -218,5 +218,5 @@ def test_completion_still_excludes_invalidated_from_score_and_mistakes_after_rej
     assert len(body["mistakes"]) == 39
     assert all(item["stable_id"] != "2025-12_B_020" for item in body["mistakes"])
 
-    mistakes = client_multi.get(f"/api/v1/users/{user_id}/mistakes").json()
+    mistakes = client_multi.get("/api/v1/users/me/mistakes").json()
     assert all(item["stable_id"] != "2025-12_B_020" for item in mistakes)
