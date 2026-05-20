@@ -10,6 +10,7 @@ from app.core.config import CORS_ORIGINS
 from app.db.deps import get_session
 from app.routers.practice_sessions import router as sessions_router
 from app.routers.questions import router as questions_router
+from app.routers.stats import router as stats_router
 from app.routers.users import router as users_router
 
 app = FastAPI(title="Bar Exam API")
@@ -40,4 +41,5 @@ def ready(session: Annotated[Session, Depends(get_session)]) -> dict[str, str]:
 
 app.include_router(questions_router, prefix="/api/v1")
 app.include_router(sessions_router, prefix="/api/v1")
+app.include_router(stats_router, prefix="/api/v1")
 app.include_router(users_router, prefix="/api/v1")

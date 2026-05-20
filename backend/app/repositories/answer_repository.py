@@ -56,10 +56,15 @@ def get_latest_mistakes(session: Session, user_id: int) -> list[Row]:
             UserAnswer.id.label("ua_id"),
             UserAnswer.question_id.label("qid"),
             UserAnswer.is_correct.label("is_correct"),
-            UserAnswer.updated_at.label("updated_at"),
+            UserAnswer.answered_at.label("answered_at"),
         )
         .join(PracticeSession, PracticeSession.id == UserAnswer.session_id)
-        .where(PracticeSession.user_id == user_id, PracticeSession.status == "completed")
+        .join(Question, Question.id == UserAnswer.question_id)
+        .where(
+            PracticeSession.user_id == user_id,
+            PracticeSession.status == "completed",
+            Question.status == "active",
+        )
         .subquery()
     )
     ranked = (
@@ -70,7 +75,7 @@ def get_latest_mistakes(session: Session, user_id: int) -> list[Row]:
             func.row_number()
             .over(
                 partition_by=user_answers.c.qid,
-                order_by=(user_answers.c.updated_at.desc(), user_answers.c.ua_id.desc()),
+                order_by=(user_answers.c.answered_at.desc(), user_answers.c.ua_id.desc()),
             )
             .label("rn"),
         )
@@ -83,7 +88,12 @@ def get_latest_mistakes(session: Session, user_id: int) -> list[Row]:
             func.sum(case((UserAnswer.is_correct.is_(False), 1), else_=0)).label("times_wrong"),
         )
         .join(PracticeSession, PracticeSession.id == UserAnswer.session_id)
-        .where(PracticeSession.user_id == user_id, PracticeSession.status == "completed")
+        .join(Question, Question.id == UserAnswer.question_id)
+        .where(
+            PracticeSession.user_id == user_id,
+            PracticeSession.status == "completed",
+            Question.status == "active",
+        )
         .group_by(UserAnswer.question_id)
         .subquery()
     )
@@ -91,7 +101,7 @@ def get_latest_mistakes(session: Session, user_id: int) -> list[Row]:
         select(Question, counts.c.times_answered, counts.c.times_wrong)
         .join(latest, latest.c.qid == Question.id)
         .join(counts, counts.c.qid == Question.id)
-        .where(latest.c.is_correct.is_(False), Question.status == "active")
+        .where(latest.c.is_correct.is_(False))
         .order_by(Question.exam_date.asc(), Question.part.asc(), Question.number.asc())
     )
     return list(session.execute(statement).all())
@@ -107,10 +117,15 @@ def list_active_mistake_questions(session: Session, user_id: int) -> list[Questi
             UserAnswer.id.label("ua_id"),
             UserAnswer.question_id.label("qid"),
             UserAnswer.is_correct.label("is_correct"),
-            UserAnswer.updated_at.label("updated_at"),
+            UserAnswer.answered_at.label("answered_at"),
         )
         .join(PracticeSession, PracticeSession.id == UserAnswer.session_id)
-        .where(PracticeSession.user_id == user_id, PracticeSession.status == "completed")
+        .join(Question, Question.id == UserAnswer.question_id)
+        .where(
+            PracticeSession.user_id == user_id,
+            PracticeSession.status == "completed",
+            Question.status == "active",
+        )
         .subquery()
     )
     ranked = select(
@@ -120,7 +135,7 @@ def list_active_mistake_questions(session: Session, user_id: int) -> list[Questi
         func.row_number()
         .over(
             partition_by=user_answers.c.qid,
-            order_by=(user_answers.c.updated_at.desc(), user_answers.c.ua_id.desc()),
+            order_by=(user_answers.c.answered_at.desc(), user_answers.c.ua_id.desc()),
         )
         .label("rn"),
     ).subquery()
@@ -128,7 +143,7 @@ def list_active_mistake_questions(session: Session, user_id: int) -> list[Questi
     statement = (
         select(Question)
         .join(latest, latest.c.qid == Question.id)
-        .where(latest.c.is_correct.is_(False), Question.status == "active")
+        .where(latest.c.is_correct.is_(False))
         .order_by(Question.stable_id.asc())
     )
     return list(session.scalars(statement).all())

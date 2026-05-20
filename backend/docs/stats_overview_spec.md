@@ -114,13 +114,9 @@ Count of `practice_sessions` where `mode = 'exam'` and `status = 'completed'` fo
 
 ### `active_mistakes_count`
 
-Count of questions where the user's most recent answer (by `user_answers.updated_at` across all completed sessions) is `is_correct = false`.
+Count of questions where the user's most recent answer is `is_correct = false`. "Most recent" is defined as `answered_at DESC, id DESC` across all completed sessions.
 
 This must use the same semantics as the Phase 2 mistakes endpoint. See Section 6 for cross-repository rules.
-
-**MVP limitation:** `user_answers` has no `answered_at` or `created_at` column. Ordering by `updated_at` is the only available proxy for recency. If `updated_at` changes due to row correction or a future upsert pattern, this can distort historical ordering. This is an accepted MVP compromise. A future schema change should add `answered_at` to `user_answers` if strict historical ordering is needed.
-
-Document this limitation explicitly in `stats_repository.py` with a comment on the relevant query.
 
 ---
 
@@ -154,7 +150,7 @@ All stats for a user must be computed in as few DB round-trips as possible. The 
 |---|---|---|
 | 1 | User existence check | `SELECT id FROM users WHERE id = :user_id` — must run first. The `users` table exists from Phase 2 migration `20260520_0002`. A user with no sessions and a non-existent user must return different responses (empty stats vs. 404). |
 | 2 | `total_answered`, `overall_success_rate`, `part_b`, `part_c` | Single query: join `user_answers → practice_sessions → questions`, filter `status='completed'` and `questions.status='active'`, group by `questions.part` |
-| 3 | `simulations_completed` + `avg_session_duration_seconds` | Single query over `practice_sessions` for this user, filtered on `status='completed'`. Count rows with `mode='exam'` for simulations; compute avg duration with the guards described in Section 5. These two stats share the same table, user, and filter — combine into one query. |
+| 3 | `simulations_completed` + `avg_session_duration_seconds` | Single query over `practice_sessions` for this user, filtered on `status='completed'`. Count rows with `mode='exam'` for simulations. For SQLite/test portability, fetch the raw `mode`, `started_at`, and `completed_at` columns and apply the duration guards in the service (filter nulls, filter negative durations, average). This returns one row per session rather than a single aggregate — acceptable for MVP scale (a few hundred sessions per user at most). |
 | 4 | `active_mistakes_count` | Implemented in `stats_repository.py` with the same semantics as the Phase 2 mistakes endpoint. See cross-repository rules below. |
 | 5 | `repeated_mistakes_count` | Single query: `user_answers → practice_sessions → questions`, filter `status='completed'` and `questions.status='active'`, group by `question_id`, having `SUM(CASE WHEN is_correct = false THEN 1 ELSE 0 END) >= 2`. In SQLAlchemy: `func.sum(case((UserAnswer.is_correct.is_(False), 1), else_=0)) >= 2`. Do not use `count(*) filter (where ...)` — that syntax is Postgres-specific and will break SQLite-based tests. |
 
@@ -304,11 +300,9 @@ The phase is complete when:
 
 ---
 
-## 13. Explicit Wording for Implementation
-
-The following two statements must appear as comments in the relevant repository files when this phase is implemented.
+## 13. Implementation Notes
 
 The `active_mistakes_count` query must include a short comment near the query explaining:
 
 - it intentionally matches the Phase 2 mistakes endpoint semantics
-- latest answer ordering uses `updated_at` as an MVP proxy because `answered_at` does not exist
+- latest answer ordering uses `answered_at DESC, id DESC`

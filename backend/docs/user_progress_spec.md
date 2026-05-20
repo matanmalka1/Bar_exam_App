@@ -462,7 +462,7 @@ Returns a list of sessions for the user, most recent first.
 
 Returns questions the user answered incorrectly, across all completed sessions.
 
-A question is a current mistake if the **most recent answer** (by `updated_at`) across all sessions is `is_correct = false` and the question is still active. Invalidated questions are not returned as active mistakes.
+A question is a current mistake if the **most recent answer** (by `answered_at`, with `id` as a tie-breaker) across completed sessions is `is_correct = false` and the question is still active. Invalidated questions are not returned as active mistakes.
 
 **Response 200:**
 
@@ -632,7 +632,7 @@ For exam mode, `score_denominator = count(active questions in the session)`. Inv
 
 Within a single active session, `user_answers` has `unique(session_id, question_id)`. This means a user has one answer slot per question per session, and it can be updated (upserted) while the session is active. This is intentional — it lets users change their mind before completing.
 
-Once the session is completed, the answer row for that session is frozen. Cross-session history is preserved because each session has its own `user_answer` rows. Mistakes are derived from the most recent `updated_at` across all sessions for a given `(user, question)` pair.
+Once the session is completed, the answer row for that session is frozen. Cross-session history is preserved because each session has its own `user_answer` rows. Mistakes are derived from the most recent `answered_at` across completed sessions for a given `(user, question)` pair, with `id` as a deterministic tie-breaker.
 
 **There is no single "immutable history" row per answer.** The history is the set of rows across multiple sessions. Within one session, the answer can change.
 
@@ -741,7 +741,7 @@ Unanswered active questions count against the user. This is intentional (matches
 
 - `practice_sessions(user_id, status)`
 - `user_answers(session_id, question_id)`
-- `user_answers(question_id, updated_at)`
+- `user_answers(question_id, answered_at)`
 - `practice_session_questions(session_id, question_id)`
 
 Do not add `user_id` to `user_answers` in this phase.
