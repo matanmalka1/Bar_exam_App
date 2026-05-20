@@ -65,6 +65,9 @@ Each imported question must preserve the final JSON structure:
 - `correct_answer`: nullable
 - `reference`
 - `invalidation_note`: nullable
+
+DB-only fields:
+
 - `created_at`
 - `updated_at`
 
