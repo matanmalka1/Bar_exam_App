@@ -35,7 +35,8 @@ VALID_STATUSES = {"active", "invalidated"}
 DISQUALIFIED_ANSWER = "נפסלה"
 FORBIDDEN_ARTIFACTS = ("00:00", "", "ð")
 STABLE_ID_RE = re.compile(r"^\d{4}-\d{2}_[BC]_\d{3}$")
-EXAM_DATE_RE = re.compile(r"^\d{4}-\d{2}$")
+EXAM_DATE_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>\d{2})$")
+STABLE_ID_FULL_RE = re.compile(r"^(?P<exam_date>\d{4}-\d{2})_(?P<part>[BC])_(?P<number>\d{3})$")
 
 
 class ImportValidationError(ValueError):
@@ -69,15 +70,36 @@ def is_non_empty_text(value: Any) -> TypeGuard[str]:
 
 
 def parse_exam_month(value: Any) -> date | None:
-    if not isinstance(value, str) or not EXAM_DATE_RE.match(value):
+    if not isinstance(value, str):
         return None
 
-    year_text, month_text = value.split("-")
-    year = int(year_text)
-    month = int(month_text)
-    if not 1 <= month <= 12:
+    match = EXAM_DATE_RE.match(value)
+    if match is None:
         return None
-    return date(year, month, 1)
+
+    try:
+        return date(int(match.group("year")), int(match.group("month")), 1)
+    except ValueError:
+        return None
+
+
+def parse_stable_id(value: Any) -> tuple[str, str, int] | None:
+    if not isinstance(value, str):
+        return None
+
+    match = STABLE_ID_FULL_RE.match(value)
+    if match is None:
+        return None
+
+    exam_date = match.group("exam_date")
+    if parse_exam_month(exam_date) is None:
+        return None
+
+    number = int(match.group("number"))
+    if not 1 <= number <= 40:
+        return None
+
+    return exam_date, match.group("part"), number
 
 
 def find_question_files(input_dir: Path) -> list[Path]:
@@ -106,7 +128,7 @@ def validate_question_file(path: Path, payload: dict[str, Any]) -> list[dict[str
     exam_month = parse_exam_month(exam_date)
 
     if exam_month is None:
-        errors.append(f"{location}: exam_date must use YYYY-MM format")
+        errors.append(f"{location}: exam_date must be a real YYYY-MM month")
     if not is_non_empty_text(label):
         errors.append(f"{location}: label is required")
     if part not in VALID_PARTS:
@@ -140,9 +162,10 @@ def validate_question_file(path: Path, payload: dict[str, Any]) -> list[dict[str
 
         if not isinstance(number, int) or not 1 <= number <= 40:
             errors.append(f"{question_location}: number must be an integer from 1 to 40")
+        stable_id_parts = parse_stable_id(stable_id)
         if not is_non_empty_text(stable_id):
             errors.append(f"{question_location}: stable_id format is invalid")
-        elif not STABLE_ID_RE.match(stable_id):
+        elif not STABLE_ID_RE.match(stable_id) or stable_id_parts is None:
             errors.append(f"{question_location}: stable_id format is invalid")
         elif isinstance(number, int) and isinstance(exam_date, str) and part in VALID_PARTS:
             expected_stable_id = f"{exam_date}_{part}_{number:03d}"

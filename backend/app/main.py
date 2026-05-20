@@ -1,13 +1,39 @@
-from fastapi import FastAPI
+from typing import Annotated
 
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+
+from app.core.config import CORS_ORIGINS
+from app.db.session import get_session
 from app.routers.questions import router as questions_router
 
 app = FastAPI(title="Bar Exam API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/ready")
+def ready(session: Annotated[Session, Depends(get_session)]) -> dict[str, str]:
+    try:
+        session.execute(text("SELECT 1"))
+    except SQLAlchemyError as exc:
+        raise HTTPException(status_code=503, detail="database unavailable") from exc
+
+    return {"status": "ready"}
 
 
 app.include_router(questions_router, prefix="/api/v1")

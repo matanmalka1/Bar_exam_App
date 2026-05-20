@@ -98,6 +98,30 @@ def test_missing_option_fails():
     assert_validation_fails(payload, "options must contain exactly א/ב/ג/ד")
 
 
+def test_invalid_exam_date_month_fails():
+    payload = make_payload(exam_date="2025-13")
+    payload["questions"] = [
+        make_question(number, stable_id=f"2025-13_B_{number:03d}")
+        for number in range(1, 41)
+    ]
+
+    assert_validation_fails(payload, "exam_date must be a real YYYY-MM month")
+
+
+def test_invalid_stable_id_month_fails():
+    payload = make_payload()
+    payload["questions"][0]["stable_id"] = "2025-13_B_001"
+
+    assert_validation_fails(payload, "stable_id format is invalid")
+
+
+def test_stable_id_number_must_be_question_range():
+    payload = make_payload()
+    payload["questions"][0]["stable_id"] = "2025-04_B_041"
+
+    assert_validation_fails(payload, "stable_id format is invalid")
+
+
 def test_valid_question_maps_exam_date_and_answer_to_db_values():
     rows = validate_question_file(Path("2025-04_B_questions.json"), make_payload())
 

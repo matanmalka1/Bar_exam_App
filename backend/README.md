@@ -76,6 +76,8 @@ Override with environment variable:
 export DATABASE_URL=postgresql+psycopg://user:pass@host:5432/dbname
 ```
 
+If you prefer file-based env vars, export them through your shell or process manager before starting the app.
+
 ## Run Commands
 
 ### Apply migrations
@@ -107,7 +109,21 @@ Expected output on success:
 ### Run API
 
 ```bash
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --reload-dir app
+```
+
+### Smoke test API
+
+With the API running and questions imported:
+
+```bash
+scripts/smoke_api.sh
+```
+
+Use `BASE_URL` to target a non-default host or port:
+
+```bash
+BASE_URL=http://127.0.0.1:8001 scripts/smoke_api.sh
 ```
 
 ### Run tests
@@ -122,6 +138,7 @@ pytest tests/ -v
 ruff check .
 pylint app scripts tests alembic/env.py alembic/versions/*.py
 pyright
+vulture
 ```
 
 ## Data Model
