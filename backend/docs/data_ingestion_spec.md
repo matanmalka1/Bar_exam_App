@@ -49,36 +49,63 @@ Expected exam parts:
 
 ## 5. Question Schema
 
-Each imported question must preserve the final JSON structure:
+### Input JSON fields (per question object)
 
-- `stable_id`
-- `exam_date`
-- `label`
-- `part`
-- `part_name`
-- `number`
-- `body`
-- `options`
-  - Hebrew keys: `א`, `ב`, `ג`, `ד`
-  - DB columns may map these to `option_a`, `option_b`, `option_c`, `option_d`
-- `status`: `active` or `invalidated`
-- `correct_answer`: nullable
-- `reference`
-- `invalidation_note`: nullable
+| Field               | Type                      | Notes                                     |
+|---------------------|---------------------------|-------------------------------------------|
+| `stable_id`         | string                    | e.g. `2025-04_B_017`                      |
+| `number`            | integer 1–40              |                                           |
+| `status`            | `active` / `invalidated`  |                                           |
+| `body`              | string                    | non-empty                                 |
+| `options`           | object                    | keys: `א`, `ב`, `ג`, `ד` — all non-empty |
+| `correct_answer`    | `א`/`ב`/`ג`/`ד` or null  | null if invalidated                       |
+| `reference`         | string                    | non-empty                                 |
+| `invalidation_note` | string or null            | non-empty if invalidated, null if active  |
 
-DB-only fields:
+### Input JSON envelope fields (per file)
 
-- `created_at`
-- `updated_at`
+| Field       | Notes                                       |
+|-------------|---------------------------------------------|
+| `exam_date` | `YYYY-MM` string, e.g. `"2025-04"`         |
+| `label`     | Hebrew display label — **not stored in DB** |
+| `part`      | `B` or `C`                                 |
+| `part_name` | Hebrew part name — **not stored in DB**     |
 
-For DB storage, the MVP can flatten `options` into four columns:
+## 6. DB Storage Decisions
 
-- `option_a`
-- `option_b`
-- `option_c`
-- `option_d`
+### correct_answer mapping
 
-## 6. DB Tables For MVP
+Hebrew answer letters are an input and display concern only.
+The DB stores Latin single-character values:
+
+| Input | DB value |
+|-------|----------|
+| `א`   | `A`      |
+| `ב`   | `B`      |
+| `ג`   | `C`      |
+| `ד`   | `D`      |
+
+The importer applies this mapping. The API layer reverses it for display.
+
+### exam_date type
+
+`exam_date` is stored as `DATE` (PostgreSQL), set to the first day of the exam month.
+
+Examples:
+
+- `"2025-04"` → `2025-04-01`
+- `"2024-06"` → `2024-06-01`
+
+### label and part_name
+
+`label` and `part_name` from the input JSON are not persisted.
+They are computed at display time from `exam_date` and `part`.
+
+### options mapping
+
+`options.א` → `option_a`, `options.ב` → `option_b`, `options.ג` → `option_c`, `options.ד` → `option_d`.
+
+## 7. DB Tables For MVP
 
 The MVP data model includes:
 
@@ -94,60 +121,64 @@ Only `questions` is implemented in the first import step.
 
 The other tables are defined for later application features and are out of scope for the initial JSON to DB import.
 
-## 7. Constraints
+There is no separate `exams` table. Exam metadata is derived from `questions.exam_date` and `questions.part` at query time.
 
-The `questions` table must enforce:
+## 8. Constraints
+
+The `questions` table enforces:
 
 - `stable_id` is unique
 - `unique(exam_date, part, number)`
 - `part in ('B', 'C')`
+- `number between 1 and 40`
 - `status in ('active', 'invalidated')`
-- `active => correct_answer in ('א', 'ב', 'ג', 'ד')`
-- `invalidated => correct_answer is null`
-- `invalidated => invalidation_note is not null`
-- invalidated questions must still keep the official reference text
+- `active => correct_answer in ('A', 'B', 'C', 'D') AND invalidation_note IS NULL`
+- `invalidated => correct_answer IS NULL AND invalidation_note IS NOT NULL AND length(trim(invalidation_note)) > 0`
 - `body` is not empty
 - `reference` is not empty
 - all four options are not empty
 
-## 8. Import Behavior
+## 9. Import Behavior
 
-The importer must be:
+The importer (`scripts/import_questions.py`) is:
 
-- transactional
-- idempotent
-- upsert-based by `stable_id`
-- fail-all on any validation error
+- transactional (single transaction for all 320 rows)
+- idempotent (upsert by `stable_id`)
+- fail-all on any validation error (full rollback)
 - strict about ignoring debug files
 - explicit in its printed summary
 
-If validation fails for any file or question, the importer must roll back the entire import.
+If validation fails for any file or question, the importer rolls back the entire import.
 
-## 9. Post-Import Validation
+### Run command
 
-After import, run validation queries/checks for:
+```bash
+python scripts/import_questions.py --input-dir outputs
+```
 
-- total question count
-- active question count
-- invalidated question count
-- exactly 40 questions per exam part
-- no duplicate `stable_id`
-- no forbidden artifact strings in final text fields:
-  - `00:00`
-  - ``
-  - `ð`
-- final JSON must not contain `correct_answer: "נפסלה"`
-- invalidated question exists:
-  - `2025-12_B_020`
-- invalidated question has:
-  - `status = 'invalidated'`
-  - `correct_answer is null`
-  - non-empty `invalidation_note`
-  - non-empty official `reference`
+By default the importer reads `DATABASE_URL` from the environment, falling back to `sqlalchemy.url` in `alembic.ini`.
 
-## 10. Expected Summary
+To override:
 
-Expected successful import summary:
+```bash
+python scripts/import_questions.py --input-dir outputs --database-url postgresql+psycopg://...
+```
+
+## 10. Post-Import Validation
+
+After import, the importer runs validation queries for:
+
+- total question count = 320
+- active question count = 319
+- invalidated question count = 1
+- exactly 40 questions per exam part (8 parts)
+- no duplicate `stable_id` in DB
+- no forbidden artifact strings in text fields: `00:00`, ``, `ð`
+- invalidated question `2025-12_B_020` exists with `status='invalidated'`, `correct_answer IS NULL`, non-empty `invalidation_note`
+
+## 11. Expected Summary
+
+Expected successful import output:
 
 ```json
 {
@@ -159,7 +190,51 @@ Expected successful import summary:
 }
 ```
 
-## 11. Out Of Scope
+## 12. Running Migrations
+
+Apply the questions table migration before running the importer:
+
+```bash
+alembic upgrade head
+```
+
+This creates the `questions` table with all constraints and indexes.
+
+## 13. Running Tests
+
+```bash
+pytest tests/test_import_questions.py -v
+```
+
+The test suite has 8 tests and covers:
+
+- active question with `correct_answer=null` → fails validation
+- invalidated question with non-null `correct_answer` → fails validation
+- active question with non-null `invalidation_note` → fails validation
+- `correct_answer='נפסלה'` literal → fails validation
+- missing option key → fails validation
+- valid question maps `exam_date` to `date(YYYY, MM, 1)` and `correct_answer` to Latin letter
+- duplicate `stable_id` across files → fails validation
+- upsert updates existing row without duplicating
+
+## 14. What Must Not Be Committed
+
+```text
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+outputs/**/debug/
+outputs/**/raw_*.txt
+outputs/**/normalized_*.txt
+outputs/**/*_dev.json
+.env
+.env.*
+```
+
+These are covered by `.gitignore` at the repo root.
+
+## 15. Out Of Scope
 
 The following are not part of this stage:
 
@@ -172,3 +247,4 @@ The following are not part of this stage:
 - PDF parsing
 - text normalization
 - question extraction
+- Exam table
