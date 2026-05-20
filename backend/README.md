@@ -110,6 +110,13 @@ Expected output on success:
 pytest tests/ -v
 ```
 
+### Run linters
+
+```bash
+ruff check .
+pylint app scripts tests alembic
+```
+
 ## Data Model
 
 ### questions table
