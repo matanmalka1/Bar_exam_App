@@ -5,9 +5,8 @@ from datetime import date
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.auth.security import hash_password
 from app.models.question import Question
-from app.models.user import User
+from tests.user_progress.helpers import auth_as, create_test_user
 
 ClientBuilder = Callable[[Callable[[Session], None]], AbstractContextManager[TestClient]]
 QuestionFactory = Callable[..., Question]
@@ -35,33 +34,37 @@ def _make_question(number: int, *, part: str = "B", correct: str = "A") -> Quest
 
 
 def _seed_two_users(session: Session) -> None:
-    session.add_all(
-        [
-            User(full_name="Alice", email=ALICE, password_hash=hash_password(PASSWORD)),
-            User(full_name="Bob", email=BOB, password_hash=hash_password(PASSWORD)),
-        ]
-    )
+    create_test_user(session, full_name="Alice", email=ALICE, password=PASSWORD)
+    create_test_user(session, full_name="Bob", email=BOB, password=PASSWORD)
     session.add_all([_make_question(n) for n in range(1, 6)])
 
 
-def _login(client: TestClient, email: str) -> dict[str, str]:
-    r = client.post("/api/v1/auth/login", json={"email": email, "password": PASSWORD})
-    assert r.status_code == 200, r.text
-    return {"Authorization": f"Bearer {r.json()['access_token']}"}
+def _auth(client: TestClient, email: str) -> dict[str, str]:
+    token = auth_as(client, email=email, password=PASSWORD)
+    return {"Authorization": f"Bearer {token}"}
 
 
-def test_my_sessions_unauthenticated_returns_401(client_builder: ClientBuilder) -> None:
+def test_user_progress_endpoints_unauthenticated_return_401(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_two_users) as client:
-        assert client.get("/api/v1/users/me/sessions").status_code == 401
-        assert client.get("/api/v1/users/me/mistakes").status_code == 401
-        assert client.get("/api/v1/users/me/bookmarks").status_code == 401
-        assert client.get("/api/v1/users/me/stats/overview").status_code == 401
         assert client.post("/api/v1/practice-sessions", json={"mode": "practice"}).status_code == 401
+        assert client.get("/api/v1/users/me/sessions").status_code == 401
+        assert client.get("/api/v1/users/me/stats/overview").status_code == 401
+        assert client.get("/api/v1/users/me/bookmarks").status_code == 401
+        assert client.get("/api/v1/users/me/mistakes").status_code == 401
+        assert client.get("/api/v1/practice-sessions/1").status_code == 401
+        assert (
+            client.post(
+                "/api/v1/practice-sessions/1/answers",
+                json={"stable_id": "2025-04_B_001", "selected_answer": "א"},
+            ).status_code
+            == 401
+        )
+        assert client.post("/api/v1/practice-sessions/1/complete").status_code == 401
 
 
 def test_session_create_uses_token_user_not_payload(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_two_users) as client:
-        alice = _login(client, ALICE)
+        alice = _auth(client, ALICE)
         # Even if client tries to pass user_id, schema rejects unknown fields.
         bad = client.post(
             "/api/v1/practice-sessions",
@@ -85,14 +88,14 @@ def test_session_create_uses_token_user_not_payload(client_builder: ClientBuilde
 
 def test_user_cannot_access_other_users_session(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_two_users) as client:
-        alice = _login(client, ALICE)
+        alice = _auth(client, ALICE)
         session_id = client.post(
             "/api/v1/practice-sessions",
             json={"mode": "practice", "part": "B"},
             headers=alice,
         ).json()["id"]
 
-        bob = _login(client, BOB)
+        bob = _auth(client, BOB)
         # Detail: 404 (not 403) so we don't leak session existence.
         assert client.get(f"/api/v1/practice-sessions/{session_id}", headers=bob).status_code == 404
         assert (
@@ -111,10 +114,10 @@ def test_user_cannot_access_other_users_session(client_builder: ClientBuilder) -
 
 def test_bookmarks_scoped_to_current_user(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_two_users) as client:
-        alice = _login(client, ALICE)
+        alice = _auth(client, ALICE)
         client.post("/api/v1/users/me/bookmarks/2025-04_B_001", headers=alice)
 
-        bob = _login(client, BOB)
+        bob = _auth(client, BOB)
         assert client.get("/api/v1/users/me/bookmarks", headers=bob).json() == []
 
         alice_bookmarks = client.get("/api/v1/users/me/bookmarks", headers=alice).json()
@@ -124,7 +127,7 @@ def test_bookmarks_scoped_to_current_user(client_builder: ClientBuilder) -> None
 
 def test_stats_and_mistakes_scoped_to_current_user(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_two_users) as client:
-        alice = _login(client, ALICE)
+        alice = _auth(client, ALICE)
         sid = client.post(
             "/api/v1/practice-sessions",
             json={"mode": "practice", "part": "B"},
@@ -141,10 +144,66 @@ def test_stats_and_mistakes_scoped_to_current_user(client_builder: ClientBuilder
         assert alice_stats["total_answered"] == 1
         assert client.get("/api/v1/users/me/mistakes", headers=alice).json() != []
 
-        bob = _login(client, BOB)
+        bob = _auth(client, BOB)
         bob_stats = client.get("/api/v1/users/me/stats/overview", headers=bob).json()
         assert bob_stats["total_answered"] == 0
         assert client.get("/api/v1/users/me/mistakes", headers=bob).json() == []
+
+
+def test_user_a_cannot_read_or_mutate_user_b_progress(client_builder: ClientBuilder) -> None:
+    with client_builder(_seed_two_users) as client:
+        bob = _auth(client, BOB)
+        bob_session_id = client.post(
+            "/api/v1/practice-sessions",
+            json={"mode": "practice", "part": "B"},
+            headers=bob,
+        ).json()["id"]
+        client.post(
+            f"/api/v1/practice-sessions/{bob_session_id}/answers",
+            json={"stable_id": "2025-04_B_001", "selected_answer": "ב"},
+            headers=bob,
+        )
+        client.post(f"/api/v1/practice-sessions/{bob_session_id}/complete", headers=bob)
+        client.post("/api/v1/users/me/bookmarks/2025-04_B_002", headers=bob)
+
+        alice = _auth(client, ALICE)
+        alice_session_id = client.post(
+            "/api/v1/practice-sessions",
+            json={"mode": "practice", "part": "B"},
+            headers=alice,
+        ).json()["id"]
+        client.post(
+            f"/api/v1/practice-sessions/{alice_session_id}/answers",
+            json={"stable_id": "2025-04_B_003", "selected_answer": "א"},
+            headers=alice,
+        )
+        client.post(f"/api/v1/practice-sessions/{alice_session_id}/complete", headers=alice)
+
+        assert client.get(f"/api/v1/practice-sessions/{bob_session_id}", headers=alice).status_code == 404
+        assert (
+            client.post(
+                f"/api/v1/practice-sessions/{bob_session_id}/answers",
+                json={"stable_id": "2025-04_B_001", "selected_answer": "א"},
+                headers=alice,
+            ).status_code
+            == 404
+        )
+        assert client.post(f"/api/v1/practice-sessions/{bob_session_id}/complete", headers=alice).status_code == 404
+
+        alice_sessions = client.get("/api/v1/users/me/sessions", headers=alice).json()
+        assert {item["id"] for item in alice_sessions} == {alice_session_id}
+        assert bob_session_id not in {item["id"] for item in alice_sessions}
+
+        alice_bookmarks = client.get("/api/v1/users/me/bookmarks", headers=alice).json()
+        assert all(item["stable_id"] != "2025-04_B_002" for item in alice_bookmarks)
+
+        alice_mistakes = client.get("/api/v1/users/me/mistakes", headers=alice).json()
+        assert all(item["stable_id"] != "2025-04_B_001" for item in alice_mistakes)
+
+        alice_stats = client.get("/api/v1/users/me/stats/overview", headers=alice).json()
+        assert alice_stats["total_answered"] == 1
+        assert alice_stats["overall_success_rate"] == 100.0
+        assert alice_stats["active_mistakes_count"] == 0
 
 
 def test_no_dev_user_endpoint(client_builder: ClientBuilder) -> None:
@@ -154,7 +213,7 @@ def test_no_dev_user_endpoint(client_builder: ClientBuilder) -> None:
 
 def test_legacy_user_id_path_routes_gone(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_two_users) as client:
-        alice = _login(client, ALICE)
+        alice = _auth(client, ALICE)
         # Old style paths should 404 — only /me variants exist.
         assert client.get("/api/v1/users/1/sessions", headers=alice).status_code == 404
         assert client.get("/api/v1/users/1/stats/overview", headers=alice).status_code == 404

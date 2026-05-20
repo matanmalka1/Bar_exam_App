@@ -9,11 +9,19 @@ DEFAULT_PASSWORD = "test-password"
 DEFAULT_FULL_NAME = "Test User"
 
 
-def seed_default_user(session: Session) -> User:
+def create_test_user(
+    session: Session,
+    *,
+    email: str = DEFAULT_EMAIL,
+    password: str = DEFAULT_PASSWORD,
+    full_name: str = DEFAULT_FULL_NAME,
+    user_id: int | None = None,
+) -> User:
     user = User(
-        full_name=DEFAULT_FULL_NAME,
-        email=DEFAULT_EMAIL,
-        password_hash=hash_password(DEFAULT_PASSWORD),
+        id=user_id,
+        full_name=full_name,
+        email=email,
+        password_hash=hash_password(password),
         is_active=True,
         token_version=0,
     )
@@ -22,15 +30,38 @@ def seed_default_user(session: Session) -> User:
     return user
 
 
-def login(client: TestClient, *, email: str = DEFAULT_EMAIL, password: str = DEFAULT_PASSWORD) -> str:
+def seed_default_user(session: Session) -> User:
+    return create_test_user(session)
+
+
+def login_as(
+    client: TestClient,
+    *,
+    email: str = DEFAULT_EMAIL,
+    password: str = DEFAULT_PASSWORD,
+) -> str:
     response = client.post("/api/v1/auth/login", json={"email": email, "password": password})
     assert response.status_code == 200, response.text
     return response.json()["access_token"]
 
 
-def dev_user(client: TestClient) -> int:
-    token = login(client)
+def auth_as(
+    client: TestClient,
+    *,
+    email: str = DEFAULT_EMAIL,
+    password: str = DEFAULT_PASSWORD,
+) -> str:
+    token = login_as(client, email=email, password=password)
     client.headers["Authorization"] = f"Bearer {token}"
+    return token
+
+
+def login(client: TestClient, *, email: str = DEFAULT_EMAIL, password: str = DEFAULT_PASSWORD) -> str:
+    return login_as(client, email=email, password=password)
+
+
+def dev_user(client: TestClient) -> int:
+    auth_as(client)
     me = client.get("/api/v1/auth/me")
     assert me.status_code == 200, me.text
     return me.json()["id"]
