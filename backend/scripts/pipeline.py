@@ -839,6 +839,8 @@ def run_pipeline(args):
     a_pdf      = args.answers_pdf
     out_dir    = args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
+    debug_dir = out_dir / "debug"
+    debug_dir.mkdir(parents=True, exist_ok=True)
 
     prefix = f"{exam_date}_{part}"
     qa       = QAReport(exam_date=exam_date, part=part)
@@ -862,8 +864,8 @@ def run_pipeline(args):
     raw_q = extract_raw_text_questions(q_pdf)
     raw_a = extract_raw_text_answers(a_pdf)
 
-    (out_dir / f"raw_questions_{prefix}.txt").write_text(raw_q, encoding="utf-8")
-    (out_dir / f"raw_answers_{prefix}.txt").write_text(raw_a, encoding="utf-8")
+    (debug_dir / f"raw_questions_{prefix}.txt").write_text(raw_q, encoding="utf-8")
+    (debug_dir / f"raw_answers_{prefix}.txt").write_text(raw_a, encoding="utf-8")
     print(f"  Questions raw: {len(raw_q):,} chars")
     print(f"  Answers raw:   {len(raw_a):,} chars")
 
@@ -873,8 +875,8 @@ def run_pipeline(args):
     norm_q = normalize_questions_text(raw_q, norm_log, part_name)
     norm_a = normalize_answers_text(raw_a, norm_log)
 
-    (out_dir / f"normalized_questions_{prefix}.txt").write_text(norm_q, encoding="utf-8")
-    (out_dir / f"normalized_answers_{prefix}.txt").write_text(norm_a, encoding="utf-8")
+    (debug_dir / f"normalized_questions_{prefix}.txt").write_text(norm_q, encoding="utf-8")
+    (debug_dir / f"normalized_answers_{prefix}.txt").write_text(norm_a, encoding="utf-8")
     print(f"  Normalized questions: {len(norm_q):,} chars")
     print(f"  Normalized answers:   {len(norm_a):,} chars")
 
@@ -947,7 +949,7 @@ def run_pipeline(args):
     # ── Write JSON ─────────────────────────────────────────────────────────────
     output     = build_json_output(merged, exam_date, exam_label, part, part_name)
     json_path  = out_dir / f"{prefix}_questions.json"
-    dev_path   = out_dir / f"{prefix}_questions_dev.json"
+    dev_path   = debug_dir / f"{prefix}_questions_dev.json"
 
     json_path.write_text(
         json.dumps(output, ensure_ascii=False, indent=2),

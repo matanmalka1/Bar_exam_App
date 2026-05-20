@@ -36,6 +36,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Generated debug outputs
+outputs/**/debug/
 outputs/**/raw_*.txt
 outputs/**/normalized_*.txt
 outputs/**/*_dev.json
