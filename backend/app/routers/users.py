@@ -6,19 +6,13 @@ from sqlalchemy.orm import Session
 from app.db.deps import get_session
 from app.schemas.answer import BookmarkedQuestionOut, BookmarkOut, BookmarkRemovedOut, MistakeOut
 from app.schemas.session import SessionSummaryOut
-from app.schemas.user import UserOut
-from app.services import answer_service, practice_session_service, user_service
+from app.services import answer_service, practice_session_service
 from app.services.answer_service import AnswerError
 from app.services.practice_session_service import SessionError
 
 router = APIRouter()
 
 STABLE_ID_PATTERN = r"^\d{4}-(0[1-9]|1[0-2])_[BC]_(00[1-9]|0[1-3][0-9]|040)$"
-
-
-@router.post("/users/dev", response_model=UserOut)
-def create_dev_user(session: Annotated[Session, Depends(get_session)]) -> UserOut:
-    return user_service.ensure_dev_user(session)
 
 
 @router.get("/users/{user_id}/sessions", response_model=list[SessionSummaryOut])

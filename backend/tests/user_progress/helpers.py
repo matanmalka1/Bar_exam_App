@@ -1,10 +1,39 @@
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+
+from app.auth.security import hash_password
+from app.models.user import User
+
+DEFAULT_EMAIL = "test@example.com"
+DEFAULT_PASSWORD = "test-password"
+DEFAULT_FULL_NAME = "Test User"
+
+
+def seed_default_user(session: Session) -> User:
+    user = User(
+        full_name=DEFAULT_FULL_NAME,
+        email=DEFAULT_EMAIL,
+        password_hash=hash_password(DEFAULT_PASSWORD),
+        is_active=True,
+        token_version=0,
+    )
+    session.add(user)
+    session.flush()
+    return user
+
+
+def login(client: TestClient, *, email: str = DEFAULT_EMAIL, password: str = DEFAULT_PASSWORD) -> str:
+    response = client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    assert response.status_code == 200, response.text
+    return response.json()["access_token"]
 
 
 def dev_user(client: TestClient) -> int:
-    response = client.post("/api/v1/users/dev")
-    assert response.status_code == 200
-    return response.json()["id"]
+    token = login(client)
+    client.headers["Authorization"] = f"Bearer {token}"
+    me = client.get("/api/v1/auth/me")
+    assert me.status_code == 200, me.text
+    return me.json()["id"]
 
 
 def seed_mistakes(client: TestClient, user_id: int, wrong_ids: list[str]) -> None:

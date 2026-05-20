@@ -6,6 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.auth.api.routes import router as auth_router
 from app.core.config import CORS_ORIGINS
 from app.db.deps import get_session
 from app.routers.practice_sessions import router as sessions_router
@@ -39,6 +40,7 @@ def ready(session: Annotated[Session, Depends(get_session)]) -> dict[str, str]:
     return {"status": "ready"}
 
 
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(questions_router, prefix="/api/v1")
 app.include_router(sessions_router, prefix="/api/v1")
 app.include_router(stats_router, prefix="/api/v1")

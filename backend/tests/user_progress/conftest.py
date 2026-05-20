@@ -1,6 +1,6 @@
 import random
 from collections.abc import Callable, Generator
-from contextlib import AbstractContextManager
+from contextlib import AbstractContextManager, contextmanager
 from datetime import date
 
 import pytest
@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 from app.models.question import Question
 from app.services import practice_session_service
 
+from .helpers import seed_default_user
+
 QuestionFactory = Callable[..., Question]
 ClientBuilder = Callable[[Callable[[Session], None]], AbstractContextManager[TestClient]]
 
@@ -17,6 +19,20 @@ ClientBuilder = Callable[[Callable[[Session], None]], AbstractContextManager[Tes
 @pytest.fixture(autouse=True)
 def deterministic_rng(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(practice_session_service, "_make_rng", lambda: random.Random(1234))
+
+
+@pytest.fixture
+def client_builder(client_builder: ClientBuilder) -> ClientBuilder:
+    @contextmanager
+    def _wrap(seed_database: Callable[[Session], None]):
+        def _seed(session: Session) -> None:
+            seed_default_user(session)
+            seed_database(session)
+
+        with client_builder(_seed) as test_client:
+            yield test_client
+
+    return _wrap
 
 
 @pytest.fixture

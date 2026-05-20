@@ -1,5 +1,4 @@
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.user import User
@@ -9,21 +8,28 @@ def get_by_id(session: Session, user_id: int) -> User | None:
     return session.scalars(select(User).where(User.id == user_id)).one_or_none()
 
 
-def get_by_user_key(session: Session, user_key: str) -> User | None:
-    return session.scalars(select(User).where(User.user_key == user_key)).one_or_none()
+def get_by_email(session: Session, email: str) -> User | None:
+    return session.scalars(select(User).where(User.email == email)).one_or_none()
 
 
-def upsert_by_user_key(session: Session, user_key: str, display_name: str) -> User:
-    existing = get_by_user_key(session, user_key)
-    if existing is not None:
-        return existing
-    try:
-        with session.begin_nested():
-            user = User(display_name=display_name, user_key=user_key)
-            session.add(user)
-            session.flush()
-            return user
-    except IntegrityError:
-        user = get_by_user_key(session, user_key)
-        assert user is not None
-        return user
+def increment_token_version(user: User) -> None:
+    user.token_version = user.token_version + 1
+
+
+def create(
+    session: Session,
+    *,
+    full_name: str,
+    email: str,
+    password_hash: str,
+    is_active: bool = True,
+) -> User:
+    user = User(
+        full_name=full_name,
+        email=email,
+        password_hash=password_hash,
+        is_active=is_active,
+    )
+    session.add(user)
+    session.flush()
+    return user

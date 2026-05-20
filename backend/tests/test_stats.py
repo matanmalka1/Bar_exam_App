@@ -19,7 +19,12 @@ UNSET = object()
 
 
 def _user(user_id: int = 1) -> User:
-    return User(id=user_id, display_name=f"משתמש {user_id}", user_key=f"user-{user_id}")
+    return User(
+        id=user_id,
+        full_name=f"משתמש {user_id}",
+        email=f"user-{user_id}@example.com",
+        password_hash="!",
+    )
 
 
 def _session(
