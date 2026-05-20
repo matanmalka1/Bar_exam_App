@@ -76,6 +76,11 @@ Example:
 EXPECTED_Q     = 40
 OPTION_LETTERS = ['א', 'ב', 'ג', 'ד']
 VALID_ANSWERS  = set(OPTION_LETTERS)
+PART_HEBREW = {
+    "A": "חלק א",
+    "B": "חלק ב",
+    "C": "חלק ג",
+}
 
 # U+F8FF — Apple Private Use Area — used as Hebrew nun (נ) via custom font mapping
 UFFF_CHAR   = ''
@@ -86,9 +91,8 @@ NBSP        = '\xa0'
 # U+00AD — Soft Hyphen — appears as separator in running page headers
 SOFT_HYPHEN = '\xad'
 
-# A running header line contains BOTH of these substrings.
-# Using two separate strings (not one pattern) makes the check encoding-agnostic.
-HEADER_MARKER_A = 'דין דיוני'   # part name
+# Running page headers contain the part name and exam timer.
+# The part name is supplied by --part-name because each exam part differs.
 HEADER_MARKER_B = '00:00'        # exam timer — never appears in question text
 
 # Additional header date pattern (secondary check)
@@ -195,7 +199,7 @@ def extract_raw_text_answers(pdf_path: Path) -> str:
 #  LAYER 2 — text-level normalization
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def normalize_questions_text(raw: str, norm_log: list) -> str:
+def normalize_questions_text(raw: str, norm_log: list, part_name: str) -> str:
     """
     ניקוי ברמת הטקסט (לפני פיצול לשאלות):
 
@@ -205,7 +209,7 @@ def normalize_questions_text(raw: str, norm_log: list) -> str:
     3. Soft hyphen (U+00AD) → הסרה
        [מופיע כמקף-מפריד ב-header בלבד]
     4. הסרת שורות header — בדיקת substring (לא regex!)
-       שורה שמכילה גם 'דין דיוני' וגם '00:00' → header → מוסרת
+       שורה שמכילה גם את שם החלק וגם '00:00' → header → מוסרת
     5. חיתוך רווחים בסוף שורה
 
     מה שלא נעשה כאן:
@@ -257,7 +261,7 @@ def normalize_questions_text(raw: str, norm_log: list) -> str:
     for line in lines:
         # בדיקת COMBINATION: שתי מחרוזות חייבות להופיע ביחד
         # '00:00' לא מופיע לעולם בטקסט שאלות → בטוח לשימוש כ-sentinel
-        if HEADER_MARKER_A in line and HEADER_MARKER_B in line:
+        if part_name in line and HEADER_MARKER_B in line:
             headers_removed += 1
             if len(removed_examples) < 3:
                 removed_examples.append(repr(line[:80]))
@@ -272,7 +276,7 @@ def normalize_questions_text(raw: str, norm_log: list) -> str:
             after="[lines removed from text]",
             rule="header-removal",
             reason=(
-                f"שורות header (המכילות '{HEADER_MARKER_A}' ו-'{HEADER_MARKER_B}') הוסרו."
+                f"שורות header (המכילות '{part_name}' ו-'{HEADER_MARKER_B}') הוסרו."
                 " זיהוי על-פי substring combination — לא regex — כדי להתמודד עם NBSP, soft-hyphen וריווחים לא-תקניים."
                 f" {headers_removed} שורה/ות הוסרו."
             )
@@ -423,6 +427,8 @@ def check_header_artifacts(
     field_name: str,
     text: str,
     qa: QAReport,
+    part_name: str,
+    part_hebrew: str,
 ):
     """
     Hard-fail אם שדה מכיל שרידי header.
@@ -434,9 +440,15 @@ def check_header_artifacts(
     - '28.04.2025' + 'חלק ב' = combination חד-משמעית של header
     """
     combos = [
-        (HEADER_MARKER_A, HEADER_MARKER_B),          # 'דין דיוני' + '00:00'
-        (HEADER_MARKER_DATE, 'חלק ב'),                # '28.04.2025' + 'חלק ב'
+        (part_name, HEADER_MARKER_B),
+        (HEADER_MARKER_DATE, part_hebrew),
     ]
+    if HEADER_MARKER_B in text:
+        qa.hard_failures.append(
+            f"HARD-FAIL: Q{q_num} שדה '{field_name}' מכיל header artifact: "
+            f"'{HEADER_MARKER_B}' — הסרת ה-header נכשלה לשאלה זו. נדרש תיקון ידני."
+        )
+        return
     for c0, c1 in combos:
         if c0 in text and c1 in text:
             qa.hard_failures.append(
@@ -497,6 +509,8 @@ def parse_question_block(
     block_text: str,
     qa:       QAReport,
     norm_log: list,
+    part_name: str,
+    part_hebrew: str,
 ) -> Optional[ParsedQuestion]:
     """
     מנתח בלוק שאלה אחד: body + options.
@@ -529,7 +543,7 @@ def parse_question_block(
         qa.manual_review.append(f"Q{q_num}: body קצר חשוד: {body!r}")
 
     # בדיקת header artifacts ב-body
-    check_header_artifacts(q_num, "body", body, qa)
+    check_header_artifacts(q_num, "body", body, qa, part_name, part_hebrew)
 
     # פיצול ו-normalization של אפשרויות
     parts = OPTION_SPLIT_RE.split(options_text)
@@ -543,7 +557,7 @@ def parse_question_block(
                 # Normalization per option
                 text = apply_field_normalization(q_num, f"option_{letter}", text, norm_log)
                 # בדיקת header artifacts
-                check_header_artifacts(q_num, f"option_{letter}", text, qa)
+                check_header_artifacts(q_num, f"option_{letter}", text, qa, part_name, part_hebrew)
                 options[letter] = text
             i += 2
 
@@ -568,6 +582,8 @@ def extract_questions(
     norm_q_text: str,
     qa:          QAReport,
     norm_log:    list,
+    part_name:   str,
+    part_hebrew: str,
 ) -> list:
     """Layer 3 entry point — מקבל טקסט מנורמל (אחרי Layer 2)."""
     lines = norm_q_text.splitlines()
@@ -597,7 +613,7 @@ def extract_questions(
         if q_num < 1 or q_num > 40:
             qa.warnings.append(f"מספר שאלה {q_num} מחוץ לטווח 1-40 — מדולג")
             continue
-        q = parse_question_block(q_num, block_text, qa, norm_log)
+        q = parse_question_block(q_num, block_text, qa, norm_log, part_name, part_hebrew)
         if q is not None:
             questions.append(q)
 
@@ -801,8 +817,9 @@ def build_json_output(
 def run_pipeline(args):
     exam_date  = args.exam_date
     exam_label = args.label
-    part       = args.part
+    part       = args.part.upper()
     part_name  = args.part_name
+    part_hebrew = PART_HEBREW.get(part, f"חלק {part}")
     q_pdf      = args.questions_pdf
     a_pdf      = args.answers_pdf
     out_dir    = args.out_dir
@@ -838,7 +855,7 @@ def run_pipeline(args):
     # ── Layer 2: text-level normalization ─────────────────────────────────────
     print("\n[Layer 2] Normalizing text...")
 
-    norm_q = normalize_questions_text(raw_q, norm_log)
+    norm_q = normalize_questions_text(raw_q, norm_log, part_name)
     norm_a = normalize_answers_text(raw_a, norm_log)
 
     (out_dir / f"normalized_questions_{prefix}.txt").write_text(norm_q, encoding="utf-8")
@@ -848,7 +865,7 @@ def run_pipeline(args):
 
     # ── Layer 3: question extraction + per-field normalization ─────────────────
     print("\n[Layer 3] Extracting questions...")
-    questions = extract_questions(norm_q, qa, norm_log)
+    questions = extract_questions(norm_q, qa, norm_log, part_name, part_hebrew)
     print(f"  Found: {len(questions)} questions")
 
     # ── Layer 4: answer extraction ─────────────────────────────────────────────
