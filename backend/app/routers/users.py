@@ -34,9 +34,7 @@ def list_user_sessions(
 
 
 @router.get("/users/{user_id}/mistakes", response_model=list[MistakeOut])
-def get_mistakes(
-    user_id: int, session: Annotated[Session, Depends(get_session)]
-) -> list[MistakeOut]:
+def get_mistakes(user_id: int, session: Annotated[Session, Depends(get_session)]) -> list[MistakeOut]:
     try:
         return answer_service.list_mistakes(session, user_id)
     except AnswerError as exc:
@@ -69,9 +67,7 @@ def delete_bookmark(
 
 
 @router.get("/users/{user_id}/bookmarks", response_model=list[BookmarkedQuestionOut])
-def list_user_bookmarks(
-    user_id: int, session: Annotated[Session, Depends(get_session)]
-) -> list[BookmarkedQuestionOut]:
+def list_user_bookmarks(user_id: int, session: Annotated[Session, Depends(get_session)]) -> list[BookmarkedQuestionOut]:
     try:
         return answer_service.list_bookmarks(session, user_id)
     except AnswerError as exc:

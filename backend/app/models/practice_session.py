@@ -32,13 +32,9 @@ class PracticeSession(Base):
     answered_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     correct_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     score_percent: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
-    started_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
-    )
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )
@@ -60,9 +56,7 @@ class PracticeSessionQuestion(Base):
     session_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("practice_sessions.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    question_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("questions.id", ondelete="RESTRICT"), nullable=False
-    )
+    question_id: Mapped[int] = mapped_column(Integer, ForeignKey("questions.id", ondelete="RESTRICT"), nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
 
     __table_args__ = (

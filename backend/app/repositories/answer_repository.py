@@ -9,9 +9,7 @@ from app.models.user_answer import BookmarkedQuestion, UserAnswer
 
 def get_user_answer(session: Session, session_id: int, question_id: int) -> UserAnswer | None:
     return session.scalars(
-        select(UserAnswer).where(
-            UserAnswer.session_id == session_id, UserAnswer.question_id == question_id
-        )
+        select(UserAnswer).where(UserAnswer.session_id == session_id, UserAnswer.question_id == question_id)
     ).one_or_none()
 
 
@@ -49,11 +47,7 @@ def insert_user_answer(
 
 
 def list_session_answers(session: Session, session_id: int) -> list[UserAnswer]:
-    return list(
-        session.scalars(
-            select(UserAnswer).where(UserAnswer.session_id == session_id)
-        ).all()
-    )
+    return list(session.scalars(select(UserAnswer).where(UserAnswer.session_id == session_id)).all())
 
 
 def get_latest_mistakes(session: Session, user_id: int) -> list[Row]:

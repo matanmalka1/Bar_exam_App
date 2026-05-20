@@ -35,6 +35,7 @@ import pypdfium2 as pdfium
 #  CLI
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def parse_args():
     p = argparse.ArgumentParser(
         description="Bar exam PDF → JSON pipeline (v2)",
@@ -51,20 +52,13 @@ Example:
     --out-dir       "/path/to/output"
         """,
     )
-    p.add_argument("--exam-date",     required=True,
-                   help='תאריך הבחינה בפורמט YYYY-MM  (e.g. "2025-04")')
-    p.add_argument("--label",         required=True,
-                   help='תווית קריאה בעברית  (e.g. "אפריל 2025")')
-    p.add_argument("--part",          required=True,
-                   help='אות החלק באנגלית  (e.g. "B")')
-    p.add_argument("--part-name",     required=True,
-                   help='שם החלק בעברית  (e.g. "דין דיוני")')
-    p.add_argument("--questions-pdf", required=True, type=Path,
-                   help="נתיב מלא לקובץ השאלות")
-    p.add_argument("--answers-pdf",   required=True, type=Path,
-                   help="נתיב מלא לקובץ התשובות")
-    p.add_argument("--out-dir",       required=True, type=Path,
-                   help="תיקיית פלט (תיווצר אם לא קיימת)")
+    p.add_argument("--exam-date", required=True, help='תאריך הבחינה בפורמט YYYY-MM  (e.g. "2025-04")')
+    p.add_argument("--label", required=True, help='תווית קריאה בעברית  (e.g. "אפריל 2025")')
+    p.add_argument("--part", required=True, help='אות החלק באנגלית  (e.g. "B")')
+    p.add_argument("--part-name", required=True, help='שם החלק בעברית  (e.g. "דין דיוני")')
+    p.add_argument("--questions-pdf", required=True, type=Path, help="נתיב מלא לקובץ השאלות")
+    p.add_argument("--answers-pdf", required=True, type=Path, help="נתיב מלא לקובץ התשובות")
+    p.add_argument("--out-dir", required=True, type=Path, help="תיקיית פלט (תיווצר אם לא קיימת)")
     return p.parse_args()
 
 
@@ -72,9 +66,9 @@ Example:
 #  CONSTANTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
-EXPECTED_Q     = 40
-OPTION_LETTERS = ['א', 'ב', 'ג', 'ד']
-VALID_ANSWERS  = set(OPTION_LETTERS)
+EXPECTED_Q = 40
+OPTION_LETTERS = ["א", "ב", "ג", "ד"]
+VALID_ANSWERS = set(OPTION_LETTERS)
 DISQUALIFIED_ANSWER = "נפסלה"
 PART_HEBREW = {
     "A": "חלק א",
@@ -83,17 +77,17 @@ PART_HEBREW = {
 }
 
 # U+F8FF — Apple Private Use Area — used as Hebrew nun (נ) via custom font mapping
-UFFF_CHAR   = ''
+UFFF_CHAR = ""
 
 # U+00A0 — Non-Breaking Space — appears in running page headers
-NBSP        = '\xa0'
+NBSP = "\xa0"
 
 # U+00AD — Soft Hyphen — appears as separator in running page headers
-SOFT_HYPHEN = '\xad'
+SOFT_HYPHEN = "\xad"
 
 # Running page headers contain the part name and exam timer.
 # The part name is supplied by --part-name because each exam part differs.
-HEADER_MARKER_B = '00:00'        # exam timer — never appears in question text
+HEADER_MARKER_B = "00:00"  # exam timer — never appears in question text
 
 # Answer-key marker in answers PDF: .N X' or .N נפסלה
 A_MARKER_RE = re.compile(r"\.\s*(\d{1,2})\s+((?:[א-ד]')|נפסלה)")
@@ -105,59 +99,61 @@ OPTION_START_RE = re.compile(r"^([אבגד])\s*\.", re.MULTILINE)
 OPTION_SPLIT_RE = re.compile(r"(?m)^([אבגד])\s*\.\s*", re.UNICODE)
 
 # Space-bounded גד → potential missing נ  (after uf8ff normalization)
-GAD_RE = re.compile(r'(?<!\w)גד(?!\w)', re.UNICODE)
+GAD_RE = re.compile(r"(?<!\w)גד(?!\w)", re.UNICODE)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  DATA STRUCTURES
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @dataclass
 class NormRecord:
     """One documented normalization change (for normalization_report.json)."""
-    question_number: int   # 0 = pre-split (whole-text change), 1-40 = per question
-    field: str             # "text" | "body" | "option_א" | "option_ב" | ... | "reference"
-    before: str            # representative sample or count description
-    after: str             # what it became
-    rule: str              # short rule identifier
-    reason: str            # human-readable explanation in Hebrew/English
+
+    question_number: int  # 0 = pre-split (whole-text change), 1-40 = per question
+    field: str  # "text" | "body" | "option_א" | "option_ב" | ... | "reference"
+    before: str  # representative sample or count description
+    after: str  # what it became
+    rule: str  # short rule identifier
+    reason: str  # human-readable explanation in Hebrew/English
 
 
 @dataclass
 class ParsedQuestion:
-    number:  int
-    body:    str
-    options: dict          # {"א": "...", "ב": "...", "ג": "...", "ד": "..."}
-    flags:   list = field(default_factory=list)
+    number: int
+    body: str
+    options: dict  # {"א": "...", "ב": "...", "ג": "...", "ד": "..."}
+    flags: list = field(default_factory=list)
 
 
 @dataclass
 class ParsedAnswer:
-    number:    int
-    correct:   str         # "א" / "ב" / "ג" / "ד" / "נפסלה"
+    number: int
+    correct: str  # "א" / "ב" / "ג" / "ד" / "נפסלה"
     reference: str
-    flags:     list = field(default_factory=list)
+    flags: list = field(default_factory=list)
 
 
 @dataclass
 class QAReport:
-    exam_date:          str
-    part:               str
-    questions_count:    int  = 0
-    answers_count:      int  = 0
-    missing_questions:  list = field(default_factory=list)
-    missing_answers:    list = field(default_factory=list)
-    duplicate_q_ids:    list = field(default_factory=list)
-    duplicate_ids:      list = field(default_factory=list)
-    invalid_options:    list = field(default_factory=list)
+    exam_date: str
+    part: str
+    questions_count: int = 0
+    answers_count: int = 0
+    missing_questions: list = field(default_factory=list)
+    missing_answers: list = field(default_factory=list)
+    duplicate_q_ids: list = field(default_factory=list)
+    duplicate_ids: list = field(default_factory=list)
+    invalid_options: list = field(default_factory=list)
     short_question_bodies: list = field(default_factory=list)
-    short_answer_options:  list = field(default_factory=list)
+    short_answer_options: list = field(default_factory=list)
     suspicious_references: list = field(default_factory=list)
-    source_artifacts:      list = field(default_factory=list)
-    hard_failures:      list = field(default_factory=list)
-    manual_review:      list = field(default_factory=list)
+    source_artifacts: list = field(default_factory=list)
+    hard_failures: list = field(default_factory=list)
+    manual_review: list = field(default_factory=list)
     manual_review_items: list = field(default_factory=list)
-    warnings:           list = field(default_factory=list)
+    warnings: list = field(default_factory=list)
 
     @property
     def passed(self) -> bool:
@@ -167,6 +163,7 @@ class QAReport:
 # ═══════════════════════════════════════════════════════════════════════════════
 #  LAYER 1 — raw text extraction
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def extract_raw_text_questions(pdf_path: Path) -> str:
     """
@@ -202,6 +199,7 @@ def extract_raw_text_answers(pdf_path: Path) -> str:
 #  LAYER 2 — text-level normalization
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def normalize_questions_text(raw: str, norm_log: list, part_name: str) -> str:
     """
     ניקוי ברמת הטקסט (לפני פיצול לשאלות):
@@ -219,41 +217,45 @@ def normalize_questions_text(raw: str, norm_log: list, part_name: str) -> str:
     - U+F8FF → נ  (נעשה per-field ב-Layer 3, כדי לתעד per שאלה)
     - שום תיקון תוכן
     """
-    text = raw.replace('\r\n', '\n').replace('\r', '\n')
+    text = raw.replace("\r\n", "\n").replace("\r", "\n")
 
     # ── 2. NBSP → space ──────────────────────────────────────────────────────
     nbsp_count = text.count(NBSP)
     if nbsp_count > 0:
-        text = text.replace(NBSP, ' ')
-        norm_log.append(NormRecord(
-            question_number=0,
-            field="text",
-            before=f"[{nbsp_count} occurrences of U+00A0 NBSP throughout questions text]",
-            after="[replaced with regular space U+0020]",
-            rule="nbsp→space",
-            reason=(
-                "NBSP (U+00A0) מופיע ב-running page headers — למשל: 'חלק\\xa0ב\\xa0\\xad\\xa0דין\\xa0דיוני'."
-                " הסרת NBSP נדרשת לפני זיהוי ה-headers כי regex רגיל עם \\s לא מזהה NBSP."
-                " ההחלפה בטוחה: NBSP לא משנה משמעות משפטית."
+        text = text.replace(NBSP, " ")
+        norm_log.append(
+            NormRecord(
+                question_number=0,
+                field="text",
+                before=f"[{nbsp_count} occurrences of U+00A0 NBSP throughout questions text]",
+                after="[replaced with regular space U+0020]",
+                rule="nbsp→space",
+                reason=(
+                    "NBSP (U+00A0) מופיע ב-running page headers — למשל: 'חלק\\xa0ב\\xa0\\xad\\xa0דין\\xa0דיוני'."
+                    " הסרת NBSP נדרשת לפני זיהוי ה-headers כי regex רגיל עם \\s לא מזהה NBSP."
+                    " ההחלפה בטוחה: NBSP לא משנה משמעות משפטית."
+                ),
             )
-        ))
+        )
 
     # ── 3. Soft hyphen → remove ───────────────────────────────────────────────
     shyp_count = text.count(SOFT_HYPHEN)
     if shyp_count > 0:
-        text = text.replace(SOFT_HYPHEN, '')
-        norm_log.append(NormRecord(
-            question_number=0,
-            field="text",
-            before=f"[{shyp_count} occurrences of U+00AD soft-hyphen throughout questions text]",
-            after="[removed entirely]",
-            rule="soft-hyphen→remove",
-            reason=(
-                "Soft hyphen (U+00AD) משמש כמקף-מפריד ב-running page header בלבד"
-                " ('חלק ב \\xad דין דיוני ...'). אינו מופיע בטקסט השאלות."
-                " הוסר לחלוטין."
+        text = text.replace(SOFT_HYPHEN, "")
+        norm_log.append(
+            NormRecord(
+                question_number=0,
+                field="text",
+                before=f"[{shyp_count} occurrences of U+00AD soft-hyphen throughout questions text]",
+                after="[removed entirely]",
+                rule="soft-hyphen→remove",
+                reason=(
+                    "Soft hyphen (U+00AD) משמש כמקף-מפריד ב-running page header בלבד"
+                    " ('חלק ב \\xad דין דיוני ...'). אינו מופיע בטקסט השאלות."
+                    " הוסר לחלוטין."
+                ),
             )
-        ))
+        )
 
     # ── 4. Remove running page headers ───────────────────────────────────────
     lines = text.splitlines()
@@ -272,20 +274,22 @@ def normalize_questions_text(raw: str, norm_log: list, part_name: str) -> str:
         cleaned.append(line.rstrip())
 
     if headers_removed > 0:
-        norm_log.append(NormRecord(
-            question_number=0,
-            field="text",
-            before=f"[{headers_removed} running page header line(s) removed. Examples: {removed_examples}]",
-            after="[lines removed from text]",
-            rule="header-removal",
-            reason=(
-                f"שורות header (המכילות '{part_name}' ו-'{HEADER_MARKER_B}') הוסרו."
-                " זיהוי על-פי substring combination — לא regex — כדי להתמודד עם NBSP, soft-hyphen וריווחים לא-תקניים."
-                f" {headers_removed} שורה/ות הוסרו."
+        norm_log.append(
+            NormRecord(
+                question_number=0,
+                field="text",
+                before=f"[{headers_removed} running page header line(s) removed. Examples: {removed_examples}]",
+                after="[lines removed from text]",
+                rule="header-removal",
+                reason=(
+                    f"שורות header (המכילות '{part_name}' ו-'{HEADER_MARKER_B}') הוסרו."
+                    " זיהוי על-פי substring combination — לא regex — כדי להתמודד עם NBSP, soft-hyphen וריווחים לא-תקניים."
+                    f" {headers_removed} שורה/ות הוסרו."
+                ),
             )
-        ))
+        )
 
-    return '\n'.join(cleaned)
+    return "\n".join(cleaned)
 
 
 def normalize_answers_text(raw: str, norm_log: list) -> str:
@@ -299,59 +303,66 @@ def normalize_answers_text(raw: str, norm_log: list) -> str:
     4. Soft hyphen → הסרה
     5. חיתוך רווחים בסוף שורה
     """
-    text = raw.replace('\r\n', '\n').replace('\r', '\n')
+    text = raw.replace("\r\n", "\n").replace("\r", "\n")
 
     # ── ð → נ ────────────────────────────────────────────────────────────────
-    eth_count = text.count('ð')
+    eth_count = text.count("ð")
     if eth_count > 0:
-        text = text.replace('ð', 'נ')
-        norm_log.append(NormRecord(
-            question_number=0,
-            field="reference",
-            before=f"[{eth_count} occurrences of ð (U+00F0 Latin eth) in answers text]",
-            after="[replaced with נ (U+05E0 Hebrew nun)]",
-            rule="ð→נ",
-            reason=(
-                "ð (Latin lowercase eth, U+00F0) מופיע כ-artifact של font-encoding בקובץ התשובות."
-                " הוא מייצג באופן עקבי את האות הנ (nun) עברית, בשל font mapping מותאם-אישית."
-                " Latin eth אינו מופיע בטקסט משפטי עברי — ההחלפה בטוחה ב-100%."
+        text = text.replace("ð", "נ")
+        norm_log.append(
+            NormRecord(
+                question_number=0,
+                field="reference",
+                before=f"[{eth_count} occurrences of ð (U+00F0 Latin eth) in answers text]",
+                after="[replaced with נ (U+05E0 Hebrew nun)]",
+                rule="ð→נ",
+                reason=(
+                    "ð (Latin lowercase eth, U+00F0) מופיע כ-artifact של font-encoding בקובץ התשובות."
+                    " הוא מייצג באופן עקבי את האות הנ (nun) עברית, בשל font mapping מותאם-אישית."
+                    " Latin eth אינו מופיע בטקסט משפטי עברי — ההחלפה בטוחה ב-100%."
+                ),
             )
-        ))
+        )
 
     # ── NBSP → space ──────────────────────────────────────────────────────────
     nbsp_count = text.count(NBSP)
     if nbsp_count > 0:
-        text = text.replace(NBSP, ' ')
-        norm_log.append(NormRecord(
-            question_number=0,
-            field="reference",
-            before=f"[{nbsp_count} occurrences of U+00A0 NBSP in answers text]",
-            after="[replaced with regular space]",
-            rule="nbsp→space",
-            reason="NBSP בקובץ התשובות הוחלף ברווח רגיל לאחידות."
-        ))
+        text = text.replace(NBSP, " ")
+        norm_log.append(
+            NormRecord(
+                question_number=0,
+                field="reference",
+                before=f"[{nbsp_count} occurrences of U+00A0 NBSP in answers text]",
+                after="[replaced with regular space]",
+                rule="nbsp→space",
+                reason="NBSP בקובץ התשובות הוחלף ברווח רגיל לאחידות.",
+            )
+        )
 
     # ── Soft hyphen → remove ──────────────────────────────────────────────────
     shyp_count = text.count(SOFT_HYPHEN)
     if shyp_count > 0:
-        text = text.replace(SOFT_HYPHEN, '')
-        norm_log.append(NormRecord(
-            question_number=0,
-            field="reference",
-            before=f"[{shyp_count} occurrences of U+00AD soft-hyphen in answers text]",
-            after="[removed]",
-            rule="soft-hyphen→remove",
-            reason="Soft hyphen הוסר מקובץ התשובות."
-        ))
+        text = text.replace(SOFT_HYPHEN, "")
+        norm_log.append(
+            NormRecord(
+                question_number=0,
+                field="reference",
+                before=f"[{shyp_count} occurrences of U+00AD soft-hyphen in answers text]",
+                after="[removed]",
+                rule="soft-hyphen→remove",
+                reason="Soft hyphen הוסר מקובץ התשובות.",
+            )
+        )
 
     lines = text.splitlines()
     cleaned = [line.rstrip() for line in lines]
-    return '\n'.join(cleaned)
+    return "\n".join(cleaned)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  PER-FIELD NORMALIZATION (called from Layer 3, per question per field)
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def apply_field_normalization(
     q_num: int,
@@ -376,46 +387,50 @@ def apply_field_normalization(
             s = max(0, m.start() - 4)
             e = min(len(text), m.end() + 4)
             ctx_before = repr(text[s:e])
-            fixed = text[s:m.start()] + 'נ' + text[m.end():e]
+            fixed = text[s : m.start()] + "נ" + text[m.end() : e]
             ctx_after = repr(fixed)
             examples.append(f"{ctx_before} → {ctx_after}")
             if len(examples) >= 5:
                 break
 
-        new_text = text.replace(UFFF_CHAR, 'נ')
+        new_text = text.replace(UFFF_CHAR, "נ")
 
-        norm_log.append(NormRecord(
-            question_number=q_num,
-            field=field_name,
-            before=f"[{count} occurrence(s) of U+F8FF. Examples: {examples}]",
-            after="[replaced with נ (U+05E0)]",
-            rule="uf8ff→נ",
-            reason=(
-                f"U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית"
-                f" באמצעות font mapping פרטי בקובץ PDF זה."
-                f" מופיע {count} פעמים בשדה '{field_name}' של שאלה {q_num}."
-                " הוחלף ב-U+05E0 (Hebrew nun)."
+        norm_log.append(
+            NormRecord(
+                question_number=q_num,
+                field=field_name,
+                before=f"[{count} occurrence(s) of U+F8FF. Examples: {examples}]",
+                after="[replaced with נ (U+05E0)]",
+                rule="uf8ff→נ",
+                reason=(
+                    f"U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית"
+                    f" באמצעות font mapping פרטי בקובץ PDF זה."
+                    f" מופיע {count} פעמים בשדה '{field_name}' של שאלה {q_num}."
+                    " הוחלף ב-U+05E0 (Hebrew nun)."
+                ),
             )
-        ))
+        )
         text = new_text
 
     # ── כלל 2: space-bounded 'גד' → 'נגד' ────────────────────────────────────
     # מופעל רק אחרי כלל 1 (רוב המקרים כבר תוקנו ע"י כלל 1)
     gad_matches = GAD_RE.findall(text)
     if gad_matches:
-        new_text = GAD_RE.sub('נגד', text)
-        norm_log.append(NormRecord(
-            question_number=q_num,
-            field=field_name,
-            before=repr(text[:100]),
-            after=repr(new_text[:100]),
-            rule="גד→נגד",
-            reason=(
-                f"'גד' עצמאי (word-boundary) הוחלף ב-'נגד' ב-{len(gad_matches)} מקום/מקומות."
-                " מתרחש לאחר כלל uf8ff→נ כאשר הרצף היה \\uf8ffגד."
-                " ✔ manual review מומלץ: 'גד' הוא גם שם פרטי תקין."
+        new_text = GAD_RE.sub("נגד", text)
+        norm_log.append(
+            NormRecord(
+                question_number=q_num,
+                field=field_name,
+                before=repr(text[:100]),
+                after=repr(new_text[:100]),
+                rule="גד→נגד",
+                reason=(
+                    f"'גד' עצמאי (word-boundary) הוחלף ב-'נגד' ב-{len(gad_matches)} מקום/מקומות."
+                    " מתרחש לאחר כלל uf8ff→נ כאשר הרצף היה \\uf8ffגד."
+                    " ✔ manual review מומלץ: 'גד' הוא גם שם פרטי תקין."
+                ),
             )
-        ))
+        )
         text = new_text
 
     return text
@@ -424,6 +439,7 @@ def apply_field_normalization(
 # ═══════════════════════════════════════════════════════════════════════════════
 #  HEADER ARTIFACT VALIDATION
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def check_header_artifacts(
     q_num: int,
@@ -466,26 +482,24 @@ def check_header_artifacts(
 #  LAYER 3 — question extraction
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def find_questions_section_start(lines: list) -> int:
     """מוצא את אינדקס השורה הראשונה של השאלות (אחרי הוראות)."""
     last_hatzlacha = -1
     for i, line in enumerate(lines):
-        if re.search(r'ב\s*ה\s*צ\s*ל\s*ח\s*ה', line):
+        if re.search(r"ב\s*ה\s*צ\s*ל\s*ח\s*ה", line):
             last_hatzlacha = i
 
     if last_hatzlacha == -1:
         raise ValueError(
-            "HARD-FAIL: לא נמצאה שורת 'ב ה צ ל ח ה' — "
-            "לא ניתן לקבוע היכן מסתיימות ההוראות ומתחילות השאלות."
+            "HARD-FAIL: לא נמצאה שורת 'ב ה צ ל ח ה' — לא ניתן לקבוע היכן מסתיימות ההוראות ומתחילות השאלות."
         )
 
     for i in range(last_hatzlacha + 1, len(lines)):
-        if re.match(r'^\s*\.1\s*\S', lines[i]):
+        if re.match(r"^\s*\.1\s*\S", lines[i]):
             return i
 
-    raise ValueError(
-        "HARD-FAIL: נמצאה 'ב ה צ ל ח ה' אך לא נמצא סמן '.1' אחריה."
-    )
+    raise ValueError("HARD-FAIL: נמצאה 'ב ה צ ל ח ה' אך לא נמצא סמן '.1' אחריה.")
 
 
 def split_question_blocks(questions_text: str) -> list:
@@ -511,7 +525,7 @@ def split_question_blocks(questions_text: str) -> list:
     for i, m in enumerate(matches):
         q_num = int(m.group(1))
         start = m.start()
-        end   = matches[i + 1].start() if i + 1 < len(matches) else len(questions_text)
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(questions_text)
         block_text = questions_text[start:end].strip()
         blocks.append((q_num, block_text))
 
@@ -519,9 +533,9 @@ def split_question_blocks(questions_text: str) -> list:
 
 
 def parse_question_block(
-    q_num:    int,
+    q_num: int,
     block_text: str,
-    qa:       QAReport,
+    qa: QAReport,
     norm_log: list,
     part_name: str,
     part_hebrew: str,
@@ -541,8 +555,8 @@ def parse_question_block(
         qa.hard_failures.append(f"Q{q_num}: לא נמצאו אפשרויות תשובה בבלוק")
         return None
 
-    raw_body     = block_text[:first_option_match.start()].strip()
-    options_text = block_text[first_option_match.start():]
+    raw_body = block_text[: first_option_match.start()].strip()
+    options_text = block_text[first_option_match.start() :]
 
     if not raw_body:
         qa.hard_failures.append(f"Q{q_num}: body ריק")
@@ -569,7 +583,7 @@ def parse_question_block(
         i = 1
         while i + 1 <= len(parts) - 1:
             letter = parts[i].strip()
-            text   = parts[i + 1].strip()
+            text = parts[i + 1].strip()
             if letter in OPTION_LETTERS:
                 # Normalization per option
                 text = apply_field_normalization(q_num, f"option_{letter}", text, norm_log)
@@ -602,9 +616,9 @@ def parse_question_block(
 
 def extract_questions(
     norm_q_text: str,
-    qa:          QAReport,
-    norm_log:    list,
-    part_name:   str,
+    qa: QAReport,
+    norm_log: list,
+    part_name: str,
     part_hebrew: str,
 ) -> list:
     """Layer 3 entry point — מקבל טקסט מנורמל (אחרי Layer 2)."""
@@ -615,7 +629,7 @@ def extract_questions(
         qa.hard_failures.append(str(e))
         return []
 
-    questions_section = '\n'.join(lines[q_start_idx:])
+    questions_section = "\n".join(lines[q_start_idx:])
 
     try:
         blocks = split_question_blocks(questions_section)
@@ -649,6 +663,7 @@ def extract_questions(
 #  LAYER 4 — answer extraction
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def extract_answers(norm_a_text: str, qa: QAReport, norm_log: list) -> dict:
     """
     Layer 4 — מקבל טקסט מנורמל (אחרי Layer 2).
@@ -677,21 +692,21 @@ def extract_answers(norm_a_text: str, qa: QAReport, norm_log: list) -> dict:
 
     answers = {}
     for i, m in enumerate(markers):
-        q_num        = int(m.group(1))
-        answer       = m.group(2).replace("'", "")
+        q_num = int(m.group(1))
+        answer = m.group(2).replace("'", "")
         marker_start = m.start()
-        marker_end   = m.end()
+        marker_end = m.end()
 
         # pre_line (Pattern B)
-        line_start = norm_a_text.rfind('\n', 0, marker_start)
+        line_start = norm_a_text.rfind("\n", 0, marker_start)
         line_start = line_start + 1 if line_start != -1 else 0
-        pre_line   = norm_a_text[line_start:marker_start].strip()
+        pre_line = norm_a_text[line_start:marker_start].strip()
 
         # post_text עד לשורת הסמן הבא (Pattern A)
         if i + 1 < len(markers):
             next_marker_start = markers[i + 1].start()
-            next_line_start   = norm_a_text.rfind('\n', 0, next_marker_start)
-            next_line_start   = next_line_start + 1 if next_line_start != -1 else 0
+            next_line_start = norm_a_text.rfind("\n", 0, next_marker_start)
+            next_line_start = next_line_start + 1 if next_line_start != -1 else 0
             post_text = norm_a_text[marker_end:next_line_start].strip()
         else:
             post_text = norm_a_text[marker_end:].strip()
@@ -702,7 +717,7 @@ def extract_answers(norm_a_text: str, qa: QAReport, norm_log: list) -> dict:
             ref_parts.append(pre_line)
         if post_text:
             ref_parts.append(post_text)
-        reference = _clean_reference(' '.join(ref_parts))
+        reference = _clean_reference(" ".join(ref_parts))
 
         # ולידציה
         if answer not in VALID_ANSWERS and answer != DISQUALIFIED_ANSWER:
@@ -734,9 +749,9 @@ def extract_answers(norm_a_text: str, qa: QAReport, norm_log: list) -> dict:
 
 def _clean_reference(text: str) -> str:
     """ניקוי מחרוזת סימוכין — collapse whitespace, הסרת artifacts של מספרי עמודים."""
-    text = re.sub(r'\s+', ' ', text).strip()
-    text = re.sub(r'^\s*\d{6,8}\s*', '', text)
-    text = re.sub(r'^\s*\d+/\d+\s*', '', text)
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"^\s*\d{6,8}\s*", "", text)
+    text = re.sub(r"^\s*\d+/\d+\s*", "", text)
     return text.strip()
 
 
@@ -744,18 +759,19 @@ def _clean_reference(text: str) -> str:
 #  LAYER 5 — merge, validate, JSON output
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def merge_and_validate(
-    questions:  list,
-    answers:    dict,
-    qa:         QAReport,
-    exam_date:  str,
-    part:       str,
+    questions: list,
+    answers: dict,
+    qa: QAReport,
+    exam_date: str,
+    part: str,
 ) -> list:
     """מיזוג שאלות ותשובות + כל ולידציות hard-fail."""
 
     q_by_num = {q.number: q for q in questions}
-    q_nums   = set(q_by_num.keys())
-    a_nums   = set(answers.keys())
+    q_nums = set(q_by_num.keys())
+    a_nums = set(answers.keys())
 
     # בדיקות כמות
     if len(questions) != EXPECTED_Q:
@@ -772,7 +788,7 @@ def merge_and_validate(
         qa.missing_answers.append(n)
 
     # רציפות מספרים
-    all_nums       = sorted(q_nums | a_nums)
+    all_nums = sorted(q_nums | a_nums)
     expected_range = list(range(1, EXPECTED_Q + 1))
     if all_nums != expected_range:
         gaps = [n for n in expected_range if n not in (q_nums & a_nums)]
@@ -794,9 +810,7 @@ def merge_and_validate(
             continue
 
         if a.correct != DISQUALIFIED_ANSWER and a.correct not in q.options:
-            qa.hard_failures.append(
-                f"Q{num}: תשובה נכונה '{a.correct}' לא מופיעה באפשרויות {list(q.options.keys())}"
-            )
+            qa.hard_failures.append(f"Q{num}: תשובה נכונה '{a.correct}' לא מופיעה באפשרויות {list(q.options.keys())}")
             continue
 
         if not a.reference:
@@ -806,45 +820,41 @@ def merge_and_validate(
         stable_id = f"{exam_date}_{part}_{num:03d}"
         is_invalidated = a.correct == DISQUALIFIED_ANSWER
 
-        output.append({
-            "stable_id":      stable_id,
-            "number":         num,
-            "status":         "invalidated" if is_invalidated else "active",
-            "body":           q.body,
-            "options": {
-                "א": q.options["א"],
-                "ב": q.options["ב"],
-                "ג": q.options["ג"],
-                "ד": q.options["ד"],
-            },
-            "correct_answer": None if is_invalidated else a.correct,
-            "reference":      a.reference,
-            "invalidation_note": (
-                "השאלה נפסלה לפי מפתח התשובות הרשמי"
-                if is_invalidated else None
-            ),
-            "_flags":         q.flags + a.flags,   # dev only — לא נכנס ל-DB
-        })
+        output.append(
+            {
+                "stable_id": stable_id,
+                "number": num,
+                "status": "invalidated" if is_invalidated else "active",
+                "body": q.body,
+                "options": {
+                    "א": q.options["א"],
+                    "ב": q.options["ב"],
+                    "ג": q.options["ג"],
+                    "ד": q.options["ד"],
+                },
+                "correct_answer": None if is_invalidated else a.correct,
+                "reference": a.reference,
+                "invalidation_note": ("השאלה נפסלה לפי מפתח התשובות הרשמי" if is_invalidated else None),
+                "_flags": q.flags + a.flags,  # dev only — לא נכנס ל-DB
+            }
+        )
 
     return output
 
 
 def build_json_output(
     questions_data: list,
-    exam_date:      str,
-    exam_label:     str,
-    part:           str,
-    part_name:      str,
+    exam_date: str,
+    exam_label: str,
+    part: str,
+    part_name: str,
 ) -> dict:
     return {
         "exam_date": exam_date,
-        "label":     exam_label,
-        "part":      part,
+        "label": exam_label,
+        "part": part,
         "part_name": part_name,
-        "questions": [
-            {k: v for k, v in q.items() if k != "_flags"}
-            for q in questions_data
-        ],
+        "questions": [{k: v for k, v in q.items() if k != "_flags"} for q in questions_data],
     }
 
 
@@ -852,22 +862,23 @@ def build_json_output(
 #  ENTRY POINT
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def run_pipeline(args):
-    exam_date  = args.exam_date
+    exam_date = args.exam_date
     exam_label = args.label
-    part       = args.part.upper()
-    part_name  = args.part_name
+    part = args.part.upper()
+    part_name = args.part_name
     part_hebrew = PART_HEBREW.get(part, f"חלק {part}")
-    q_pdf      = args.questions_pdf
-    a_pdf      = args.answers_pdf
-    out_dir    = args.out_dir
+    q_pdf = args.questions_pdf
+    a_pdf = args.answers_pdf
+    out_dir = args.out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     debug_dir = out_dir / "debug"
     debug_dir.mkdir(parents=True, exist_ok=True)
 
     prefix = f"{exam_date}_{part}"
-    qa       = QAReport(exam_date=exam_date, part=part)
-    norm_log = []   # list[NormRecord]
+    qa = QAReport(exam_date=exam_date, part=part)
+    norm_log = []  # list[NormRecord]
 
     print("=" * 60)
     print("Bar Exam PDF Pipeline  v2")
@@ -919,23 +930,17 @@ def run_pipeline(args):
 
     # ── Normalization report ───────────────────────────────────────────────────
     norm_report = {
-        "exam_date":     exam_date,
-        "part":          part,
+        "exam_date": exam_date,
+        "part": part,
         "total_changes": len(norm_log),
-        "records":       [asdict(r) for r in norm_log],
+        "records": [asdict(r) for r in norm_log],
     }
     norm_report_path = out_dir / f"normalization_report_{prefix}.json"
-    norm_report_path.write_text(
-        json.dumps(norm_report, ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
+    norm_report_path.write_text(json.dumps(norm_report, ensure_ascii=False, indent=2), encoding="utf-8")
 
     # ── QA report ─────────────────────────────────────────────────────────────
     qa_path = out_dir / f"qa_report_{prefix}.json"
-    qa_path.write_text(
-        json.dumps(asdict(qa), ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
+    qa_path.write_text(json.dumps(asdict(qa), ensure_ascii=False, indent=2), encoding="utf-8")
 
     # ── Summary ───────────────────────────────────────────────────────────────
     print("\n" + "=" * 60)
@@ -970,20 +975,14 @@ def run_pipeline(args):
         return False
 
     # ── Write JSON ─────────────────────────────────────────────────────────────
-    output     = build_json_output(merged, exam_date, exam_label, part, part_name)
-    json_path  = out_dir / f"{prefix}_questions.json"
-    dev_path   = debug_dir / f"{prefix}_questions_dev.json"
+    output = build_json_output(merged, exam_date, exam_label, part, part_name)
+    json_path = out_dir / f"{prefix}_questions.json"
+    dev_path = debug_dir / f"{prefix}_questions_dev.json"
 
-    json_path.write_text(
-        json.dumps(output, ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
+    json_path.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
 
     dev_output = {**output, "questions": merged}
-    dev_path.write_text(
-        json.dumps(dev_output, ensure_ascii=False, indent=2),
-        encoding="utf-8"
-    )
+    dev_path.write_text(json.dumps(dev_output, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print(f"\n  ✅ SUCCESS — {len(merged)} שאלות נכתבו")
     print(f"     JSON:                {json_path}")

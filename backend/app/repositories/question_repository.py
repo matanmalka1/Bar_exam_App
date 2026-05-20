@@ -22,9 +22,7 @@ def get_exams(session: Session) -> list[Row]:
 
 def get_questions_by_exam(session: Session, exam_date: date, part: str) -> list[Question]:
     statement = (
-        select(Question)
-        .where(Question.exam_date == exam_date, Question.part == part)
-        .order_by(Question.number.asc())
+        select(Question).where(Question.exam_date == exam_date, Question.part == part).order_by(Question.number.asc())
     )
     return list(session.scalars(statement).all())
 

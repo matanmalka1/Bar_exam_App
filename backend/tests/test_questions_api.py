@@ -56,19 +56,9 @@ def client() -> Generator[TestClient, None, None]:
     Base.metadata.create_all(engine)
 
     with Session(engine) as session:
-        session.add_all(
-            [
-                make_question(date(2025, 4, 1), "B", number)
-                for number in range(1, 41)
-            ]
-        )
+        session.add_all([make_question(date(2025, 4, 1), "B", number) for number in range(1, 41)])
         session.add(make_question(date(2025, 4, 1), "C", 1, correct_answer="B"))
-        session.add_all(
-            [
-                make_question(date(2025, 12, 1), "B", number)
-                for number in range(1, 20)
-            ]
-        )
+        session.add_all([make_question(date(2025, 12, 1), "B", number) for number in range(1, 20)])
         session.add(
             make_question(
                 date(2025, 12, 1),
@@ -79,12 +69,7 @@ def client() -> Generator[TestClient, None, None]:
                 invalidation_note="השאלה נפסלה לפי מפתח התשובות הרשמי",
             )
         )
-        session.add_all(
-            [
-                make_question(date(2025, 12, 1), "B", number)
-                for number in range(21, 41)
-            ]
-        )
+        session.add_all([make_question(date(2025, 12, 1), "B", number) for number in range(21, 41)])
         session.commit()
 
     def override_get_session() -> Generator[Session, None, None]:

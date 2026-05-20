@@ -21,9 +21,7 @@ class AnswerError(Exception):
         self.detail = detail
 
 
-def submit_answer(
-    session: Session, session_id: int, payload: AnswerSubmitIn
-) -> AnswerPracticeOut | AnswerExamOut:
+def submit_answer(session: Session, session_id: int, payload: AnswerSubmitIn) -> AnswerPracticeOut | AnswerExamOut:
     ps = session_repository.get_session_by_id(session, session_id)
     if ps is None:
         raise AnswerError(404, "session not found")
@@ -40,9 +38,7 @@ def submit_answer(
 
     db_answer = HEBREW_TO_DB[payload.selected_answer]
     is_correct = (
-        question.status == "active"
-        and question.correct_answer is not None
-        and question.correct_answer == db_answer
+        question.status == "active" and question.correct_answer is not None and question.correct_answer == db_answer
     )
 
     ua, inserted = answer_repository.insert_user_answer(
@@ -92,9 +88,7 @@ def list_mistakes(session: Session, user_id: int) -> list[MistakeOut]:
                     "ג": question.option_c,
                     "ד": question.option_d,
                 },
-                correct_answer=(
-                    DB_TO_HEBREW[question.correct_answer] if question.correct_answer else None
-                ),
+                correct_answer=(DB_TO_HEBREW[question.correct_answer] if question.correct_answer else None),
                 reference=question.reference,
                 times_answered=int(times_answered),
                 times_wrong=int(times_wrong or 0),
@@ -145,9 +139,7 @@ def list_bookmarks(session: Session, user_id: int) -> list[BookmarkedQuestionOut
                     "ד": question.option_d,
                 },
                 status=question.status,
-                correct_answer=(
-                    DB_TO_HEBREW[question.correct_answer] if question.correct_answer else None
-                ),
+                correct_answer=(DB_TO_HEBREW[question.correct_answer] if question.correct_answer else None),
                 reference=question.reference,
                 created_at=created_at,
             )

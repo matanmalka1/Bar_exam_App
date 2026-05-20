@@ -23,9 +23,7 @@ class Question(Base):
     correct_answer: Mapped[str | None] = mapped_column(String(1), nullable=True)
     reference: Mapped[str] = mapped_column(Text, nullable=False)
     invalidation_note: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
     )

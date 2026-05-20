@@ -235,9 +235,7 @@ def validate_question_file(path: Path, payload: dict[str, Any]) -> list[dict[str
         errors.append(f"{location}: question numbers must be unique and continuous 1-40")
     stable_ids = [question.get("stable_id") for question in questions if isinstance(question, dict)]
     duplicate_stable_ids = sorted(
-        stable_id
-        for stable_id, count in Counter(stable_ids).items()
-        if stable_id is not None and count > 1
+        stable_id for stable_id, count in Counter(stable_ids).items() if stable_id is not None and count > 1
     )
     for stable_id in duplicate_stable_ids:
         errors.append(f"{location}: duplicate stable_id {stable_id}")
@@ -270,9 +268,7 @@ def load_and_validate(input_dir: Path) -> list[dict[str, Any]]:
         errors.append(f"duplicate stable_id in input: {stable_id}")
 
     exam_part_numbers = [(row["exam_date"], row["part"], row["number"]) for row in rows]
-    duplicate_exam_part_numbers = sorted(
-        item for item, count in Counter(exam_part_numbers).items() if count > 1
-    )
+    duplicate_exam_part_numbers = sorted(item for item, count in Counter(exam_part_numbers).items() if count > 1)
     for exam_date, part, number in duplicate_exam_part_numbers:
         errors.append(f"duplicate exam_date/part/number in input: {exam_date}/{part}/{number}")
 
@@ -315,27 +311,30 @@ def run_post_import_validation(session: Session) -> dict[str, Any]:
     errors: list[str] = []
 
     total_questions = session.scalar(select(func.count()).select_from(Question)) or 0
-    active_questions = session.scalar(
-        select(func.count()).select_from(Question).where(Question.status == "active")
-    ) or 0
-    invalidated_questions = session.scalar(
-        select(func.count()).select_from(Question).where(Question.status == "invalidated")
-    ) or 0
-    exam_parts = session.scalar(
-        select(func.count()).select_from(
-            select(Question.exam_date, Question.part).group_by(Question.exam_date, Question.part).subquery()
+    active_questions = (
+        session.scalar(select(func.count()).select_from(Question).where(Question.status == "active")) or 0
+    )
+    invalidated_questions = (
+        session.scalar(select(func.count()).select_from(Question).where(Question.status == "invalidated")) or 0
+    )
+    exam_parts = (
+        session.scalar(
+            select(func.count()).select_from(
+                select(Question.exam_date, Question.part).group_by(Question.exam_date, Question.part).subquery()
+            )
         )
-    ) or 0
+        or 0
+    )
     part_counts = session.execute(
         select(Question.exam_date, Question.part, func.count())
         .group_by(Question.exam_date, Question.part)
         .order_by(Question.exam_date, Question.part)
     ).all()
-    duplicate_stable_ids = session.execute(
-        select(Question.stable_id)
-        .group_by(Question.stable_id)
-        .having(func.count() > 1)
-    ).scalars().all()
+    duplicate_stable_ids = (
+        session.execute(select(Question.stable_id).group_by(Question.stable_id).having(func.count() > 1))
+        .scalars()
+        .all()
+    )
 
     if total_questions != EXPECTED_TOTAL:
         errors.append(f"expected total_questions={EXPECTED_TOTAL}, got {total_questions}")
@@ -351,9 +350,7 @@ def run_post_import_validation(session: Session) -> dict[str, Any]:
     if duplicate_stable_ids:
         errors.append(f"duplicate stable_id rows found: {duplicate_stable_ids}")
 
-    invalidated = session.scalar(
-        select(Question).where(Question.stable_id == EXPECTED_INVALIDATED_STABLE_ID)
-    )
+    invalidated = session.scalar(select(Question).where(Question.stable_id == EXPECTED_INVALIDATED_STABLE_ID))
     if invalidated is None:
         errors.append(f"missing invalidated question {EXPECTED_INVALIDATED_STABLE_ID}")
     else:
@@ -375,9 +372,11 @@ def run_post_import_validation(session: Session) -> dict[str, Any]:
         artifact_filters.append(Question.option_c.like(like_value))
         artifact_filters.append(Question.option_d.like(like_value))
         artifact_filters.append(Question.reference.like(like_value))
-    artifact_rows = session.execute(
-        select(Question.stable_id).where(or_(*artifact_filters)).order_by(Question.stable_id)
-    ).scalars().all()
+    artifact_rows = (
+        session.execute(select(Question.stable_id).where(or_(*artifact_filters)).order_by(Question.stable_id))
+        .scalars()
+        .all()
+    )
     if artifact_rows:
         errors.append(f"forbidden artifacts found in DB text fields: {artifact_rows}")
 

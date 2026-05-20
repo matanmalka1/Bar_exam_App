@@ -31,9 +31,7 @@ def create_session(
     return ps
 
 
-def add_session_questions(
-    session: Session, session_id: int, ordered_question_ids: list[int]
-) -> None:
+def add_session_questions(session: Session, session_id: int, ordered_question_ids: list[int]) -> None:
     rows = [
         PracticeSessionQuestion(session_id=session_id, question_id=qid, position=i + 1)
         for i, qid in enumerate(ordered_question_ids)
@@ -48,7 +46,6 @@ def select_candidate_questions(
     exam_date: date | None,
     part: str | None,
     include_invalidated: bool,
-    limit: int | None,
 ) -> list[Question]:
     statement = select(Question)
     if exam_date is not None:
@@ -57,18 +54,22 @@ def select_candidate_questions(
         statement = statement.where(Question.part == part)
     if not include_invalidated:
         statement = statement.where(Question.status == "active")
-    statement = statement.order_by(
-        Question.exam_date.asc(), Question.part.asc(), Question.number.asc()
-    )
-    if limit is not None:
-        statement = statement.limit(limit)
+    statement = statement.order_by(Question.exam_date.asc(), Question.part.asc(), Question.number.asc())
     return list(session.scalars(statement).all())
 
 
+def list_seen_question_ids(session: Session, user_id: int) -> set[int]:
+    statement = (
+        select(PracticeSessionQuestion.question_id)
+        .join(PracticeSession, PracticeSession.id == PracticeSessionQuestion.session_id)
+        .where(PracticeSession.user_id == user_id)
+        .distinct()
+    )
+    return set(session.scalars(statement).all())
+
+
 def get_session_by_id(session: Session, session_id: int) -> PracticeSession | None:
-    return session.scalars(
-        select(PracticeSession).where(PracticeSession.id == session_id)
-    ).one_or_none()
+    return session.scalars(select(PracticeSession).where(PracticeSession.id == session_id)).one_or_none()
 
 
 def get_session_questions(session: Session, session_id: int) -> list[Row]:
@@ -81,9 +82,7 @@ def get_session_questions(session: Session, session_id: int) -> list[Row]:
     return list(session.execute(statement).all())
 
 
-def get_session_question_link(
-    session: Session, session_id: int, question_id: int
-) -> PracticeSessionQuestion | None:
+def get_session_question_link(session: Session, session_id: int, question_id: int) -> PracticeSessionQuestion | None:
     return session.scalars(
         select(PracticeSessionQuestion).where(
             PracticeSessionQuestion.session_id == session_id,
@@ -92,9 +91,7 @@ def get_session_question_link(
     ).one_or_none()
 
 
-def list_sessions_by_user(
-    session: Session, user_id: int, status: str | None
-) -> list[PracticeSession]:
+def list_sessions_by_user(session: Session, user_id: int, status: str | None) -> list[PracticeSession]:
     statement = select(PracticeSession).where(PracticeSession.user_id == user_id)
     if status is not None:
         statement = statement.where(PracticeSession.status == status)

@@ -203,14 +203,23 @@ Creates a new practice session for a user.
 |----------------------|----------|-----------------------------------------------------------------------|
 | `user_id`            | yes      |                                                                       |
 | `mode`               | yes      | `exam`, `practice`, or `mistakes`                                    |
-| `exam_date`          | no       | `YYYY-MM` — if omitted, questions from all exams                     |
+| `exam_date`          | no       | `YYYY-MM` — if omitted, questions span all exam dates for the selected part(s) |
 | `part`               | no       | `B` or `C` — if omitted, both parts                                  |
-| `question_count`     | no       | if set, take the first N matching questions (see ordering rules below); if null, include all |
+| `question_count`     | no       | if set, select exactly N unique questions; if null, include all matching |
 | `include_invalidated`| no       | default `false` — whether to include invalidated questions           |
 
-The service selects questions matching the filters, excludes invalidated unless `include_invalidated=true`, and orders them by `exam_date`, `part`, `number` ascending. If `question_count` is set, it takes the first N from this ordered list. It then assigns `position` values (1-based, matching the selected order) and creates the session and `practice_session_questions` rows in one transaction.
+### Selection algorithm
 
-**No random sampling in Phase 2.** The order is always deterministic: `exam_date ASC, part ASC, number ASC`. Randomization is deferred to a future phase.
+1. Repository returns the full candidate pool that matches `part`, `exam_date`, and `include_invalidated`, ordered canonically (`exam_date ASC, part ASC, number ASC`). `exam_date` is only applied when explicitly provided — a subject-level session (`part=B` or `part=C` with no `exam_date`) draws from **all** imported exams for that part.
+2. Repository returns the set of question IDs the user has already seen (any row in `practice_session_questions` joined through `practice_sessions` for this `user_id`).
+3. Service splits candidates into `unseen` and `seen` groups.
+4. Service shuffles each group independently using a backend-owned RNG. Randomization is **not** exposed as a frontend/API parameter; tests inject a deterministic seed via the module-level `_make_rng` factory.
+5. Final order = `unseen` shuffled, followed by `seen` shuffled. Unseen questions are always preferred; seen questions are only used as fill when the unseen pool is too small.
+6. If `question_count` is set, the first N from this combined list are taken. If `question_count > len(candidates)` → 422.
+7. If `question_count` is null, all matching questions are included (unseen first, seen last, shuffled within each group).
+8. The selected order is persisted in `practice_session_questions.position` and is the source of truth from that point on. `GET /practice-sessions/{id}` returns the persisted order unchanged on every call — never reshuffles.
+
+No DB `random()` is used. Shuffling happens in the service layer only.
 
 If no matching questions are found → 422 with descriptive error.
 
@@ -660,8 +669,11 @@ Unanswered questions count against the user. This is intentional (matches real e
 
 Do not add `user_id` to `user_answers` in this phase.
 
-**6. `practice_session_questions` order is always deterministic**
-Positions are assigned at session creation using a fixed sort: `exam_date ASC, part ASC, number ASC`. There is no random sampling in Phase 2. This guarantees that `GET /sessions/{id}` returns the same question order on every call. Randomization is deferred.
+**6. `practice_session_questions` order is the persisted source of truth**
+Positions are assigned at session creation by the selection algorithm (see section 5). After creation, the row order is frozen — `GET /sessions/{id}` returns it as-is and never reshuffles. The selection itself uses a backend-owned RNG; the seed is never exposed via the API. Tests control randomness by replacing the `session_service._make_rng` factory.
+
+**7. Anti-repeat is best-effort, not a guarantee**
+A new session prefers questions the user has not seen before (any row in `practice_session_questions` for any of the user's sessions counts as "seen"). When the unseen pool is too small to fill `question_count`, the remaining slots are filled from previously seen questions. Repeats are only allowed when the pool forces it.
 
 ---
 

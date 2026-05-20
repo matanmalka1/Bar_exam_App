@@ -1,3 +1,4 @@
+import random
 import sys
 from collections.abc import Generator
 from datetime import date
@@ -17,6 +18,12 @@ from app.db.base import Base
 from app.db.session import get_session
 from app.main import app
 from app.models.question import Question
+from app.services import session_service
+
+
+@pytest.fixture(autouse=True)
+def deterministic_rng(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(session_service, "_make_rng", lambda: random.Random(1234))
 
 
 def make_question(
@@ -55,9 +62,7 @@ def client() -> Generator[TestClient, None, None]:
     Base.metadata.create_all(engine)
 
     with Session(engine) as session:
-        session.add_all(
-            [make_question(date(2025, 4, 1), "B", n) for n in range(1, 6)]
-        )
+        session.add_all([make_question(date(2025, 4, 1), "B", n) for n in range(1, 6)])
         session.add(
             make_question(
                 date(2025, 4, 1),
@@ -68,12 +73,33 @@ def client() -> Generator[TestClient, None, None]:
                 invalidation_note="נפסלה",
             )
         )
-        session.add_all(
-            [make_question(date(2025, 4, 1), "B", n, correct_answer="B") for n in range(7, 11)]
-        )
-        session.add_all(
-            [make_question(date(2025, 4, 1), "C", n, correct_answer="C") for n in range(1, 4)]
-        )
+        session.add_all([make_question(date(2025, 4, 1), "B", n, correct_answer="B") for n in range(7, 11)])
+        session.add_all([make_question(date(2025, 4, 1), "C", n, correct_answer="C") for n in range(1, 4)])
+        session.commit()
+
+    def override_get_session() -> Generator[Session, None, None]:
+        with Session(engine) as session:
+            yield session
+
+    app.dependency_overrides[get_session] = override_get_session
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def client_multi() -> Generator[TestClient, None, None]:
+    engine = create_engine(
+        "sqlite+pysqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(engine)
+
+    with Session(engine) as session:
+        for exam in (date(2025, 4, 1), date(2025, 6, 1), date(2025, 12, 1)):
+            session.add_all([make_question(exam, "B", n) for n in range(1, 41)])
+            session.add_all([make_question(exam, "C", n, correct_answer="C") for n in range(1, 41)])
         session.commit()
 
     def override_get_session() -> Generator[Session, None, None]:
@@ -431,7 +457,7 @@ def test_mistakes_ignores_active_sessions(client: TestClient):
     assert mistakes == []
 
 
-def test_question_count_limits_session_to_first_n(client: TestClient):
+def test_question_count_returns_exactly_n_unique(client: TestClient):
     user_id = _dev_user(client)
     response = client.post(
         "/api/v1/practice-sessions",
@@ -448,15 +474,121 @@ def test_question_count_limits_session_to_first_n(client: TestClient):
     assert response.json()["total_questions"] == 3
     detail = client.get(f"/api/v1/practice-sessions/{sid}").json()
     assert [q["position"] for q in detail["questions"]] == [1, 2, 3]
-    assert [q["stable_id"] for q in detail["questions"]] == [
-        "2025-04_B_001",
-        "2025-04_B_002",
-        "2025-04_B_003",
-    ]
+    stable_ids = [q["stable_id"] for q in detail["questions"]]
+    assert len(set(stable_ids)) == 3
+    for sid_ in stable_ids:
+        assert sid_.startswith("2025-04_B_")
+
+
+def test_question_count_exceeds_pool_returns_422(client: TestClient):
+    user_id = _dev_user(client)
+    response = client.post(
+        "/api/v1/practice-sessions",
+        json={
+            "user_id": user_id,
+            "mode": "practice",
+            "exam_date": "2025-04",
+            "part": "B",
+            "question_count": 999,
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_exam_date_restricts_selection(client_multi: TestClient):
+    user_id = _dev_user(client_multi)
+    response = client_multi.post(
+        "/api/v1/practice-sessions",
+        json={
+            "user_id": user_id,
+            "mode": "practice",
+            "exam_date": "2025-06",
+            "part": "B",
+            "question_count": 5,
+        },
+    )
+    assert response.status_code == 201
+    sid = response.json()["id"]
+    detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
+    for q in detail["questions"]:
+        assert q["stable_id"].startswith("2025-06_B_")
+
+
+def test_subject_pool_spans_all_exams_when_date_omitted(client_multi: TestClient):
+    user_id = _dev_user(client_multi)
+    response = client_multi.post(
+        "/api/v1/practice-sessions",
+        json={
+            "user_id": user_id,
+            "mode": "practice",
+            "part": "B",
+            "question_count": 40,
+        },
+    )
+    assert response.status_code == 201
+    sid = response.json()["id"]
+    detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
+    exam_prefixes = {q["stable_id"].rsplit("_", 2)[0] for q in detail["questions"]}
+    assert len(exam_prefixes) > 1
+    for q in detail["questions"]:
+        assert "_B_" in q["stable_id"]
+
+
+def test_second_session_prefers_unseen(client_multi: TestClient):
+    user_id = _dev_user(client_multi)
+    s1 = client_multi.post(
+        "/api/v1/practice-sessions",
+        json={"user_id": user_id, "mode": "practice", "part": "B", "question_count": 40},
+    ).json()
+    s2 = client_multi.post(
+        "/api/v1/practice-sessions",
+        json={"user_id": user_id, "mode": "practice", "part": "B", "question_count": 40},
+    ).json()
+    d1 = client_multi.get(f"/api/v1/practice-sessions/{s1['id']}").json()
+    d2 = client_multi.get(f"/api/v1/practice-sessions/{s2['id']}").json()
+    ids1 = {q["stable_id"] for q in d1["questions"]}
+    ids2 = {q["stable_id"] for q in d2["questions"]}
+    assert ids1 != ids2
+    assert ids1.isdisjoint(ids2)
+
+
+def test_unseen_pool_insufficient_fills_from_seen(client: TestClient):
+    user_id = _dev_user(client)
+    s1 = client.post(
+        "/api/v1/practice-sessions",
+        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B", "question_count": 7},
+    ).json()
+    d1 = client.get(f"/api/v1/practice-sessions/{s1['id']}").json()
+    seen = {q["stable_id"] for q in d1["questions"]}
+
+    s2 = client.post(
+        "/api/v1/practice-sessions",
+        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B", "question_count": 5},
+    ).json()
+    d2 = client.get(f"/api/v1/practice-sessions/{s2['id']}").json()
+    ids2 = [q["stable_id"] for q in d2["questions"]]
+    assert len(ids2) == 5
+    assert len(set(ids2)) == 5
+    overlap = seen & set(ids2)
+    # only 2 unseen remain (9 active - 7 seen); 3 slots must come from seen.
+    assert len(overlap) == 3
+
+
+def test_get_session_detail_returns_persisted_order(client: TestClient):
+    user_id = _dev_user(client)
+    sid = client.post(
+        "/api/v1/practice-sessions",
+        json={"user_id": user_id, "mode": "practice", "exam_date": "2025-04", "part": "B", "question_count": 5},
+    ).json()["id"]
+    a = client.get(f"/api/v1/practice-sessions/{sid}").json()
+    b = client.get(f"/api/v1/practice-sessions/{sid}").json()
+    assert [q["stable_id"] for q in a["questions"]] == [q["stable_id"] for q in b["questions"]]
+    assert [q["position"] for q in a["questions"]] == [1, 2, 3, 4, 5]
 
 
 def test_no_db_query_in_new_modules():
     import pathlib
+
     root = pathlib.Path(__file__).resolve().parents[1] / "app"
     new_files = []
     for name in (

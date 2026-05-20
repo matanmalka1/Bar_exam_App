@@ -100,10 +100,7 @@ def test_missing_option_fails():
 
 def test_invalid_exam_date_month_fails():
     payload = make_payload(exam_date="2025-13")
-    payload["questions"] = [
-        make_question(number, stable_id=f"2025-13_B_{number:03d}")
-        for number in range(1, 41)
-    ]
+    payload["questions"] = [make_question(number, stable_id=f"2025-13_B_{number:03d}") for number in range(1, 41)]
 
     assert_validation_fails(payload, "exam_date must be a real YYYY-MM month")
 
@@ -153,9 +150,7 @@ def test_duplicate_stable_id_fails(tmp_path):
         questions = []
         for number in range(1, 41):
             if index == 0 and number == 2:
-                questions.append(
-                    make_question(1, stable_id=f"{exam_date}_{part}_001", body="שכפול stable_id לבדיקה")
-                )
+                questions.append(make_question(1, stable_id=f"{exam_date}_{part}_001", body="שכפול stable_id לבדיקה"))
                 continue
             stable_id = f"{exam_date}_{part}_{number:03d}"
             questions.append(make_question(number, stable_id=stable_id))

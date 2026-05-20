@@ -19,9 +19,7 @@ router = APIRouter()
 
 
 @router.post("/practice-sessions", response_model=SessionSummaryOut, status_code=201)
-def create_session(
-    payload: SessionCreateIn, session: Annotated[Session, Depends(get_session)]
-) -> SessionSummaryOut:
+def create_session(payload: SessionCreateIn, session: Annotated[Session, Depends(get_session)]) -> SessionSummaryOut:
     try:
         return session_service.create_session(session, payload)
     except SessionError as exc:
@@ -29,9 +27,7 @@ def create_session(
 
 
 @router.get("/practice-sessions/{session_id}", response_model=SessionDetailOut)
-def get_session_detail(
-    session_id: int, session: Annotated[Session, Depends(get_session)]
-) -> SessionDetailOut:
+def get_session_detail(session_id: int, session: Annotated[Session, Depends(get_session)]) -> SessionDetailOut:
     try:
         return session_service.get_session_detail(session, session_id)
     except SessionError as exc:
@@ -54,9 +50,7 @@ def submit_answer(
 
 
 @router.post("/practice-sessions/{session_id}/complete", response_model=SessionCompleteOut)
-def complete_session(
-    session_id: int, session: Annotated[Session, Depends(get_session)]
-) -> SessionCompleteOut:
+def complete_session(session_id: int, session: Annotated[Session, Depends(get_session)]) -> SessionCompleteOut:
     try:
         return session_service.complete_session(session, session_id)
     except SessionError as exc:

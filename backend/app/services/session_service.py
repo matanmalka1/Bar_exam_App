@@ -1,9 +1,11 @@
+import random
 from datetime import UTC, date, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy.orm import Session
 
 from app.models.practice_session import PracticeSession
+from app.models.question import Question
 from app.repositories import answer_repository, session_repository, user_repository
 from app.schemas.session import (
     SessionCompleteOut,
@@ -15,6 +17,10 @@ from app.schemas.session import (
 from app.services.question_service import ANSWER_LABELS
 
 DB_TO_HEBREW = ANSWER_LABELS
+
+
+def _make_rng() -> random.Random:
+    return random.Random()
 
 
 class SessionError(Exception):
@@ -29,15 +35,22 @@ def create_session(session: Session, payload: SessionCreateIn) -> SessionSummary
         raise SessionError(404, "user not found")
 
     exam_date = _parse_exam_date(payload.exam_date) if payload.exam_date else None
-    questions = session_repository.select_candidate_questions(
+    candidates = session_repository.select_candidate_questions(
         session,
         exam_date=exam_date,
         part=payload.part,
         include_invalidated=payload.include_invalidated,
-        limit=payload.question_count,
     )
-    if not questions:
+    if not candidates:
         raise SessionError(422, "no matching questions for session filters")
+    if payload.question_count is not None and payload.question_count > len(candidates):
+        raise SessionError(422, "question_count exceeds available question pool")
+
+    ordered = _select_questions(
+        candidates,
+        seen_ids=session_repository.list_seen_question_ids(session, payload.user_id),
+        question_count=payload.question_count,
+    )
 
     ps = session_repository.create_session(
         session,
@@ -45,9 +58,9 @@ def create_session(session: Session, payload: SessionCreateIn) -> SessionSummary
         mode=payload.mode,
         exam_date=exam_date,
         part=payload.part,
-        total_questions=len(questions),
+        total_questions=len(ordered),
     )
-    session_repository.add_session_questions(session, ps.id, [q.id for q in questions])
+    session_repository.add_session_questions(session, ps.id, [q.id for q in ordered])
     session.commit()
     session.refresh(ps)
     return _summary(ps)
@@ -93,9 +106,7 @@ def get_session_detail(session: Session, session_id: int) -> SessionDetailOut:
     return SessionDetailOut(**summary, questions=question_outs)
 
 
-def list_user_sessions(
-    session: Session, user_id: int, status: str | None
-) -> list[SessionSummaryOut]:
+def list_user_sessions(session: Session, user_id: int, status: str | None) -> list[SessionSummaryOut]:
     if user_repository.get_by_id(session, user_id) is None:
         raise SessionError(404, "user not found")
     sessions = session_repository.list_sessions_by_user(session, user_id, status)
@@ -111,9 +122,9 @@ def complete_session(session: Session, session_id: int) -> SessionCompleteOut:
 
     answers = answer_repository.list_session_answers(session, session_id)
     correct_count = sum(1 for a in answers if a.is_correct)
-    score = (
-        Decimal(correct_count * 100) / Decimal(ps.total_questions)
-    ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    score = (Decimal(correct_count * 100) / Decimal(ps.total_questions)).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
     now = datetime.now(UTC)
     session_repository.complete_session(
         session,
@@ -133,6 +144,23 @@ def complete_session(session: Session, session_id: int) -> SessionCompleteOut:
         score_percent=ps.score_percent or Decimal("0.00"),
         completed_at=ps.completed_at or now,
     )
+
+
+def _select_questions(
+    candidates: list[Question],
+    *,
+    seen_ids: set[int],
+    question_count: int | None,
+) -> list[Question]:
+    unseen = [q for q in candidates if q.id not in seen_ids]
+    seen = [q for q in candidates if q.id in seen_ids]
+    rng = _make_rng()
+    rng.shuffle(unseen)
+    rng.shuffle(seen)
+    ordered = unseen + seen
+    if question_count is not None:
+        ordered = ordered[:question_count]
+    return ordered
 
 
 def _summary(ps: PracticeSession) -> SessionSummaryOut:
@@ -168,5 +196,3 @@ def _hebrew_or_none(db_letter: str | None) -> str | None:
 def _parse_exam_date(value: str) -> date:
     year_text, month_text = value.split("-")
     return date(int(year_text), int(month_text), 1)
-
-
