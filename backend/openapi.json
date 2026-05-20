@@ -1,0 +1,1954 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Bar Exam API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "summary": "Ready",
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Ready Ready Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/exams": {
+      "get": {
+        "summary": "Get Exams",
+        "operationId": "get_exams_api_v1_exams_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExamSummary"
+                  },
+                  "type": "array",
+                  "title": "Response Get Exams Api V1 Exams Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/questions": {
+      "get": {
+        "summary": "Get Questions",
+        "operationId": "get_questions_api_v1_questions_get",
+        "parameters": [
+          {
+            "name": "exam_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+              "title": "Exam Date"
+            }
+          },
+          {
+            "name": "part",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "B",
+                "C"
+              ],
+              "type": "string",
+              "title": "Part"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuestionPracticeOut"
+                  },
+                  "title": "Response Get Questions Api V1 Questions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/questions/review": {
+      "get": {
+        "summary": "Get Questions For Review",
+        "operationId": "get_questions_for_review_api_v1_questions_review_get",
+        "parameters": [
+          {
+            "name": "exam_date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+              "title": "Exam Date"
+            }
+          },
+          {
+            "name": "part",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "B",
+                "C"
+              ],
+              "type": "string",
+              "title": "Part"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/QuestionReviewOut"
+                  },
+                  "title": "Response Get Questions For Review Api V1 Questions Review Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/questions/{stable_id}": {
+      "get": {
+        "summary": "Get Question",
+        "operationId": "get_question_api_v1_questions__stable_id__get",
+        "parameters": [
+          {
+            "name": "stable_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])_[BC]_(00[1-9]|0[1-3][0-9]|040)$",
+              "title": "Stable Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionPracticeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/questions/{stable_id}/review": {
+      "get": {
+        "summary": "Get Question For Review",
+        "operationId": "get_question_for_review_api_v1_questions__stable_id__review_get",
+        "parameters": [
+          {
+            "name": "stable_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])_[BC]_(00[1-9]|0[1-3][0-9]|040)$",
+              "title": "Stable Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionReviewOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/practice-sessions": {
+      "post": {
+        "summary": "Create Session",
+        "operationId": "create_session_api_v1_practice_sessions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionSummaryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/practice-sessions/{session_id}": {
+      "get": {
+        "summary": "Get Session Detail",
+        "operationId": "get_session_detail_api_v1_practice_sessions__session_id__get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/practice-sessions/{session_id}/answers": {
+      "post": {
+        "summary": "Submit Answer",
+        "operationId": "submit_answer_api_v1_practice_sessions__session_id__answers_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerSubmitIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/AnswerPracticeOut"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AnswerExamOut"
+                    }
+                  ],
+                  "title": "Response Submit Answer Api V1 Practice Sessions  Session Id  Answers Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/practice-sessions/{session_id}/complete": {
+      "post": {
+        "summary": "Complete Session",
+        "operationId": "complete_session_api_v1_practice_sessions__session_id__complete_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Session Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionCompleteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{user_id}/stats/overview": {
+      "get": {
+        "summary": "Get User Stats Overview",
+        "operationId": "get_user_stats_overview_api_v1_users__user_id__stats_overview_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsOverviewOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/dev": {
+      "post": {
+        "summary": "Create Dev User",
+        "operationId": "create_dev_user_api_v1_users_dev_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{user_id}/sessions": {
+      "get": {
+        "summary": "List User Sessions",
+        "operationId": "list_user_sessions_api_v1_users__user_id__sessions_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "active",
+                    "completed",
+                    "abandoned"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionSummaryOut"
+                  },
+                  "title": "Response List User Sessions Api V1 Users  User Id  Sessions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{user_id}/mistakes": {
+      "get": {
+        "summary": "Get Mistakes",
+        "operationId": "get_mistakes_api_v1_users__user_id__mistakes_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MistakeOut"
+                  },
+                  "title": "Response Get Mistakes Api V1 Users  User Id  Mistakes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{user_id}/bookmarks/{stable_id}": {
+      "post": {
+        "summary": "Add Bookmark",
+        "operationId": "add_bookmark_api_v1_users__user_id__bookmarks__stable_id__post",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "stable_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])_[BC]_(00[1-9]|0[1-3][0-9]|040)$",
+              "title": "Stable Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookmarkOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Bookmark",
+        "operationId": "delete_bookmark_api_v1_users__user_id__bookmarks__stable_id__delete",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "stable_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])_[BC]_(00[1-9]|0[1-3][0-9]|040)$",
+              "title": "Stable Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookmarkRemovedOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/users/{user_id}/bookmarks": {
+      "get": {
+        "summary": "List User Bookmarks",
+        "operationId": "list_user_bookmarks_api_v1_users__user_id__bookmarks_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BookmarkedQuestionOut"
+                  },
+                  "title": "Response List User Bookmarks Api V1 Users  User Id  Bookmarks Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnswerExamOut": {
+        "properties": {
+          "stable_id": {
+            "type": "string",
+            "title": "Stable Id"
+          },
+          "selected_answer": {
+            "type": "string",
+            "title": "Selected Answer"
+          },
+          "answered_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Answered At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stable_id",
+          "selected_answer",
+          "answered_at"
+        ],
+        "title": "AnswerExamOut"
+      },
+      "AnswerPracticeOut": {
+        "properties": {
+          "stable_id": {
+            "type": "string",
+            "title": "Stable Id"
+          },
+          "selected_answer": {
+            "type": "string",
+            "title": "Selected Answer"
+          },
+          "is_correct": {
+            "type": "boolean",
+            "title": "Is Correct"
+          },
+          "correct_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Answer"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "answered_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Answered At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stable_id",
+          "selected_answer",
+          "is_correct",
+          "correct_answer",
+          "reference",
+          "answered_at"
+        ],
+        "title": "AnswerPracticeOut"
+      },
+      "AnswerSubmitIn": {
+        "properties": {
+          "stable_id": {
+            "type": "string",
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])_[BC]_(00[1-9]|0[1-3][0-9]|040)$",
+            "title": "Stable Id"
+          },
+          "selected_answer": {
+            "type": "string",
+            "pattern": "^[אבגד]$",
+            "title": "Selected Answer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stable_id",
+          "selected_answer"
+        ],
+        "title": "AnswerSubmitIn"
+      },
+      "BookmarkOut": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "stable_id": {
+            "type": "string",
+            "title": "Stable Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "stable_id",
+          "created_at"
+        ],
+        "title": "BookmarkOut"
+      },
+      "BookmarkRemovedOut": {
+        "properties": {
+          "removed": {
+            "type": "boolean",
+            "title": "Removed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "removed"
+        ],
+        "title": "BookmarkRemovedOut"
+      },
+      "BookmarkedQuestionOut": {
+        "properties": {
+          "stable_id": {
+            "type": "string",
+            "title": "Stable Id"
+          },
+          "exam_date": {
+            "type": "string",
+            "title": "Exam Date"
+          },
+          "part": {
+            "type": "string",
+            "title": "Part"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "options": {
+            "$ref": "#/components/schemas/QuestionOptions"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "correct_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Answer"
+          },
+          "reference": {
+            "type": "string",
+            "title": "Reference"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stable_id",
+          "exam_date",
+          "part",
+          "number",
+          "body",
+          "options",
+          "status",
+          "correct_answer",
+          "reference",
+          "created_at"
+        ],
+        "title": "BookmarkedQuestionOut"
+      },
+      "ExamMistakeOut": {
+        "properties": {
+          "stable_id": {
+            "type": "string",
+            "title": "Stable Id"
+          },
+          "part": {
+            "type": "string",
+            "title": "Part"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "options": {
+            "$ref": "#/components/schemas/QuestionOptions"
+          },
+          "selected_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Answer"
+          },
+          "correct_answer": {
+            "type": "string",
+            "title": "Correct Answer"
+          },
+          "reference": {
+            "type": "string",
+            "title": "Reference"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stable_id",
+          "part",
+          "number",
+          "body",
+          "options",
+          "selected_answer",
+          "correct_answer",
+          "reference"
+        ],
+        "title": "ExamMistakeOut"
+      },
+      "ExamSummary": {
+        "properties": {
+          "exam_date": {
+            "type": "string",
+            "title": "Exam Date"
+          },
+          "part": {
+            "type": "string",
+            "title": "Part"
+          },
+          "part_name": {
+            "type": "string",
+            "title": "Part Name"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "question_count": {
+            "type": "integer",
+            "title": "Question Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "exam_date",
+          "part",
+          "part_name",
+          "label",
+          "question_count"
+        ],
+        "title": "ExamSummary"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MistakeOut": {
+        "properties": {
+          "stable_id": {
+            "type": "string",
+            "title": "Stable Id"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "exam_date": {
+            "type": "string",
+            "title": "Exam Date"
+          },
+          "part": {
+            "type": "string",
+            "title": "Part"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "options": {
+            "$ref": "#/components/schemas/QuestionOptions"
+          },
+          "correct_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Answer"
+          },
+          "reference": {
+            "type": "string",
+            "title": "Reference"
+          },
+          "times_answered": {
+            "type": "integer",
+            "title": "Times Answered"
+          },
+          "times_wrong": {
+            "type": "integer",
+            "title": "Times Wrong"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stable_id",
+          "number",
+          "exam_date",
+          "part",
+          "body",
+          "options",
+          "correct_answer",
+          "reference",
+          "times_answered",
+          "times_wrong"
+        ],
+        "title": "MistakeOut"
+      },
+      "PartBreakdown": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "answered": {
+            "type": "integer",
+            "title": "Answered"
+          },
+          "correct": {
+            "type": "integer",
+            "title": "Correct"
+          },
+          "score_percent": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Score Percent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "answered",
+          "correct",
+          "score_percent"
+        ],
+        "title": "PartBreakdown"
+      },
+      "PartStatsOut": {
+        "properties": {
+          "total_answered": {
+            "type": "integer",
+            "title": "Total Answered"
+          },
+          "success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Success Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_answered",
+          "success_rate"
+        ],
+        "title": "PartStatsOut"
+      },
+      "QuestionOptions": {
+        "properties": {
+          "א": {
+            "type": "string",
+            "title": "א"
+          },
+          "ב": {
+            "type": "string",
+            "title": "ב"
+          },
+          "ג": {
+            "type": "string",
+            "title": "ג"
+          },
+          "ד": {
+            "type": "string",
+            "title": "ד"
+          }
+        },
+        "type": "object",
+        "required": [
+          "א",
+          "ב",
+          "ג",
+          "ד"
+        ],
+        "title": "QuestionOptions"
+      },
+      "QuestionPracticeOut": {
+        "properties": {
+          "stable_id": {
+            "type": "string",
+            "title": "Stable Id"
+          },
+          "exam_date": {
+            "type": "string",
+            "title": "Exam Date"
+          },
+          "part": {
+            "type": "string",
+            "title": "Part"
+          },
+          "part_name": {
+            "type": "string",
+            "title": "Part Name"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "options": {
+            "$ref": "#/components/schemas/QuestionOptions"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "invalidation_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invalidation Note"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stable_id",
+          "exam_date",
+          "part",
+          "part_name",
+          "label",
+          "number",
+          "body",
+          "options",
+          "status",
+          "invalidation_note"
+        ],
+        "title": "QuestionPracticeOut"
+      },
+      "QuestionReviewOut": {
+        "properties": {
+          "stable_id": {
+            "type": "string",
+            "title": "Stable Id"
+          },
+          "exam_date": {
+            "type": "string",
+            "title": "Exam Date"
+          },
+          "part": {
+            "type": "string",
+            "title": "Part"
+          },
+          "part_name": {
+            "type": "string",
+            "title": "Part Name"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "options": {
+            "$ref": "#/components/schemas/QuestionOptions"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "invalidation_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invalidation Note"
+          },
+          "correct_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Answer"
+          },
+          "reference": {
+            "type": "string",
+            "title": "Reference"
+          }
+        },
+        "type": "object",
+        "required": [
+          "stable_id",
+          "exam_date",
+          "part",
+          "part_name",
+          "label",
+          "number",
+          "body",
+          "options",
+          "status",
+          "invalidation_note",
+          "correct_answer",
+          "reference"
+        ],
+        "title": "QuestionReviewOut"
+      },
+      "SessionAnswerInline": {
+        "properties": {
+          "selected_answer": {
+            "type": "string",
+            "title": "Selected Answer"
+          },
+          "is_correct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Correct"
+          },
+          "answered_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Answered At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "selected_answer",
+          "answered_at"
+        ],
+        "title": "SessionAnswerInline"
+      },
+      "SessionCompleteOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "total_questions": {
+            "type": "integer",
+            "title": "Total Questions"
+          },
+          "scorable_questions": {
+            "type": "integer",
+            "title": "Scorable Questions"
+          },
+          "answered_count": {
+            "type": "integer",
+            "title": "Answered Count"
+          },
+          "correct_count": {
+            "type": "integer",
+            "title": "Correct Count"
+          },
+          "score_percent": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Score Percent"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Completed At"
+          },
+          "part_breakdown": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/PartBreakdown"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part Breakdown"
+          },
+          "mistakes": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ExamMistakeOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mistakes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "total_questions",
+          "scorable_questions",
+          "answered_count",
+          "correct_count",
+          "score_percent",
+          "completed_at"
+        ],
+        "title": "SessionCompleteOut"
+      },
+      "SessionCreateIn": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "exam",
+              "simulation",
+              "practice",
+              "mistakes",
+              "bookmarks"
+            ],
+            "title": "Mode"
+          },
+          "exam_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam Date"
+          },
+          "part": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "B",
+                  "C"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part"
+          },
+          "question_count": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question Count"
+          },
+          "include_invalidated": {
+            "type": "boolean",
+            "title": "Include Invalidated",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "mode"
+        ],
+        "title": "SessionCreateIn"
+      },
+      "SessionDetailOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "exam_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam Date"
+          },
+          "part": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part"
+          },
+          "total_questions": {
+            "type": "integer",
+            "title": "Total Questions"
+          },
+          "answered_count": {
+            "type": "integer",
+            "title": "Answered Count"
+          },
+          "correct_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Count"
+          },
+          "score_percent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Percent"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/SessionQuestionOut"
+            },
+            "type": "array",
+            "title": "Questions"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "mode",
+          "status",
+          "exam_date",
+          "part",
+          "total_questions",
+          "answered_count",
+          "correct_count",
+          "score_percent",
+          "started_at",
+          "completed_at",
+          "created_at",
+          "questions"
+        ],
+        "title": "SessionDetailOut"
+      },
+      "SessionQuestionOut": {
+        "properties": {
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "stable_id": {
+            "type": "string",
+            "title": "Stable Id"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "options": {
+            "$ref": "#/components/schemas/QuestionOptions"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SessionAnswerInline"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "correct_answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Answer"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          }
+        },
+        "type": "object",
+        "required": [
+          "position",
+          "stable_id",
+          "number",
+          "body",
+          "options",
+          "status",
+          "answer"
+        ],
+        "title": "SessionQuestionOut"
+      },
+      "SessionSummaryOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "exam_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exam Date"
+          },
+          "part": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Part"
+          },
+          "total_questions": {
+            "type": "integer",
+            "title": "Total Questions"
+          },
+          "answered_count": {
+            "type": "integer",
+            "title": "Answered Count"
+          },
+          "correct_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct Count"
+          },
+          "score_percent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Percent"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "mode",
+          "status",
+          "exam_date",
+          "part",
+          "total_questions",
+          "answered_count",
+          "correct_count",
+          "score_percent",
+          "started_at",
+          "completed_at",
+          "created_at"
+        ],
+        "title": "SessionSummaryOut"
+      },
+      "StatsOverviewOut": {
+        "properties": {
+          "total_answered": {
+            "type": "integer",
+            "title": "Total Answered"
+          },
+          "overall_success_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Success Rate"
+          },
+          "part_b": {
+            "$ref": "#/components/schemas/PartStatsOut"
+          },
+          "part_c": {
+            "$ref": "#/components/schemas/PartStatsOut"
+          },
+          "simulations_completed": {
+            "type": "integer",
+            "title": "Simulations Completed"
+          },
+          "active_mistakes_count": {
+            "type": "integer",
+            "title": "Active Mistakes Count"
+          },
+          "repeated_mistakes_count": {
+            "type": "integer",
+            "title": "Repeated Mistakes Count"
+          },
+          "avg_session_duration_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Session Duration Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_answered",
+          "overall_success_rate",
+          "part_b",
+          "part_c",
+          "simulations_completed",
+          "active_mistakes_count",
+          "repeated_mistakes_count",
+          "avg_session_duration_seconds"
+        ],
+        "title": "StatsOverviewOut"
+      },
+      "UserOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "display_name": {
+            "type": "string",
+            "title": "Display Name"
+          },
+          "user_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Key"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "display_name",
+          "user_key",
+          "created_at"
+        ],
+        "title": "UserOut"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
