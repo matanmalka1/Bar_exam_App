@@ -114,9 +114,13 @@ Count of `practice_sessions` where `mode = 'exam'` and `status = 'completed'` fo
 
 ### `active_mistakes_count`
 
-Count of questions where the user's most recent answer (by `updated_at` across all completed sessions) is `is_correct = false`.
+Count of questions where the user's most recent answer (by `user_answers.updated_at` across all completed sessions) is `is_correct = false`.
 
-This is the same definition as the mistakes endpoint in Phase 2. Reuse the existing query logic.
+This must use the same semantics as the Phase 2 mistakes endpoint. See Section 6 for cross-repository rules.
+
+**MVP limitation:** `user_answers` has no `answered_at` or `created_at` column. Ordering by `updated_at` is the only available proxy for recency. If `updated_at` changes due to row correction or a future upsert pattern, this can distort historical ordering. This is an accepted MVP compromise. A future schema change should add `answered_at` to `user_answers` if strict historical ordering is needed.
+
+Document this limitation explicitly in `stats_repository.py` with a comment on the relevant query.
 
 ---
 
@@ -136,21 +140,30 @@ Average of `(completed_at - started_at)` in seconds across all completed session
 
 Returns `null` if no completed sessions exist.
 
+**Query guard:** Filter on `completed_at IS NOT NULL AND started_at IS NOT NULL` explicitly. Do not rely on `status = 'completed'` alone to guarantee both fields are populated — a data bug could produce a null timestamp on an otherwise completed session, which would cause a DB error or null result depending on dialect. Additionally, discard any row where `completed_at < started_at` (negative duration) rather than letting it silently distort the average.
+
 **Limitation:** This is a session-level approximation, not per-question timing. It includes navigation time, pauses, and any time the user left the session open. A proper per-question metric would require `time_spent_seconds` on `user_answers` — that is a future schema change and is out of scope here.
 
 ---
 
 ## 6. Query Design
 
-All stats for a user must be computed in as few DB round-trips as possible. The recommended approach is one query per stat group:
+All stats for a user must be computed in as few DB round-trips as possible. The recommended approach:
 
-| Stat group | Query |
-|---|---|
-| `total_answered`, `overall_success_rate`, `part_b`, `part_c` | Single query: join `user_answers → practice_sessions → questions`, filter `status='completed'` and `questions.status='active'`, group by `questions.part` |
-| `simulations_completed` | Single count: `practice_sessions` where `user_id`, `mode='exam'`, `status='completed'` |
-| `active_mistakes_count` | Reuse existing `get_latest_mistakes` logic from `answer_repository`, count results |
-| `repeated_mistakes_count` | Single query: `user_answers → practice_sessions → questions`, group by `question_id`, having `sum(is_correct = false) >= 2` |
-| `avg_session_duration_seconds` | Single avg: `completed_at - started_at` over completed sessions |
+| # | Stat group | Query |
+|---|---|---|
+| 1 | User existence check | `SELECT id FROM users WHERE id = :user_id` — must run first. The `users` table exists from Phase 2 migration `20260520_0002`. A user with no sessions and a non-existent user must return different responses (empty stats vs. 404). |
+| 2 | `total_answered`, `overall_success_rate`, `part_b`, `part_c` | Single query: join `user_answers → practice_sessions → questions`, filter `status='completed'` and `questions.status='active'`, group by `questions.part` |
+| 3 | `simulations_completed` + `avg_session_duration_seconds` | Single query over `practice_sessions` for this user, filtered on `status='completed'`. Count rows with `mode='exam'` for simulations; compute avg duration with the guards described in Section 5. These two stats share the same table, user, and filter — combine into one query. |
+| 4 | `active_mistakes_count` | Implemented in `stats_repository.py` with the same semantics as the Phase 2 mistakes endpoint. See cross-repository rules below. |
+| 5 | `repeated_mistakes_count` | Single query: `user_answers → practice_sessions → questions`, filter `status='completed'` and `questions.status='active'`, group by `question_id`, having `SUM(CASE WHEN is_correct = false THEN 1 ELSE 0 END) >= 2`. In SQLAlchemy: `func.sum(case((UserAnswer.is_correct.is_(False), 1), else_=0)) >= 2`. Do not use `count(*) filter (where ...)` — that syntax is Postgres-specific and will break SQLite-based tests. |
+
+**Cross-repository rule for `active_mistakes_count`:** Do not import or call methods from `answer_repository` inside `stats_repository`. Repositories must not call each other. Two options — pick one:
+
+- **Option A (preferred if the logic is short):** Duplicate the aggregate query in `stats_repository.py`. Add a test in `test_stats.py` that asserts `active_mistakes_count` equals `len(GET /users/{id}/mistakes)` for the same user. This verifies semantic equivalence without coupling.
+- **Option B:** Extract a shared private query builder (e.g. `app/repositories/_mistakes_query.py`) that both repositories import. Document clearly that it is a shared internal helper and must not grow into a god module.
+
+Whichever option is chosen, document the decision in a comment at the top of the relevant repository method.
 
 Do not run one query per field. Combine where possible.
 
@@ -170,6 +183,8 @@ Router → Service → Repository → ORM
 
 Do not add stats queries to `answer_repository.py` or `practice_session_repository.py`. Keep them in `stats_repository.py`.
 
+Do not import repository methods across repositories. See Section 6 for the explicit rule on `active_mistakes_count` cross-repository semantics.
+
 ---
 
 ## 8. Folder Structure Changes
@@ -182,11 +197,13 @@ app/
 │   └── stats_repository.py   # new
 ├── services/
 │   └── stats_service.py      # new
-└── routers/
-    └── stats.py              # new (or add route to users.py — see note below)
-schemas/
-└── stats.py                  # new
+├── routers/
+│   └── stats.py              # new (or add route to users.py — see note below)
+└── schemas/
+    └── stats.py              # new — inside app/schemas/, matching existing layout
 ```
+
+`schemas/` lives under `app/`, not at the repo root. Do not create a top-level `schemas/` directory — it does not match the existing project layout.
 
 The stats endpoint is scoped to a user (`/users/{user_id}/stats/overview`), so it fits naturally under `users.py`. Either location is acceptable — pick one and be consistent. A separate `stats.py` router is preferred if more stat endpoints are anticipated.
 
@@ -216,7 +233,8 @@ Required test cases:
 - `part_b.success_rate` is null when no part B answers exist
 - Answers to invalidated questions are excluded from `total_answered` and success rates
 - `simulations_completed` counts only `mode='exam'` completed sessions
-- `active_mistakes_count` matches the count of results from the mistakes endpoint
+- `active_mistakes_count` matches the count of results from the mistakes endpoint for the same user (semantic equivalence test)
+- Answers from `active` (not-yet-completed) sessions are not counted in `active_mistakes_count` or `repeated_mistakes_count`, and are not counted in answered stats
 - `repeated_mistakes_count` counts questions with ≥ 2 wrong answers; a question answered wrong once does not count
 - `repeated_mistakes_count` excludes invalidated questions
 - `avg_session_duration_seconds` is null with no completed sessions
@@ -253,7 +271,20 @@ A question answered wrong → right → wrong across three sessions has 2 wrong 
 
 This is a proxy. The denominator is number of completed sessions, not number of questions. It does not normalize for session length. A 40-question exam session and a 5-question practice session contribute equally to the average, which makes this metric imprecise. Accept this for MVP. Document it clearly in the API response if needed.
 
-**6. No caching in this phase**
+**6. `overall_success_rate` and per-part rates — float vs. Decimal**
+
+The response schema uses `float` with 2 decimal places. Do not use Python `float` arithmetic internally if the division is done in Python — floating-point rounding can produce inconsistent values in tests (e.g. `62.499999...` vs `62.50`). Options:
+
+- Compute the percentage in SQL (`ROUND(100.0 * correct / total, 2)`) and return the result directly.
+- Or compute in Python using `Decimal` and convert to `float` only at the Pydantic output boundary.
+
+Tests must compare rates as rounded values (e.g., `pytest.approx(62.5, abs=0.01)` or compare as strings). Pick one approach, document it in `stats_service.py`, and be consistent.
+
+**7. Parts are always B and C**
+
+`part_b` and `part_c` are hardcoded fields in the response schema. The DB `questions.part` column is constrained to `B` and `C`. The service must handle the case where the grouped query returns only one part (or neither) for a user without crashing — default missing parts to `{"total_answered": 0, "success_rate": null}`. If a future part were added, the response schema would need a new field; the grouped-by-part query would not crash but the new part would be silently ignored until a schema change is made.
+
+**8. No caching in this phase**
 
 Stats are computed on every request. With the current scale (a few users, a few hundred sessions), this is fine. Do not add caching until profiling shows it is needed.
 
@@ -270,3 +301,14 @@ The phase is complete when:
 - The endpoint returns correct null/zero values for a new user with no sessions.
 - No `db.query()` in any new code.
 - No ORM objects returned from routers.
+
+---
+
+## 13. Explicit Wording for Implementation
+
+The following two statements must appear as comments in the relevant repository files when this phase is implemented.
+
+The `active_mistakes_count` query must include a short comment near the query explaining:
+
+- it intentionally matches the Phase 2 mistakes endpoint semantics
+- latest answer ordering uses `updated_at` as an MVP proxy because `answered_at` does not exist
