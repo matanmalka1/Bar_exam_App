@@ -62,12 +62,27 @@ disable = [
     "wrong-import-position",
 ]
 
-[tool.pylint.typecheck]
-ignored-modules = ["pypdfium2"]
-
 [tool.pylint.design]
 max-args = 8
 max-positional-arguments = 8
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+
+[tool.pyright]
+include = [
+    "app",
+    "scripts",
+    "tests",
+    "alembic",
+]
+exclude = [
+    ".venv",
+    "outputs",
+    "uploads",
+]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+reportMissingTypeStubs = false

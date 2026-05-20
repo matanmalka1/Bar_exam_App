@@ -104,6 +104,12 @@ Expected output on success:
 }
 ```
 
+### Run API
+
+```bash
+uvicorn app.main:app --reload
+```
+
 ### Run tests
 
 ```bash
@@ -115,6 +121,7 @@ pytest tests/ -v
 ```bash
 ruff check .
 pylint app scripts tests alembic/env.py alembic/versions/*.py
+pyright
 ```
 
 ## Data Model

@@ -10,7 +10,7 @@ import sys
 from collections import Counter
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeGuard
 
 from sqlalchemy import create_engine, func, or_, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -64,7 +64,7 @@ def resolve_database_url(cli_database_url: str | None) -> str | None:
     return parser.get("alembic", "sqlalchemy.url", fallback=None)
 
 
-def is_non_empty_text(value: Any) -> bool:
+def is_non_empty_text(value: Any) -> TypeGuard[str]:
     return isinstance(value, str) and bool(value.strip())
 
 
@@ -129,7 +129,8 @@ def validate_question_file(path: Path, payload: dict[str, Any]) -> list[dict[str
         number = raw_question.get("number")
         stable_id = raw_question.get("stable_id")
         question_location = f"{location}:{stable_id or number or '?'}"
-        numbers.append(number) if isinstance(number, int) else None
+        if isinstance(number, int):
+            numbers.append(number)
 
         options = raw_question.get("options")
         status = raw_question.get("status")
@@ -139,7 +140,9 @@ def validate_question_file(path: Path, payload: dict[str, Any]) -> list[dict[str
 
         if not isinstance(number, int) or not 1 <= number <= 40:
             errors.append(f"{question_location}: number must be an integer from 1 to 40")
-        if not is_non_empty_text(stable_id) or not STABLE_ID_RE.match(stable_id):
+        if not is_non_empty_text(stable_id):
+            errors.append(f"{question_location}: stable_id format is invalid")
+        elif not STABLE_ID_RE.match(stable_id):
             errors.append(f"{question_location}: stable_id format is invalid")
         elif isinstance(number, int) and isinstance(exam_date, str) and part in VALID_PARTS:
             expected_stable_id = f"{exam_date}_{part}_{number:03d}"
