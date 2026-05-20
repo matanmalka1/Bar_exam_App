@@ -9,7 +9,7 @@ from app.schemas.question import QuestionOptions
 
 class SessionCreateIn(BaseModel):
     user_id: int
-    mode: Literal["exam", "practice", "mistakes"]
+    mode: Literal["exam", "simulation", "practice", "mistakes", "bookmarks"]
     exam_date: str | None = Field(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
     part: Literal["B", "C"] | None = None
     question_count: int | None = Field(default=None, gt=0)
@@ -56,11 +56,32 @@ class SessionDetailOut(SessionSummaryOut):
     questions: list[SessionQuestionOut]
 
 
+class PartBreakdown(BaseModel):
+    total: int
+    answered: int
+    correct: int
+    score_percent: Decimal
+
+
+class ExamMistakeOut(BaseModel):
+    stable_id: str
+    part: str
+    number: int
+    body: str
+    options: QuestionOptions
+    selected_answer: str | None
+    correct_answer: str
+    reference: str
+
+
 class SessionCompleteOut(BaseModel):
     id: int
     status: str
     total_questions: int
+    scorable_questions: int
     answered_count: int
     correct_count: int
     score_percent: Decimal
     completed_at: datetime
+    part_breakdown: dict[str, PartBreakdown] | None = None
+    mistakes: list[ExamMistakeOut] | None = None

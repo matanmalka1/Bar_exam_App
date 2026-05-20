@@ -385,7 +385,7 @@ Fields:
 Rules:
 
 * Every answer belongs to a session
-* UserAnswer is immutable history
+* UserAnswer mutability follows `backend/docs/user_progress_spec.md`: within an active session the row is upserted on (session_id, question_id); once the session is completed the row is frozen. Cross-session history is preserved by having a separate row per session.
 * Do not delete answers when mistake state changes
 
 BookmarkedQuestion

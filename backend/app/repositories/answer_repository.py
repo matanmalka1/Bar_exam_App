@@ -1,8 +1,7 @@
-from sqlalchemy import Row, case, delete, func, select
+from sqlalchemy import Row, case, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models.bookmarked_question import BookmarkedQuestion
 from app.models.practice_session import PracticeSession
 from app.models.question import Question
 from app.models.user_answer import UserAnswer
@@ -92,44 +91,44 @@ def get_latest_mistakes(session: Session, user_id: int) -> list[Row]:
         select(Question, counts.c.times_answered, counts.c.times_wrong)
         .join(latest, latest.c.qid == Question.id)
         .join(counts, counts.c.qid == Question.id)
-        .where(latest.c.is_correct.is_(False))
+        .where(latest.c.is_correct.is_(False), Question.status == "active")
         .order_by(Question.exam_date.asc(), Question.part.asc(), Question.number.asc())
     )
     return list(session.execute(statement).all())
 
 
-def add_bookmark(session: Session, user_id: int, question_id: int) -> BookmarkedQuestion:
-    try:
-        with session.begin_nested():
-            bm = BookmarkedQuestion(user_id=user_id, question_id=question_id)
-            session.add(bm)
-            session.flush()
-            return bm
-    except IntegrityError:
-        existing = session.scalars(
-            select(BookmarkedQuestion).where(
-                BookmarkedQuestion.user_id == user_id,
-                BookmarkedQuestion.question_id == question_id,
-            )
-        ).one_or_none()
-        assert existing is not None
-        return existing
+def list_active_mistake_questions(session: Session, user_id: int) -> list[Question]:
+    """Questions where the user's latest answer across completed sessions is incorrect.
 
-
-def remove_bookmark(session: Session, user_id: int, question_id: int) -> None:
-    session.execute(
-        delete(BookmarkedQuestion).where(
-            BookmarkedQuestion.user_id == user_id,
-            BookmarkedQuestion.question_id == question_id,
+    Active sessions are ignored. Order: Question.stable_id asc (deterministic).
+    """
+    user_answers = (
+        select(
+            UserAnswer.id.label("ua_id"),
+            UserAnswer.question_id.label("qid"),
+            UserAnswer.is_correct.label("is_correct"),
+            UserAnswer.updated_at.label("updated_at"),
         )
+        .join(PracticeSession, PracticeSession.id == UserAnswer.session_id)
+        .where(PracticeSession.user_id == user_id, PracticeSession.status == "completed")
+        .subquery()
     )
-
-
-def list_bookmarks(session: Session, user_id: int) -> list[Row]:
+    ranked = select(
+        user_answers.c.ua_id,
+        user_answers.c.qid,
+        user_answers.c.is_correct,
+        func.row_number()
+        .over(
+            partition_by=user_answers.c.qid,
+            order_by=(user_answers.c.updated_at.desc(), user_answers.c.ua_id.desc()),
+        )
+        .label("rn"),
+    ).subquery()
+    latest = select(ranked.c.qid, ranked.c.is_correct).where(ranked.c.rn == 1).subquery()
     statement = (
-        select(Question, BookmarkedQuestion.created_at)
-        .join(BookmarkedQuestion, BookmarkedQuestion.question_id == Question.id)
-        .where(BookmarkedQuestion.user_id == user_id)
-        .order_by(BookmarkedQuestion.created_at.desc(), Question.stable_id.asc())
+        select(Question)
+        .join(latest, latest.c.qid == Question.id)
+        .where(latest.c.is_correct.is_(False), Question.status == "active")
+        .order_by(Question.stable_id.asc())
     )
-    return list(session.execute(statement).all())
+    return list(session.scalars(statement).all())

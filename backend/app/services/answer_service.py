@@ -1,6 +1,12 @@
 from sqlalchemy.orm import Session
 
-from app.repositories import answer_repository, practice_session_repository, question_repository, user_repository
+from app.repositories import (
+    answer_repository,
+    bookmark_repository,
+    practice_session_repository,
+    question_repository,
+    user_repository,
+)
 from app.schemas.answer import (
     AnswerExamOut,
     AnswerPracticeOut,
@@ -35,11 +41,11 @@ def submit_answer(session: Session, session_id: int, payload: AnswerSubmitIn) ->
     link = practice_session_repository.get_session_question_link(session, session_id, question.id)
     if link is None:
         raise AnswerError(422, "question does not belong to this session")
+    if question.status != "active":
+        raise AnswerError(422, "cannot answer invalidated question")
 
     db_answer = HEBREW_TO_DB[payload.selected_answer]
-    is_correct = (
-        question.status == "active" and question.correct_answer is not None and question.correct_answer == db_answer
-    )
+    is_correct = question.correct_answer is not None and question.correct_answer == db_answer
 
     ua, inserted = answer_repository.insert_user_answer(
         session,
@@ -53,7 +59,7 @@ def submit_answer(session: Session, session_id: int, payload: AnswerSubmitIn) ->
     session.commit()
     session.refresh(ua)
 
-    if ps.mode == "exam":
+    if ps.mode in ("exam", "simulation"):
         return AnswerExamOut(
             stable_id=payload.stable_id,
             selected_answer=DB_TO_HEBREW[ua.selected_answer],
@@ -103,7 +109,7 @@ def add_bookmark(session: Session, user_id: int, stable_id: str) -> BookmarkOut:
     question = question_repository.get_question_by_stable_id(session, stable_id)
     if question is None:
         raise AnswerError(404, "question not found")
-    bm = answer_repository.add_bookmark(session, user_id, question.id)
+    bm = bookmark_repository.add_bookmark(session, user_id, question.id)
     session.commit()
     session.refresh(bm)
     return BookmarkOut(user_id=user_id, stable_id=stable_id, created_at=bm.created_at)
@@ -115,14 +121,14 @@ def remove_bookmark(session: Session, user_id: int, stable_id: str) -> None:
     question = question_repository.get_question_by_stable_id(session, stable_id)
     if question is None:
         return
-    answer_repository.remove_bookmark(session, user_id, question.id)
+    bookmark_repository.remove_bookmark(session, user_id, question.id)
     session.commit()
 
 
 def list_bookmarks(session: Session, user_id: int) -> list[BookmarkedQuestionOut]:
     if user_repository.get_by_id(session, user_id) is None:
         raise AnswerError(404, "user not found")
-    rows = answer_repository.list_bookmarks(session, user_id)
+    rows = bookmark_repository.list_bookmarks(session, user_id)
     result: list[BookmarkedQuestionOut] = []
     for question, created_at in rows:
         result.append(

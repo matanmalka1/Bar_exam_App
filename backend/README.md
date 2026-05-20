@@ -4,18 +4,20 @@ Hebrew RTL PWA for practicing past Israeli Bar Association qualification exams.
 
 ## Project Status
 
-| Layer              | Status      |
-|--------------------|-------------|
-| PDF extraction     | Complete    |
-| JSON validation    | Complete    |
-| DB schema          | Complete    |
-| Data import        | Complete    |
-| Application API    | Complete (read-only questions + user progress) |
-| Auth               | Not started |
-| Statistics         | Not started |
-| Frontend           | Not started |
+| Layer                                                                   | Status          |
+| ----------------------------------------------------------------------- | --------------- |
+| PDF extraction                                                          | Implemented     |
+| JSON validation                                                         | Implemented     |
+| DB schema                                                               | Implemented     |
+| Data import                                                             | Implemented     |
+| Phase 1 read-only question API                                          | Implemented     |
+| Phase 2 user progress API (practice / mistakes / bookmarks / exam / simulation) | Implemented     |
+| Real auth (email/password, JWT)                                         | Not implemented |
+| Statistics dashboard                                                    | Not implemented |
+| Per-question timing                                                     | Not implemented |
+| Frontend                                                                | Not implemented |
 
-The questions table is populated with 320 questions across 8 exam parts. The read-only FastAPI question API is implemented. The user progress layer (sessions, answers, mistakes, bookmarks) is implemented. Auth, statistics, and frontend have not been implemented yet.
+The questions table is populated with 320 questions across 8 exam parts. The Phase 1 read-only question API is implemented. The Phase 2 user progress layer is implemented and covers: practice sessions, mistakes-only sessions, bookmark-only sessions, official past-exam replay (`exam` mode, requires `exam_date`; full 80 questions or single 40-question part from that exam), and mixed 80-question simulation (`simulation` mode; 40 B + 40 C drawn from the full pool across all imported dates). Both `exam` and `simulation` hide the answer key until completion and return a per-part score breakdown and mistake list on complete. Real authentication (only a dev user exists today), statistics endpoints, and the frontend are not implemented.
 
 ## Folder Structure
 
@@ -177,24 +179,24 @@ vulture
 
 ### questions table
 
-| Column             | Type          | Notes                                            |
-|--------------------|---------------|--------------------------------------------------|
-| `id`               | integer PK    |                                                  |
-| `stable_id`        | varchar(32)   | unique, e.g. `2025-04_B_017`                     |
-| `exam_date`        | date          | first day of exam month, e.g. `2025-04-01`       |
-| `part`             | varchar(1)    | `B` or `C`                                       |
-| `number`           | integer       | 1–40                                             |
-| `body`             | text          | original question text                           |
-| `option_a`         | text          | answer option א                                  |
-| `option_b`         | text          | answer option ב                                  |
-| `option_c`         | text          | answer option ג                                  |
-| `option_d`         | text          | answer option ד                                  |
-| `status`           | varchar(16)   | `active` or `invalidated`                        |
-| `correct_answer`   | varchar(1)    | `A`/`B`/`C`/`D` for active, NULL for invalidated |
-| `reference`        | text          | official סימוכין                                 |
-| `invalidation_note`| text          | non-empty for invalidated, NULL for active        |
-| `created_at`       | timestamptz   |                                                  |
-| `updated_at`       | timestamptz   |                                                  |
+| Column              | Type        | Notes                                            |
+| ------------------- | ----------- | ------------------------------------------------ |
+| `id`                | integer PK  |                                                  |
+| `stable_id`         | varchar(32) | unique, e.g. `2025-04_B_017`                     |
+| `exam_date`         | date        | first day of exam month, e.g. `2025-04-01`       |
+| `part`              | varchar(1)  | `B` or `C`                                       |
+| `number`            | integer     | 1–40                                             |
+| `body`              | text        | original question text                           |
+| `option_a`          | text        | answer option א                                  |
+| `option_b`          | text        | answer option ב                                  |
+| `option_c`          | text        | answer option ג                                  |
+| `option_d`          | text        | answer option ד                                  |
+| `status`            | varchar(16) | `active` or `invalidated`                        |
+| `correct_answer`    | varchar(1)  | `A`/`B`/`C`/`D` for active, NULL for invalidated |
+| `reference`         | text        | official סימוכין                                 |
+| `invalidation_note` | text        | non-empty for invalidated, NULL for active       |
+| `created_at`        | timestamptz |                                                  |
+| `updated_at`        | timestamptz |                                                  |
 
 `correct_answer` is stored as a Latin letter (`A`/`B`/`C`/`D`). The Hebrew display labels (`א`/`ב`/`ג`/`ד`) are computed by the API layer.
 
@@ -206,37 +208,47 @@ There is no separate `answer_keys` table in the MVP implementation. `correct_ans
 
 ### Users
 
-| Endpoint | Description |
-|----------|-------------|
+| Endpoint                 | Description                                  |
+| ------------------------ | -------------------------------------------- |
 | `POST /api/v1/users/dev` | Upsert a dev user by `user_key` (idempotent) |
 
 ### Practice Sessions
 
-| Endpoint | Description |
-|----------|-------------|
-| `POST /api/v1/practice-sessions` | Create a new session (practice / exam / mistakes) |
-| `GET /api/v1/practice-sessions/{id}` | Get session with questions and answers |
-| `POST /api/v1/practice-sessions/{id}/answers` | Submit or update an answer for a question |
-| `POST /api/v1/practice-sessions/{id}/complete` | Complete a session and freeze scoring |
+| Endpoint                                       | Description                                                   |
+| ---------------------------------------------- | ------------------------------------------------------------- |
+| `POST /api/v1/practice-sessions`               | Create a new session (practice / exam / simulation / mistakes / bookmarks) |
+| `GET /api/v1/practice-sessions/{id}`           | Get session with questions and answers                        |
+| `POST /api/v1/practice-sessions/{id}/answers`  | Submit or update an answer for a question                     |
+| `POST /api/v1/practice-sessions/{id}/complete` | Complete a session and freeze scoring                         |
 
 ### User History
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/v1/users/{user_id}/sessions` | List all sessions for a user |
+| Endpoint                               | Description                                |
+| -------------------------------------- | ------------------------------------------ |
+| `GET /api/v1/users/{user_id}/sessions` | List all sessions for a user               |
 | `GET /api/v1/users/{user_id}/mistakes` | List active mistakes (latest answer wrong) |
 
 ### Bookmarks
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /api/v1/users/{user_id}/bookmarks` | List all bookmarked questions |
-| `POST /api/v1/users/{user_id}/bookmarks/{stable_id}` | Add bookmark (idempotent) |
-| `DELETE /api/v1/users/{user_id}/bookmarks/{stable_id}` | Remove bookmark |
+| Endpoint                                               | Description                   |
+| ------------------------------------------------------ | ----------------------------- |
+| `GET /api/v1/users/{user_id}/bookmarks`                | List all bookmarked questions |
+| `POST /api/v1/users/{user_id}/bookmarks/{stable_id}`   | Add bookmark (idempotent)     |
+| `DELETE /api/v1/users/{user_id}/bookmarks/{stable_id}` | Remove bookmark               |
 
-Answer visibility rules:
-- `practice` and `mistakes` sessions: `correct_answer` and `reference` are always returned after answer submission.
-- `exam` sessions: answer data is hidden until the session is completed.
+Session mode behavior (see `docs/user_progress_spec.md` for the full spec):
+
+| Mode         | Question pool                                                                                             | Filter args                                                                                  | Answer-key visibility                                                                            |
+| ------------ | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `practice`   | All active questions filtered by request                                                                  | `exam_date`, `part`, `question_count`, `include_invalidated` accepted                        | Revealed per-question after the user answers that question                                       |
+| `mistakes`   | User's current active mistakes (latest answer wrong across _completed_ sessions; active sessions ignored) | `question_count` accepted; other filter args rejected (422)                                  | Revealed per-question after the user answers that question                                       |
+| `bookmarks`  | User's bookmarked questions                                                                               | `question_count` accepted; other filter args rejected (422)                                  | Revealed per-question after the user answers that question                                       |
+| `exam`       | Single official exam by date. If `part` omitted: 40 B + 40 C from that date (grouped B-then-C). If `part` set: 40 from that part. Dates never mixed. Invalidated questions are included to preserve the official source. | `exam_date` **required**; `part` optional; `question_count` and `include_invalidated=true` rejected | Hidden for every question while active; revealed for all questions after completion |
+| `simulation` | Mixed 80-question simulation: 40 B + 40 C from the full active pool across all dates (unseen-first)       | `exam_date`, `part`, `question_count`, `include_invalidated=true` all rejected (422)         | Hidden for every question while active; revealed for all questions after completion              |
+
+Exam and simulation completion responses include `part_breakdown` (only the scorable active questions in the parts present in the session, each with `total` / `answered` / `correct` / `score_percent`) and `mistakes` (list of unanswered or incorrect active questions with `stable_id`, `part`, `number`, `body`, `options`, `selected_answer`, `correct_answer`, `reference`). For practice / mistakes / bookmarks sessions both fields are `null`. Simulation score denominator is `total_questions` because simulation selects only active questions. Exam score denominator excludes invalidated questions; invalidated questions stay in the session and are visible with `status=invalidated`, but they are not counted as wrong and are not included in the mistakes list.
+
+Answer mutability: within an active session, the user can resubmit an answer for a given question and the row is upserted by `(session_id, question_id)`. Once the session is completed, its answer rows are frozen. Cross-session history is preserved because each session has its own answer rows.
 
 ## API Answer Visibility
 
@@ -256,7 +268,7 @@ Simulation and regular practice flows must use practice payloads before submissi
 
 ## Invalidated Questions
 
-Invalidated questions stay in the database with their stable IDs. They are included in source-data QA and review views, excluded from active exam counts, and must not be selected for normal practice or simulation unless a future QA-only flow explicitly requests them.
+Invalidated questions stay in the database with their stable IDs. They are included in source-data QA and review views. Official `exam` mode includes them to preserve the original exam source, but excludes them from scoring denominators and mistakes. Simulation selects only active questions. Normal practice excludes invalidated questions unless `include_invalidated=true`.
 
 ## What Is Not Committed
 

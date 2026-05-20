@@ -59,6 +59,29 @@ def select_candidate_questions(
     return list(session.scalars(statement).all())
 
 
+def select_exam_candidates(session: Session, *, part: str) -> list[Question]:
+    """Active questions for a given part across all exam dates (simulation pool)."""
+    statement = (
+        select(Question)
+        .where(Question.part == part, Question.status == "active")
+        .order_by(Question.exam_date.asc(), Question.number.asc())
+    )
+    return list(session.scalars(statement).all())
+
+
+def select_official_exam_questions(session: Session, *, exam_date: date, part: str) -> list[Question]:
+    """All questions from a single official exam date and part, including invalidated."""
+    statement = (
+        select(Question)
+        .where(
+            Question.exam_date == exam_date,
+            Question.part == part,
+        )
+        .order_by(Question.number.asc())
+    )
+    return list(session.scalars(statement).all())
+
+
 def list_seen_question_ids(session: Session, user_id: int) -> set[int]:
     statement = (
         select(PracticeSessionQuestion.question_id)

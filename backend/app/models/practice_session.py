@@ -39,7 +39,10 @@ class PracticeSession(Base):
     )
 
     __table_args__ = (
-        CheckConstraint("mode IN ('exam', 'practice', 'mistakes')", name="ck_sessions_mode"),
+        CheckConstraint(
+            "mode IN ('exam', 'simulation', 'practice', 'mistakes', 'bookmarks')",
+            name="ck_sessions_mode",
+        ),
         CheckConstraint("status IN ('active', 'completed', 'abandoned')", name="ck_sessions_status"),
         CheckConstraint("part IS NULL OR part IN ('B', 'C')", name="ck_sessions_part"),
         CheckConstraint("total_questions > 0", name="ck_sessions_total_positive"),
