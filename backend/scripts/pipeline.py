@@ -148,9 +148,15 @@ class QAReport:
     missing_questions:  list = field(default_factory=list)
     missing_answers:    list = field(default_factory=list)
     duplicate_q_ids:    list = field(default_factory=list)
+    duplicate_ids:      list = field(default_factory=list)
     invalid_options:    list = field(default_factory=list)
+    short_question_bodies: list = field(default_factory=list)
+    short_answer_options:  list = field(default_factory=list)
+    suspicious_references: list = field(default_factory=list)
+    source_artifacts:      list = field(default_factory=list)
     hard_failures:      list = field(default_factory=list)
     manual_review:      list = field(default_factory=list)
+    manual_review_items: list = field(default_factory=list)
     warnings:           list = field(default_factory=list)
 
     @property
@@ -441,6 +447,7 @@ def check_header_artifacts(
         (part_hebrew, HEADER_MARKER_B),
     ]
     if HEADER_MARKER_B in text:
+        qa.source_artifacts.append({"question": q_num, "field": field_name, "artifact": HEADER_MARKER_B})
         qa.hard_failures.append(
             f"HARD-FAIL: Q{q_num} שדה '{field_name}' מכיל header artifact: "
             f"'{HEADER_MARKER_B}' — הסרת ה-header נכשלה לשאלה זו. נדרש תיקון ידני."
@@ -448,6 +455,7 @@ def check_header_artifacts(
         return
     for c0, c1 in combos:
         if c0 in text and c1 in text:
+            qa.source_artifacts.append({"question": q_num, "field": field_name, "artifact": f"{c0} + {c1}"})
             qa.hard_failures.append(
                 f"HARD-FAIL: Q{q_num} שדה '{field_name}' מכיל header artifact: "
                 f"'{c0}' + '{c1}' — הסרת ה-header נכשלה לשאלה זו. נדרש תיקון ידני."
@@ -546,7 +554,10 @@ def parse_question_block(
     # ולידציה של body
     if len(body) < 20:
         flags.append(f"short body ({len(body)} chars)")
-        qa.manual_review.append(f"Q{q_num}: body קצר חשוד: {body!r}")
+        item = f"Q{q_num}: body קצר חשוד: {body!r}"
+        qa.short_question_bodies.append({"question": q_num, "length": len(body), "text": body})
+        qa.manual_review.append(item)
+        qa.manual_review_items.append(item)
 
     # בדיקת header artifacts ב-body
     check_header_artifacts(q_num, "body", body, qa, part_name, part_hebrew)
@@ -570,16 +581,21 @@ def parse_question_block(
     # ולידציה: כל 4 האפשרויות חייבות להיות קיימות ולא ריקות
     for letter in OPTION_LETTERS:
         if letter not in options:
+            qa.invalid_options.append({"question": q_num, "option": letter, "reason": "missing"})
             qa.hard_failures.append(f"Q{q_num}: אפשרות '{letter}' חסרה")
             return None
         if not options[letter]:
+            qa.invalid_options.append({"question": q_num, "option": letter, "reason": "empty"})
             qa.hard_failures.append(f"Q{q_num}: אפשרות '{letter}' ריקה")
             return None
         if len(options[letter]) < 3:
             flags.append(f"short option {letter}")
-            qa.manual_review.append(
-                f"Q{q_num}: אפשרות '{letter}' קצרה חשוד: {options[letter]!r}"
+            item = f"Q{q_num}: אפשרות '{letter}' קצרה חשוד: {options[letter]!r}"
+            qa.short_answer_options.append(
+                {"question": q_num, "option": letter, "length": len(options[letter]), "text": options[letter]}
             )
+            qa.manual_review.append(item)
+            qa.manual_review_items.append(item)
 
     return ParsedQuestion(number=q_num, body=body, options=options, flags=flags)
 
@@ -611,6 +627,8 @@ def extract_questions(
     seen_nums = {}
     for q_num, _ in blocks:
         if q_num in seen_nums:
+            qa.duplicate_q_ids.append(q_num)
+            qa.duplicate_ids.append(q_num)
             qa.hard_failures.append(f"מספר שאלה כפול: {q_num}")
         seen_nums[q_num] = True
 
@@ -692,11 +710,17 @@ def extract_answers(norm_a_text: str, qa: QAReport, norm_log: list) -> dict:
             continue
 
         if not reference:
-            qa.manual_review.append(f"A{q_num}: סימוכין ריקים — לבדוק ב-PDF המקורי")
+            item = f"A{q_num}: סימוכין ריקים — לבדוק ב-PDF המקורי"
+            qa.suspicious_references.append({"question": q_num, "reason": "empty", "reference": reference})
+            qa.manual_review.append(item)
+            qa.manual_review_items.append(item)
         elif len(reference) < 10:
-            qa.manual_review.append(
-                f"A{q_num}: סימוכין קצרים חשוד ({len(reference)} תווים): {reference!r}"
+            item = f"A{q_num}: סימוכין קצרים חשוד ({len(reference)} תווים): {reference!r}"
+            qa.suspicious_references.append(
+                {"question": q_num, "reason": "short", "length": len(reference), "reference": reference}
             )
+            qa.manual_review.append(item)
+            qa.manual_review_items.append(item)
 
         if q_num in answers:
             qa.hard_failures.append(f"ערך תשובה כפול לשאלה {q_num}")

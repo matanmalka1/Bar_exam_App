@@ -49,6 +49,14 @@ Expected exam parts:
 
 ## 5. Question Schema
 
+The formal JSON Schema is stored at:
+
+```text
+backend/docs/question_import.schema.json
+```
+
+The schema defines the file envelope and per-question shape. The Python importer still owns cross-record validation that JSON Schema cannot express cleanly, such as global `stable_id` uniqueness and continuous question numbers.
+
 ### Input JSON fields (per question object)
 
 | Field               | Type                      | Notes                                     |
@@ -123,6 +131,10 @@ The other tables are defined for later application features and are out of scope
 
 There is no separate `exams` table. Exam metadata is derived from `questions.exam_date` and `questions.part` at query time.
 
+There is no separate `answer_keys` table in the MVP implementation. `correct_answer` and `reference` are stored directly on `questions` as an intentional simplification because each imported question has exactly one official answer key row. The API must still avoid exposing those fields in pre-submit practice payloads.
+
+Invalidated questions remain in the `questions` table. They keep their stable IDs, are included in source-data QA views, are excluded from active question counts, and must not be selected for normal practice or simulation unless a future QA-only flow explicitly requests them.
+
 ## 8. Constraints
 
 The `questions` table enforces:
@@ -147,8 +159,11 @@ The importer (`scripts/import_questions.py`) is:
 - fail-all on any validation error (full rollback)
 - strict about ignoring debug files
 - explicit in its printed summary
+- deterministic for a given set of JSON files
 
 If validation fails for any file or question, the importer rolls back the entire import.
+
+The importer does not silently delete DB rows that are absent from the input. Missing or extra input data must be caught by validation before import is considered successful.
 
 ### Run command
 
@@ -175,6 +190,32 @@ After import, the importer runs validation queries for:
 - no duplicate `stable_id` in DB
 - no forbidden artifact strings in text fields: `00:00`, ``, `ð`
 - invalidated question `2025-12_B_020` exists with `status='invalidated'`, `correct_answer IS NULL`, non-empty `invalidation_note`
+
+## 10.1 QA Report Contract
+
+Every PDF pipeline run writes `qa_report_<YYYY-MM_PART>.json`. The report must be useful for manual review, not only pass/fail status.
+
+Required report fields:
+
+- `exam_date`
+- `part`
+- `questions_count`
+- `answers_count`
+- `missing_questions`
+- `missing_answers`
+- `duplicate_q_ids`
+- `duplicate_ids`
+- `invalid_options`
+- `short_question_bodies`
+- `short_answer_options`
+- `suspicious_references`
+- `source_artifacts`
+- `hard_failures`
+- `manual_review`
+- `manual_review_items`
+- `warnings`
+
+`hard_failures` block import. `manual_review` and `manual_review_items` require human inspection against the official PDF before accepting the generated JSON.
 
 ## 11. Expected Summary
 
