@@ -20,7 +20,7 @@ class QuestionOptions(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class QuestionOut(BaseModel):
+class QuestionPracticeOut(BaseModel):
     stable_id: str
     exam_date: str
     part: str
@@ -30,8 +30,11 @@ class QuestionOut(BaseModel):
     body: str
     options: QuestionOptions
     status: str
-    correct_answer: str | None
-    reference: str
     invalidation_note: str | None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class QuestionReviewOut(QuestionPracticeOut):
+    correct_answer: str | None
+    reference: str

@@ -177,12 +177,28 @@ def test_get_questions_returns_40_ordered_questions(client: TestClient):
     assert [question["number"] for question in questions] == list(range(1, 41))
 
 
-def test_get_questions_returns_hebrew_answer_and_options(client: TestClient):
+def test_get_questions_returns_options_without_answer_key(client: TestClient):
     response = client.get("/api/v1/questions?exam_date=2025-04&part=B")
 
     assert response.status_code == 200
     question = response.json()[0]
+    assert question["options"] == {
+        "א": "אפשרות א",
+        "ב": "אפשרות ב",
+        "ג": "אפשרות ג",
+        "ד": "אפשרות ד",
+    }
+    assert "correct_answer" not in question
+    assert "reference" not in question
+
+
+def test_get_questions_for_review_returns_hebrew_answer_and_reference(client: TestClient):
+    response = client.get("/api/v1/questions/review?exam_date=2025-04&part=B")
+
+    assert response.status_code == 200
+    question = response.json()[0]
     assert question["correct_answer"] == "א"
+    assert question["reference"] == "סימוכין רשמי"
     assert question["options"] == {
         "א": "אפשרות א",
         "ב": "אפשרות ב",
@@ -223,6 +239,32 @@ def test_get_question_by_stable_id(client: TestClient):
     question = response.json()
     assert question["stable_id"] == "2025-04_B_001"
     assert question["number"] == 1
+    assert "correct_answer" not in question
+    assert "reference" not in question
+
+
+def test_question_practice_endpoint_does_not_leak_answer_fields_for_invalidated_question(
+    client: TestClient,
+):
+    response = client.get("/api/v1/questions/2025-12_B_020")
+
+    assert response.status_code == 200
+    question = response.json()
+    assert question["stable_id"] == "2025-12_B_020"
+    assert question["status"] == "invalidated"
+    assert question["invalidation_note"] == "השאלה נפסלה לפי מפתח התשובות הרשמי"
+    assert "correct_answer" not in question
+    assert "reference" not in question
+
+
+def test_get_question_review_by_stable_id(client: TestClient):
+    response = client.get("/api/v1/questions/2025-04_B_001/review")
+
+    assert response.status_code == 200
+    question = response.json()
+    assert question["stable_id"] == "2025-04_B_001"
+    assert question["correct_answer"] == "א"
+    assert question["reference"] == "סימוכין רשמי"
 
 
 def test_get_question_rejects_invalid_stable_id_format(client: TestClient):
@@ -239,7 +281,7 @@ def test_get_question_returns_404_for_unknown_valid_stable_id(client: TestClient
 
 
 def test_invalidated_question_has_no_correct_answer_and_note(client: TestClient):
-    response = client.get("/api/v1/questions/2025-12_B_020")
+    response = client.get("/api/v1/questions/2025-12_B_020/review")
 
     assert response.status_code == 200
     question = response.json()

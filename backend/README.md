@@ -10,10 +10,10 @@ Hebrew RTL PWA for practicing past Israeli Bar Association qualification exams.
 | JSON validation    | Complete    |
 | DB schema          | Complete    |
 | Data import        | Complete    |
-| Application API    | Not started |
+| Application API    | Read-only questions complete |
 | Frontend           | Not started |
 
-The questions table is populated with 320 questions across 8 exam parts. The application backend (FastAPI, auth, sessions, statistics) has not been implemented yet.
+The questions table is populated with 320 questions across 8 exam parts. The read-only FastAPI question API is implemented. Auth, sessions, scoring, mistakes, bookmarks, statistics, and frontend have not been implemented yet.
 
 ## Folder Structure
 
@@ -30,6 +30,8 @@ backend/
 ├── docs/
 │   ├── data_ingestion_spec.md
 │   ├── application_backend_spec.md
+│   ├── pdf_manual_qa_checklist.md
+│   ├── question_import.schema.json
 │   └── mvp_spec_delta.md
 ├── outputs/                  # Pipeline output (one dir per exam part)
 │   └── <YYYY-MM_PART>/
@@ -167,6 +169,28 @@ vulture
 `correct_answer` is stored as a Latin letter (`A`/`B`/`C`/`D`). The Hebrew display labels (`א`/`ב`/`ג`/`ד`) are computed by the API layer.
 
 There is no `exams` table. Exam metadata is derived from `questions.exam_date` and `questions.part`.
+
+There is no separate `answer_keys` table in the MVP implementation. `correct_answer` and `reference` are stored directly on `questions` as an intentional MVP simplification.
+
+## API Answer Visibility
+
+Practice endpoints do not expose official answer data:
+
+- `GET /api/v1/questions`
+- `GET /api/v1/questions/{stable_id}`
+
+Review endpoints expose `correct_answer` and `reference` and are intended only for QA, post-submit review, and future result screens:
+
+- `GET /api/v1/questions/review`
+- `GET /api/v1/questions/{stable_id}/review`
+
+These endpoints are not access-protected in this phase. The separation prevents accidental answer leakage in frontend flows, but it is not an authorization boundary.
+
+Simulation and regular practice flows must use practice payloads before submission.
+
+## Invalidated Questions
+
+Invalidated questions stay in the database with their stable IDs. They are included in source-data QA and review views, excluded from active exam counts, and must not be selected for normal practice or simulation unless a future QA-only flow explicitly requests them.
 
 ## What Is Not Committed
 

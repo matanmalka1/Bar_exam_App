@@ -34,4 +34,8 @@ question="$(request "/api/v1/questions/2025-04_B_001")"
 expect_contains "${question}" '"stable_id":"2025-04_B_001"'
 expect_contains "${question}" '"options"'
 
+review_question="$(request "/api/v1/questions/2025-04_B_001/review")"
+expect_contains "${review_question}" '"correct_answer":"'
+expect_contains "${review_question}" '"reference":"'
+
 echo "API smoke check passed: ${BASE_URL}"

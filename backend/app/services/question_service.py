@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.question import Question
 from app.repositories import question_repository
-from app.schemas.question import ExamSummary, QuestionOptions, QuestionOut
+from app.schemas.question import ExamSummary, QuestionOptions, QuestionPracticeOut, QuestionReviewOut
 
 PART_NAMES = {"B": "דין דיוני", "C": "דין מהותי"}
 MONTH_LABELS = {"04": "אפריל", "06": "יוני", "12": "דצמבר"}
@@ -27,20 +27,36 @@ def list_exams(session: Session) -> list[ExamSummary]:
     return exams
 
 
-def list_questions(session: Session, exam_date: str, part: str) -> list[QuestionOut]:
+def list_questions(session: Session, exam_date: str, part: str) -> list[QuestionPracticeOut]:
     parsed_exam_date = _parse_exam_date(exam_date)
     if parsed_exam_date is None:
         return []
 
     questions = question_repository.get_questions_by_exam(session, parsed_exam_date, part)
-    return [_build_question_out(question) for question in questions]
+    return [_build_question_practice_out(question) for question in questions]
 
 
-def get_question(session: Session, stable_id: str) -> QuestionOut | None:
+def list_questions_for_review(session: Session, exam_date: str, part: str) -> list[QuestionReviewOut]:
+    parsed_exam_date = _parse_exam_date(exam_date)
+    if parsed_exam_date is None:
+        return []
+
+    questions = question_repository.get_questions_by_exam(session, parsed_exam_date, part)
+    return [_build_question_review_out(question) for question in questions]
+
+
+def get_question(session: Session, stable_id: str) -> QuestionPracticeOut | None:
     question = question_repository.get_question_by_stable_id(session, stable_id)
     if question is None:
         return None
-    return _build_question_out(question)
+    return _build_question_practice_out(question)
+
+
+def get_question_for_review(session: Session, stable_id: str) -> QuestionReviewOut | None:
+    question = question_repository.get_question_by_stable_id(session, stable_id)
+    if question is None:
+        return None
+    return _build_question_review_out(question)
 
 
 def _parse_exam_date(value: str) -> date | None:
@@ -51,9 +67,30 @@ def _parse_exam_date(value: str) -> date | None:
         return None
 
 
-def _build_question_out(question: Question) -> QuestionOut:
+def _build_question_practice_out(question: Question) -> QuestionPracticeOut:
     exam_date = question.exam_date.strftime("%Y-%m")
-    return QuestionOut(
+    return QuestionPracticeOut(
+        stable_id=question.stable_id,
+        exam_date=exam_date,
+        part=question.part,
+        part_name=_part_name(question.part),
+        label=_exam_label(exam_date),
+        number=question.number,
+        body=question.body,
+        options=QuestionOptions(
+            א=question.option_a,
+            ב=question.option_b,
+            ג=question.option_c,
+            ד=question.option_d,
+        ),
+        status=question.status,
+        invalidation_note=question.invalidation_note,
+    )
+
+
+def _build_question_review_out(question: Question) -> QuestionReviewOut:
+    exam_date = question.exam_date.strftime("%Y-%m")
+    return QuestionReviewOut(
         stable_id=question.stable_id,
         exam_date=exam_date,
         part=question.part,

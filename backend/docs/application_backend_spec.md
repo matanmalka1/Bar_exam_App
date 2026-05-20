@@ -4,7 +4,7 @@
 
 Expose the imported question data through a read-only FastAPI application.
 
-This is the first application backend slice. It provides four HTTP endpoints over the already-imported `questions` table.
+This is the first application backend slice. It provides practice endpoints that hide official answer data, plus explicit review endpoints over the already-imported `questions` table.
 
 ## 2. Non-Goals
 
@@ -127,7 +127,9 @@ Format: `{month_name} {year}`, e.g. `יוני 2024`.
 
 ### GET /api/v1/questions
 
-Returns all questions for a given exam part.
+Returns all questions for a given exam part as a practice payload.
+
+This endpoint must not expose `correct_answer` or `reference`. It is intended for regular practice and future simulation screens before submission.
 
 **Query parameters:**
 
@@ -161,8 +163,6 @@ Returns all questions for a given exam part.
       "ד": "..."
     },
     "status": "active",
-    "correct_answer": "א",
-    "reference": "...",
     "invalidation_note": null
   }
 ]
@@ -170,7 +170,28 @@ Returns all questions for a given exam part.
 
 Ordered by `number` ascending.
 
-Includes both `active` and `invalidated` questions. Invalidated questions have `correct_answer: null`.
+Includes both `active` and `invalidated` questions. Invalidated questions may include `invalidation_note`.
+
+---
+
+### GET /api/v1/questions/review
+
+Returns all questions for a given exam part with official answer data.
+
+This endpoint is for QA, post-submit review, and future result screens only. It must not be used for pre-submit simulation payloads.
+
+These endpoints are not access-protected in this phase. The separation prevents accidental answer leakage in frontend flows, but it is not an authorization boundary.
+
+**Query parameters:** same as `GET /api/v1/questions`.
+
+**Response 200:** Same as `GET /api/v1/questions`, plus:
+
+```json
+{
+  "correct_answer": "א",
+  "reference": "..."
+}
+```
 
 `correct_answer` is returned as a Hebrew letter (`א`/`ב`/`ג`/`ד`), not the DB value (`A`/`B`/`C`/`D`). The service layer applies the reverse mapping.
 
@@ -191,6 +212,8 @@ Includes both `active` and `invalidated` questions. Invalidated questions have `
 
 Returns a single question by its stable ID.
 
+This is also a practice payload and must not expose `correct_answer` or `reference`.
+
 **Path parameter:**
 
 | Parameter   | Format                          |
@@ -204,6 +227,16 @@ Returns a single question by its stable ID.
 ```json
 { "detail": "question not found" }
 ```
+
+---
+
+### GET /api/v1/questions/{stable_id}/review
+
+Returns a single question by stable ID with official answer data.
+
+This endpoint is for QA, post-submit review, and future result screens only.
+
+These endpoints are not access-protected in this phase. The separation prevents accidental answer leakage in frontend flows, but it is not an authorization boundary.
 
 ## 6. Pydantic Schemas
 
@@ -223,7 +256,7 @@ class QuestionOptions(BaseModel):
     ג: str
     ד: str
 
-class QuestionOut(BaseModel):
+class QuestionPracticeOut(BaseModel):
     stable_id: str
     exam_date: str          # "YYYY-MM"
     part: str
@@ -233,9 +266,13 @@ class QuestionOut(BaseModel):
     body: str
     options: QuestionOptions
     status: str             # "active" or "invalidated"
+    invalidation_note: str | None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class QuestionReviewOut(QuestionPracticeOut):
     correct_answer: str | None   # Hebrew letter or null
     reference: str
-    invalidation_note: str | None
 
     model_config = ConfigDict(from_attributes=True)
 ```
@@ -267,9 +304,9 @@ Responsibilities:
 
 - Parse `YYYY-MM` string to `date` object before passing to repository.
 - Compute `label` and `part_name` from `exam_date` and `part`.
-- Reverse-map DB answer `A`/`B`/`C`/`D` → Hebrew `א`/`ב`/`ג`/`ד`.
+- Reverse-map DB answer `A`/`B`/`C`/`D` → Hebrew `א`/`ב`/`ג`/`ד` only for review schemas.
 - Reconstruct `options` dict with Hebrew keys from `option_a`/`option_b`/`option_c`/`option_d`.
-- Build and return Pydantic `ExamSummary` and `QuestionOut` objects.
+- Build and return Pydantic `ExamSummary`, `QuestionPracticeOut`, and `QuestionReviewOut` objects.
 
 The service must not access the DB directly.
 
@@ -327,24 +364,27 @@ Required test cases:
 - `GET /health` → 200 `{ "status": "ok" }`
 - `GET /api/v1/exams` → 200, returns list of exam summaries with correct labels and counts
 - `GET /api/v1/questions?exam_date=2025-04&part=B` → 200, 40 questions, ordered by number
-- `GET /api/v1/questions?exam_date=2025-04&part=B` → each question has Hebrew `correct_answer` and `options` dict with Hebrew keys
+- `GET /api/v1/questions?exam_date=2025-04&part=B` → each question has Hebrew `options` keys and does not include `correct_answer` or `reference`
+- `GET /api/v1/questions/review?exam_date=2025-04&part=B` → each question has Hebrew `correct_answer`, `reference`, and Hebrew `options` keys
 - `GET /api/v1/questions?exam_date=9999-99&part=B` → 200, empty list (no data)
 - `GET /api/v1/questions` (missing params) → 422
 - `GET /api/v1/questions?exam_date=2025-04&part=X` → 422
-- `GET /api/v1/questions/2025-04_B_001` → 200, correct question
+- `GET /api/v1/questions/2025-04_B_001` → 200, correct practice question without official answer data
+- `GET /api/v1/questions/2025-04_B_001/review` → 200, correct question with official answer data
 - `GET /api/v1/questions/does-not-exist` → 404
-- Invalidated question: `correct_answer` is null, `invalidation_note` is non-empty
+- Invalidated question on review endpoint: `correct_answer` is null, `invalidation_note` is non-empty
 - `exam_count` on `/api/v1/exams` counts only active questions
 
 ## 14. Acceptance Criteria
 
 The phase is complete when:
 
-- All 4 endpoints return correct data from a real PostgreSQL DB with the imported dataset.
-- Hebrew `correct_answer` and `options` keys are returned correctly.
+- All 6 endpoints return correct data from a real PostgreSQL DB with the imported dataset.
+- Practice endpoints do not expose `correct_answer` or `reference`.
+- Review endpoints return Hebrew `correct_answer` and Hebrew `options` keys correctly.
 - `label` and `part_name` are computed correctly for all 4 exam dates.
 - `GET /api/v1/exams` returns 8 entries (4 dates × 2 parts), ordered.
-- Invalidated question `2025-12_B_020` is returned with `correct_answer: null`.
+- Invalidated question `2025-12_B_020` is returned on review endpoints with `correct_answer: null`.
 - All tests pass.
 - No ORM objects leak into router responses.
 - No `db.query()` anywhere in the codebase.
