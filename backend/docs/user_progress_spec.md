@@ -1,7 +1,7 @@
 # User Progress + Practice Sessions Spec — Phase 2
 
-> **Status: Spec only. Do not implement code yet.**
-> Point out any risky product or backend decisions before coding begins.
+> **Status: Implemented. This document reflects the actual Phase 2 behavior.**
+> Do not start Phase 3 until this spec is confirmed to match the code.
 
 ---
 
@@ -210,16 +210,22 @@ Creates a new practice session for a user.
 
 ### Selection algorithm
 
-1. Repository returns the full candidate pool that matches `part`, `exam_date`, and `include_invalidated`, ordered canonically (`exam_date ASC, part ASC, number ASC`). `exam_date` is only applied when explicitly provided — a subject-level session (`part=B` or `part=C` with no `exam_date`) draws from **all** imported exams for that part.
+> **Important:** The final question order is always randomized. Canonical ordering applies only to the internal repository fetch — it is never the order shown to the user.
+
+This is intentional product behavior. The backend owns all randomization. The frontend does not send seed or ordering parameters; no API field controls the shuffle.
+
+1. Repository fetches the full candidate pool matching `part`, `exam_date`, and `include_invalidated`. The fetch uses a stable internal order (`exam_date ASC, part ASC, number ASC`) for reproducible queries, but this order is immediately discarded by the service — it is **not** the final question order.
+   - If `exam_date` is provided, selection is restricted to that exam date.
+   - If `exam_date` is omitted and `part` is provided, selection spans **all** imported exam dates for that part.
 2. Repository returns the set of question IDs the user has already seen (any row in `practice_session_questions` joined through `practice_sessions` for this `user_id`).
 3. Service splits candidates into `unseen` and `seen` groups.
-4. Service shuffles each group independently using a backend-owned RNG. Randomization is **not** exposed as a frontend/API parameter; tests inject a deterministic seed via the module-level `_make_rng` factory.
-5. Final order = `unseen` shuffled, followed by `seen` shuffled. Unseen questions are always preferred; seen questions are only used as fill when the unseen pool is too small.
+4. Service shuffles each group independently using `random.Random()` (backend-owned, no seed exposed). Randomization is **not** exposed as a frontend/API parameter. Tests inject a deterministic seed by monkeypatching the module-level `_make_rng` factory. Production behavior is always random — never first-N canonical.
+5. Final order = `unseen` shuffled + `seen` shuffled. Unseen questions are always preferred. Seen questions fill remaining slots only when the unseen pool is insufficient. Repeated questions are allowed only when the pool forces it.
 6. If `question_count` is set, the first N from this combined list are taken. If `question_count > len(candidates)` → 422.
-7. If `question_count` is null, all matching questions are included (unseen first, seen last, shuffled within each group).
-8. The selected order is persisted in `practice_session_questions.position` and is the source of truth from that point on. `GET /practice-sessions/{id}` returns the persisted order unchanged on every call — never reshuffles.
+7. If `question_count` is null, all matching questions are included (unseen first, seen last, each group shuffled).
+8. The selected order is persisted in `practice_session_questions.position` immediately at session creation. This is the source of truth from that point on. `GET /practice-sessions/{id}` returns the persisted order unchanged on every call — never reshuffles.
 
-No DB `random()` is used. Shuffling happens in the service layer only.
+No DB `random()` is used. All shuffling happens in the service layer only.
 
 If no matching questions are found → 422 with descriptive error.
 
@@ -670,7 +676,7 @@ Unanswered questions count against the user. This is intentional (matches real e
 Do not add `user_id` to `user_answers` in this phase.
 
 **6. `practice_session_questions` order is the persisted source of truth**
-Positions are assigned at session creation by the selection algorithm (see section 5). After creation, the row order is frozen — `GET /sessions/{id}` returns it as-is and never reshuffles. The selection itself uses a backend-owned RNG; the seed is never exposed via the API. Tests control randomness by replacing the `practice_session_service._make_rng` factory.
+Positions are assigned at session creation by the selection algorithm (see section 5). After creation, the row order is frozen — `GET /sessions/{id}` returns it as-is and never reshuffles. The selection itself uses a backend-owned `random.Random()` instance; no seed is exposed via the API and the frontend sends no ordering parameters. Tests control randomness by monkeypatching `practice_session_service._make_rng`. Production behavior is always a fresh unseeded shuffle — never first-N canonical order.
 
 **7. Anti-repeat is best-effort, not a guarantee**
 A new session prefers questions the user has not seen before (any row in `practice_session_questions` for any of the user's sessions counts as "seen"). When the unseen pool is too small to fill `question_count`, the remaining slots are filled from previously seen questions. Repeats are only allowed when the pool forces it.
