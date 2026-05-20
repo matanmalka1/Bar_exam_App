@@ -573,60 +573,60 @@ Once the session is completed, the answer row for that session is frozen. Cross-
 
 ## 12. Alembic Migration
 
-Add a single migration file for this phase:
+Phase 2 migration is:
 
 ```
 alembic/versions/20260520_0002_create_user_progress.py
 ```
 
-The migration must:
+The migration creates:
 
-- Create `users`, `practice_sessions`, `practice_session_questions`, `user_answers`, `bookmarked_questions` in one migration.
-- Not modify the `questions` table.
-- Be reversible (implement `downgrade()`).
+- `users`, `practice_sessions`, `practice_session_questions`, `user_answers`, `bookmarked_questions` in one migration.
+- It does not modify the `questions` table.
+- It is reversible via `downgrade()`.
 
 ---
 
 ## 13. Folder Structure Changes
 
-Add to `backend/app/`:
+Phase 2 added to `backend/app/`:
 
 ```
 app/
 ├── models/
-│   ├── question.py          # existing
-│   ├── user.py              # new
-│   ├── practice_session.py  # new
-│   └── user_answer.py       # new (includes practice_session_questions, bookmarked_questions)
+│   ├── question.py
+│   ├── user.py
+│   ├── practice_session.py
+│   ├── practice_session_question.py
+│   ├── bookmarked_question.py
+│   └── user_answer.py
 ├── repositories/
-│   ├── question_repository.py     # existing
-│   ├── user_repository.py         # new
-│   ├── practice_session_repository.py      # new
-│   └── answer_repository.py       # new
+│   ├── question_repository.py
+│   ├── user_repository.py
+│   ├── practice_session_repository.py
+│   └── answer_repository.py
 ├── services/
-│   ├── question_service.py        # existing
-│   ├── user_service.py            # new
-│   ├── practice_session_service.py         # new
-│   └── answer_service.py          # new
+│   ├── question_service.py
+│   ├── user_service.py
+│   ├── practice_session_service.py
+│   └── answer_service.py
 ├── routers/
-│   ├── questions.py               # existing
-│   ├── users.py                   # new
-│   ├── sessions.py                # new
-│   └── answers.py                 # new (or folded into sessions.py)
+│   ├── questions.py
+│   ├── users.py
+│   ├── practice_sessions.py
+│   └── answers.py
 └── schemas/
-    ├── question.py                # existing
-    ├── user.py                    # new
-    ├── session.py                 # new
-    └── answer.py                  # new
+    ├── question.py
+    ├── user.py
+    ├── session.py
+    └── answer.py
 ```
 
 ---
 
 ## 14. Tests
 
-Add `tests/test_user_progress.py`.
-
-Required test cases:
+Implemented tests in `tests/test_user_progress.py` cover:
 
 - `POST /api/v1/users/dev` creates dev user on first call, returns same user on second call (idempotent)
 - `POST /api/v1/practice-sessions` creates session with correct `total_questions` and `status=active`

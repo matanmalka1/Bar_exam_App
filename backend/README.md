@@ -10,10 +10,12 @@ Hebrew RTL PWA for practicing past Israeli Bar Association qualification exams.
 | JSON validation    | Complete    |
 | DB schema          | Complete    |
 | Data import        | Complete    |
-| Application API    | Read-only questions complete |
+| Application API    | Complete (read-only questions + user progress) |
+| Auth               | Not started |
+| Statistics         | Not started |
 | Frontend           | Not started |
 
-The questions table is populated with 320 questions across 8 exam parts. The read-only FastAPI question API is implemented. Auth, sessions, scoring, mistakes, bookmarks, statistics, and frontend have not been implemented yet.
+The questions table is populated with 320 questions across 8 exam parts. The read-only FastAPI question API is implemented. The user progress layer (sessions, answers, mistakes, bookmarks) is implemented. Auth, statistics, and frontend have not been implemented yet.
 
 ## Folder Structure
 
@@ -21,15 +23,40 @@ The questions table is populated with 320 questions across 8 exam parts. The rea
 backend/
 ├── alembic/                  # DB migrations
 │   └── versions/
-│       └── 20260520_0001_create_questions.py
+│       ├── 20260520_0001_create_questions.py
+│       └── 20260520_0002_create_user_progress.py
 ├── app/
 │   ├── db/
 │   │   └── base.py           # SQLAlchemy declarative base
-│   └── models/
-│       └── question.py       # Question ORM model
+│   ├── models/
+│   │   ├── question.py       # Question ORM model
+│   │   ├── user.py           # User ORM model
+│   │   ├── practice_session.py
+│   │   ├── practice_session_question.py
+│   │   ├── user_answer.py
+│   │   └── bookmarked_question.py
+│   ├── repositories/
+│   │   ├── question_repository.py
+│   │   ├── practice_session_repository.py
+│   │   └── user_repository.py
+│   ├── services/
+│   │   ├── question_service.py
+│   │   ├── practice_session_service.py
+│   │   └── user_service.py
+│   ├── routers/
+│   │   ├── questions.py
+│   │   ├── practice_sessions.py
+│   │   └── users.py
+│   ├── schemas/
+│   │   ├── question.py
+│   │   ├── session.py
+│   │   ├── answer.py
+│   │   └── user.py
+│   └── main.py
 ├── docs/
 │   ├── data_ingestion_spec.md
 │   ├── application_backend_spec.md
+│   ├── user_progress_spec.md
 │   ├── pdf_manual_qa_checklist.md
 │   ├── question_import.schema.json
 │   └── mvp_spec_delta.md
@@ -41,9 +68,12 @@ backend/
 │       └── debug/                          ← not committed
 ├── scripts/
 │   ├── pipeline.py           # PDF → JSON extraction pipeline
-│   └── import_questions.py   # JSON → DB importer
+│   ├── import_questions.py   # JSON → DB importer
+│   └── smoke_api.sh          # API smoke test script
 ├── tests/
-│   └── test_import_questions.py
+│   ├── conftest.py
+│   ├── test_import_questions.py
+│   └── test_user_progress.py
 ├── uploads/                  # Source PDFs (not committed)
 ├── alembic.ini
 └── requirements.txt
@@ -171,6 +201,42 @@ vulture
 There is no `exams` table. Exam metadata is derived from `questions.exam_date` and `questions.part`.
 
 There is no separate `answer_keys` table in the MVP implementation. `correct_answer` and `reference` are stored directly on `questions` as an intentional MVP simplification.
+
+## User Progress API
+
+### Users
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/v1/users/dev` | Upsert a dev user by `user_key` (idempotent) |
+
+### Practice Sessions
+
+| Endpoint | Description |
+|----------|-------------|
+| `POST /api/v1/practice-sessions` | Create a new session (practice / exam / mistakes) |
+| `GET /api/v1/practice-sessions/{id}` | Get session with questions and answers |
+| `POST /api/v1/practice-sessions/{id}/answers` | Submit or update an answer for a question |
+| `POST /api/v1/practice-sessions/{id}/complete` | Complete a session and freeze scoring |
+
+### User History
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v1/users/{user_id}/sessions` | List all sessions for a user |
+| `GET /api/v1/users/{user_id}/mistakes` | List active mistakes (latest answer wrong) |
+
+### Bookmarks
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/v1/users/{user_id}/bookmarks` | List all bookmarked questions |
+| `POST /api/v1/users/{user_id}/bookmarks/{stable_id}` | Add bookmark (idempotent) |
+| `DELETE /api/v1/users/{user_id}/bookmarks/{stable_id}` | Remove bookmark |
+
+Answer visibility rules:
+- `practice` and `mistakes` sessions: `correct_answer` and `reference` are always returned after answer submission.
+- `exam` sessions: answer data is hidden until the session is completed.
 
 ## API Answer Visibility
 

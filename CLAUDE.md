@@ -785,15 +785,3 @@ Product Decisions Already Made
 * Backend is source of truth for scoring
 
 ⸻
-
-Current Priority
-
-The next correct step is to finalize:
-
-1. JSON schema
-2. Import validation rules
-3. Database model
-4. MVP screen flow
-5. First implementation plan
-
-Do not start UI polish before the data pipeline is reliable.
