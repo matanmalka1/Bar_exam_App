@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
-from app.db.session import get_session
+from app.db.deps import get_session
 from app.schemas.question import ExamSummary, QuestionPracticeOut, QuestionReviewOut
 from app.services import question_service
 

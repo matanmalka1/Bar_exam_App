@@ -1,61 +1,26 @@
-import sys
-from collections.abc import Generator
+from collections.abc import Callable, Generator
+from contextlib import AbstractContextManager
 from datetime import date
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-from sqlalchemy.pool import StaticPool
 
-BACKEND_DIR = Path(__file__).resolve().parents[1]
-if str(BACKEND_DIR) not in sys.path:
-    sys.path.insert(0, str(BACKEND_DIR))
-
-from app.db.base import Base
-from app.db.session import get_session
+from app.db.deps import get_session
 from app.main import app
 from app.models.question import Question
 
-
-def make_question(
-    exam_date: date,
-    part: str,
-    number: int,
-    *,
-    status: str = "active",
-    correct_answer: str | None = "A",
-    invalidation_note: str | None = None,
-) -> Question:
-    return Question(
-        stable_id=f"{exam_date.strftime('%Y-%m')}_{part}_{number:03d}",
-        exam_date=exam_date,
-        part=part,
-        number=number,
-        body=f"גוף שאלה {number}",
-        option_a="אפשרות א",
-        option_b="אפשרות ב",
-        option_c="אפשרות ג",
-        option_d="אפשרות ד",
-        status=status,
-        correct_answer=correct_answer,
-        reference="סימוכין רשמי",
-        invalidation_note=invalidation_note,
-    )
+QuestionFactory = Callable[..., Question]
+ClientBuilder = Callable[[Callable[[Session], None]], AbstractContextManager[TestClient]]
 
 
 @pytest.fixture
-def client() -> Generator[TestClient, None, None]:
-    engine = create_engine(
-        "sqlite+pysqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    Base.metadata.create_all(engine)
-
-    with Session(engine) as session:
+def client(
+    client_builder: ClientBuilder,
+    make_question: QuestionFactory,
+) -> Generator[TestClient, None, None]:
+    def seed_database(session: Session) -> None:
         session.add_all([make_question(date(2025, 4, 1), "B", number) for number in range(1, 41)])
         session.add(make_question(date(2025, 4, 1), "C", 1, correct_answer="B"))
         session.add_all([make_question(date(2025, 12, 1), "B", number) for number in range(1, 20)])
@@ -70,16 +35,9 @@ def client() -> Generator[TestClient, None, None]:
             )
         )
         session.add_all([make_question(date(2025, 12, 1), "B", number) for number in range(21, 41)])
-        session.commit()
 
-    def override_get_session() -> Generator[Session, None, None]:
-        with Session(engine) as session:
-            yield session
-
-    app.dependency_overrides[get_session] = override_get_session
-    with TestClient(app) as test_client:
+    with client_builder(seed_database) as test_client:
         yield test_client
-    app.dependency_overrides.clear()
 
 
 def test_health(client: TestClient):

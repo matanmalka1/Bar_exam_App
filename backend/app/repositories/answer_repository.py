@@ -2,9 +2,10 @@ from sqlalchemy import Row, case, delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.models.bookmarked_question import BookmarkedQuestion
 from app.models.practice_session import PracticeSession
 from app.models.question import Question
-from app.models.user_answer import BookmarkedQuestion, UserAnswer
+from app.models.user_answer import UserAnswer
 
 
 def get_user_answer(session: Session, session_id: int, question_id: int) -> UserAnswer | None:

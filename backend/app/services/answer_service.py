@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.repositories import answer_repository, question_repository, session_repository, user_repository
+from app.repositories import answer_repository, practice_session_repository, question_repository, user_repository
 from app.schemas.answer import (
     AnswerExamOut,
     AnswerPracticeOut,
@@ -22,7 +22,7 @@ class AnswerError(Exception):
 
 
 def submit_answer(session: Session, session_id: int, payload: AnswerSubmitIn) -> AnswerPracticeOut | AnswerExamOut:
-    ps = session_repository.get_session_by_id(session, session_id)
+    ps = practice_session_repository.get_session_by_id(session, session_id)
     if ps is None:
         raise AnswerError(404, "session not found")
     if ps.status != "active":
@@ -32,7 +32,7 @@ def submit_answer(session: Session, session_id: int, payload: AnswerSubmitIn) ->
     if question is None:
         raise AnswerError(422, "question not found")
 
-    link = session_repository.get_session_question_link(session, session_id, question.id)
+    link = practice_session_repository.get_session_question_link(session, session_id, question.id)
     if link is None:
         raise AnswerError(422, "question does not belong to this session")
 
@@ -49,7 +49,7 @@ def submit_answer(session: Session, session_id: int, payload: AnswerSubmitIn) ->
         is_correct=is_correct,
     )
     if inserted:
-        session_repository.increment_answered_count(session, session_id)
+        practice_session_repository.increment_answered_count(session, session_id)
     session.commit()
     session.refresh(ua)
 

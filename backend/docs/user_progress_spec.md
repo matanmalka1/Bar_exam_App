@@ -595,12 +595,12 @@ app/
 ├── repositories/
 │   ├── question_repository.py     # existing
 │   ├── user_repository.py         # new
-│   ├── session_repository.py      # new
+│   ├── practice_session_repository.py      # new
 │   └── answer_repository.py       # new
 ├── services/
 │   ├── question_service.py        # existing
 │   ├── user_service.py            # new
-│   ├── session_service.py         # new
+│   ├── practice_session_service.py         # new
 │   └── answer_service.py          # new
 ├── routers/
 │   ├── questions.py               # existing
@@ -670,7 +670,7 @@ Unanswered questions count against the user. This is intentional (matches real e
 Do not add `user_id` to `user_answers` in this phase.
 
 **6. `practice_session_questions` order is the persisted source of truth**
-Positions are assigned at session creation by the selection algorithm (see section 5). After creation, the row order is frozen — `GET /sessions/{id}` returns it as-is and never reshuffles. The selection itself uses a backend-owned RNG; the seed is never exposed via the API. Tests control randomness by replacing the `session_service._make_rng` factory.
+Positions are assigned at session creation by the selection algorithm (see section 5). After creation, the row order is frozen — `GET /sessions/{id}` returns it as-is and never reshuffles. The selection itself uses a backend-owned RNG; the seed is never exposed via the API. Tests control randomness by replacing the `practice_session_service._make_rng` factory.
 
 **7. Anti-repeat is best-effort, not a guarantee**
 A new session prefers questions the user has not seen before (any row in `practice_session_questions` for any of the user's sessions counts as "seen"). When the unseen pool is too small to fill `question_count`, the remaining slots are filled from previously seen questions. Repeats are only allowed when the pool forces it.

@@ -3,13 +3,13 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
-from app.db.session import get_session
+from app.db.deps import get_session
 from app.schemas.answer import BookmarkedQuestionOut, BookmarkOut, BookmarkRemovedOut, MistakeOut
 from app.schemas.session import SessionSummaryOut
 from app.schemas.user import UserOut
-from app.services import answer_service, session_service, user_service
+from app.services import answer_service, practice_session_service, user_service
 from app.services.answer_service import AnswerError
-from app.services.session_service import SessionError
+from app.services.practice_session_service import SessionError
 
 router = APIRouter()
 
@@ -28,7 +28,7 @@ def list_user_sessions(
     status: Annotated[Literal["active", "completed", "abandoned"] | None, Query()] = None,
 ) -> list[SessionSummaryOut]:
     try:
-        return session_service.list_user_sessions(session, user_id, status)
+        return practice_session_service.list_user_sessions(session, user_id, status)
     except SessionError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 

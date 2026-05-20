@@ -9,7 +9,6 @@ from sqlalchemy import (
     Integer,
     Numeric,
     String,
-    UniqueConstraint,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -46,21 +45,4 @@ class PracticeSession(Base):
         CheckConstraint("total_questions > 0", name="ck_sessions_total_positive"),
         CheckConstraint("answered_count >= 0", name="ck_sessions_answered_nonneg"),
         CheckConstraint("answered_count <= total_questions", name="ck_sessions_answered_le_total"),
-    )
-
-
-class PracticeSessionQuestion(Base):
-    __tablename__ = "practice_session_questions"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    session_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("practice_sessions.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    question_id: Mapped[int] = mapped_column(Integer, ForeignKey("questions.id", ondelete="RESTRICT"), nullable=False)
-    position: Mapped[int] = mapped_column(Integer, nullable=False)
-
-    __table_args__ = (
-        UniqueConstraint("session_id", "question_id", name="uq_psq_session_question"),
-        UniqueConstraint("session_id", "position", name="uq_psq_session_position"),
-        CheckConstraint("position >= 1", name="ck_psq_position_positive"),
     )

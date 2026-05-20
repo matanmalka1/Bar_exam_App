@@ -283,7 +283,8 @@ def normalize_questions_text(raw: str, norm_log: list, part_name: str) -> str:
                 rule="header-removal",
                 reason=(
                     f"שורות header (המכילות '{part_name}' ו-'{HEADER_MARKER_B}') הוסרו."
-                    " זיהוי על-פי substring combination — לא regex — כדי להתמודד עם NBSP, soft-hyphen וריווחים לא-תקניים."
+                    " זיהוי על-פי substring combination — לא regex — כדי להתמודד עם NBSP,"
+                    " soft-hyphen וריווחים לא-תקניים."
                     f" {headers_removed} שורה/ות הוסרו."
                 ),
             )

@@ -4,7 +4,8 @@ from decimal import Decimal
 from sqlalchemy import Row, select, update
 from sqlalchemy.orm import Session
 
-from app.models.practice_session import PracticeSession, PracticeSessionQuestion
+from app.models.practice_session import PracticeSession
+from app.models.practice_session_question import PracticeSessionQuestion
 from app.models.question import Question
 
 

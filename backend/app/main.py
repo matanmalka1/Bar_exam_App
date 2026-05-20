@@ -7,9 +7,9 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.config import CORS_ORIGINS
-from app.db.session import get_session
+from app.db.deps import get_session
+from app.routers.practice_sessions import router as sessions_router
 from app.routers.questions import router as questions_router
-from app.routers.sessions import router as sessions_router
 from app.routers.users import router as users_router
 
 app = FastAPI(title="Bar Exam API")

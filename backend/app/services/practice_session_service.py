@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models.practice_session import PracticeSession
 from app.models.question import Question
-from app.repositories import answer_repository, session_repository, user_repository
+from app.repositories import answer_repository, practice_session_repository, user_repository
 from app.schemas.session import (
     SessionCompleteOut,
     SessionCreateIn,
@@ -35,7 +35,7 @@ def create_session(session: Session, payload: SessionCreateIn) -> SessionSummary
         raise SessionError(404, "user not found")
 
     exam_date = _parse_exam_date(payload.exam_date) if payload.exam_date else None
-    candidates = session_repository.select_candidate_questions(
+    candidates = practice_session_repository.select_candidate_questions(
         session,
         exam_date=exam_date,
         part=payload.part,
@@ -48,11 +48,11 @@ def create_session(session: Session, payload: SessionCreateIn) -> SessionSummary
 
     ordered = _select_questions(
         candidates,
-        seen_ids=session_repository.list_seen_question_ids(session, payload.user_id),
+        seen_ids=practice_session_repository.list_seen_question_ids(session, payload.user_id),
         question_count=payload.question_count,
     )
 
-    ps = session_repository.create_session(
+    ps = practice_session_repository.create_session(
         session,
         user_id=payload.user_id,
         mode=payload.mode,
@@ -60,17 +60,17 @@ def create_session(session: Session, payload: SessionCreateIn) -> SessionSummary
         part=payload.part,
         total_questions=len(ordered),
     )
-    session_repository.add_session_questions(session, ps.id, [q.id for q in ordered])
+    practice_session_repository.add_session_questions(session, ps.id, [q.id for q in ordered])
     session.commit()
     session.refresh(ps)
     return _summary(ps)
 
 
 def get_session_detail(session: Session, session_id: int) -> SessionDetailOut:
-    ps = session_repository.get_session_by_id(session, session_id)
+    ps = practice_session_repository.get_session_by_id(session, session_id)
     if ps is None:
         raise SessionError(404, "session not found")
-    rows = session_repository.get_session_questions(session, session_id)
+    rows = practice_session_repository.get_session_questions(session, session_id)
     answers = {a.question_id: a for a in answer_repository.list_session_answers(session, session_id)}
 
     expose_answer_key = _expose_answer_key(ps)
@@ -109,12 +109,12 @@ def get_session_detail(session: Session, session_id: int) -> SessionDetailOut:
 def list_user_sessions(session: Session, user_id: int, status: str | None) -> list[SessionSummaryOut]:
     if user_repository.get_by_id(session, user_id) is None:
         raise SessionError(404, "user not found")
-    sessions = session_repository.list_sessions_by_user(session, user_id, status)
+    sessions = practice_session_repository.list_sessions_by_user(session, user_id, status)
     return [_summary(s) for s in sessions]
 
 
 def complete_session(session: Session, session_id: int) -> SessionCompleteOut:
-    ps = session_repository.get_session_by_id(session, session_id)
+    ps = practice_session_repository.get_session_by_id(session, session_id)
     if ps is None:
         raise SessionError(404, "session not found")
     if ps.status != "active":
@@ -126,7 +126,7 @@ def complete_session(session: Session, session_id: int) -> SessionCompleteOut:
         Decimal("0.01"), rounding=ROUND_HALF_UP
     )
     now = datetime.now(UTC)
-    session_repository.complete_session(
+    practice_session_repository.complete_session(
         session,
         session_id,
         correct_count=correct_count,
