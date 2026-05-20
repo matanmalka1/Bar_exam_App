@@ -1,0 +1,1479 @@
+{
+  "exam_date": "2025-06",
+  "part": "C",
+  "total_changes": 184,
+  "records": [
+    {
+      "question_number": 0,
+      "field": "text",
+      "before": "[126 occurrences of U+00A0 NBSP throughout questions text]",
+      "after": "[replaced with regular space U+0020]",
+      "rule": "nbsp→space",
+      "reason": "NBSP (U+00A0) מופיע ב-running page headers — למשל: 'חלק\\xa0ב\\xa0\\xad\\xa0דין\\xa0דיוני'. הסרת NBSP נדרשת לפני זיהוי ה-headers כי regex רגיל עם \\s לא מזהה NBSP. ההחלפה בטוחה: NBSP לא משנה משמעות משפטית."
+    },
+    {
+      "question_number": 0,
+      "field": "text",
+      "before": "[42 occurrences of U+00AD soft-hyphen throughout questions text]",
+      "after": "[removed entirely]",
+      "rule": "soft-hyphen→remove",
+      "reason": "Soft hyphen (U+00AD) משמש כמקף-מפריד ב-running page header בלבד ('חלק ב \\xad דין דיוני ...'). אינו מופיע בטקסט השאלות. הוסר לחלוטין."
+    },
+    {
+      "question_number": 0,
+      "field": "text",
+      "before": "[14 running page header line(s) removed. Examples: [\"'חלק ג  דין מהותי00:00     16.06.2025חלק יחיד'\", \"'חלק ג  דין מהותי00:00     16.06.2025חלק יחיד'\", \"'חלק ג  דין מהותי00:00     16.06.2025חלק יחיד'\"]]",
+      "after": "[lines removed from text]",
+      "rule": "header-removal",
+      "reason": "שורות header (המכילות 'דין מהותי' ו-'00:00') הוסרו. זיהוי על-פי substring combination — לא regex — כדי להתמודד עם NBSP, soft-hyphen וריווחים לא-תקניים. 14 שורה/ות הוסרו."
+    },
+    {
+      "question_number": 0,
+      "field": "reference",
+      "before": "[67 occurrences of ð (U+00F0 Latin eth) in answers text]",
+      "after": "[replaced with נ (U+05E0 Hebrew nun)]",
+      "rule": "ð→נ",
+      "reason": "ð (Latin lowercase eth, U+00F0) מופיע כ-artifact של font-encoding בקובץ התשובות. הוא מייצג באופן עקבי את האות הנ (nun) עברית, בשל font mapping מותאם-אישית. Latin eth אינו מופיע בטקסט משפטי עברי — ההחלפה בטוחה ב-100%."
+    },
+    {
+      "question_number": 1,
+      "field": "body",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"' העו\\\\uf8ffשין,' → ' העונשין,'\", \"'לי ש\\\\uf8ffיתן ' → 'לי שניתן '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'body' של שאלה 1. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 1,
+      "field": "option_א",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"' כל \\\\uf8ffיזוק' → ' כל ניזוק'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_א' של שאלה 1. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 1,
+      "field": "option_ב",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'ד מה\\\\uf8ffיזוק' → 'ד מהניזוק'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ב' של שאלה 1. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 1,
+      "field": "option_ג",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"' כל \\\\uf8ffיזוק' → ' כל ניזוק'\", \"'ה, ו\\\\uf8ffוסף ' → 'ה, ונוסף '\", \"'כל ה\\\\uf8ffיזוק' → 'כל הניזוק'\", \"'הם ב\\\\uf8ffי\\\\nמש' → 'הם בני\\\\nמש'\", \"'ראשו\\\\uf8ffה של' → 'ראשונה של'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'option_ג' של שאלה 1. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 1,
+      "field": "option_ד",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"' כל \\\\uf8ffיזוק' → ' כל ניזוק'\", \"'ה, ו\\\\uf8ffוסף ' → 'ה, ונוסף '\", \"'ד מה\\\\uf8ffיזוק' → 'ד מהניזוק'\", \"'הם ב\\\\uf8ffי\\\\nמש' → 'הם בני\\\\nמש'\", \"'ראשו\\\\uf8ffה של' → 'ראשונה של'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'option_ד' של שאלה 1. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 2,
+      "field": "body",
+      "before": "[9 occurrence(s) of U+F8FF. Examples: [\"'ד\\\\uf8ffי פר' → 'דני פר'\", \"' תמו\\\\uf8ffה אי' → ' תמונה אי'\", \"'ה אי\\\\uf8ffטימי' → 'ה אינטימי'\", \"'ן בש\\\\uf8ffת .2' → 'ן בשנת .2'\", \"'יעה \\\\uf8ffגד ד' → 'יעה נגד ד'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 9 פעמים בשדה 'body' של שאלה 2. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 2,
+      "field": "option_א",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'תייש\\\\uf8ffה אף' → 'תיישנה אף'\", \"' 7 ש\\\\uf8ffים.' → ' 7 שנים.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_א' של שאלה 2. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 2,
+      "field": "option_ב",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ק הג\\\\uf8ffת הפ' → 'ק הגנת הפ'\", \"'תייש\\\\uf8ffה, א' → 'תיישנה, א'\", \"'תייש\\\\uf8ffה.' → 'תיישנה.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ב' של שאלה 2. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 2,
+      "field": "option_ג",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'תייש\\\\uf8ffה, א' → 'תיישנה, א'\", \"'ק\\\\nהג\\\\uf8ffת הפ' → 'ק\\\\nהגנת הפ'\", \"'תייש\\\\uf8ffה.' → 'תיישנה.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ג' של שאלה 2. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 2,
+      "field": "option_ד",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'תייש\\\\uf8ffה כי' → 'תיישנה כי'\", \"' 7 ש\\\\uf8ffים.' → ' 7 שנים.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ד' של שאלה 2. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 3,
+      "field": "body",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"'ים מ\\\\uf8ffת\\\\uf8ffאל' → 'ים מנת\\\\uf8ffאל'\", \"' מ\\\\uf8ffת\\\\uf8ffאל. ' → ' מ\\\\uf8ffתנאל. '\", \"' מעו\\\\uf8ffיין\\\\n' → ' מעוניין\\\\n'\", \"'בו ל\\\\uf8ffת\\\\uf8ffאל' → 'בו לנת\\\\uf8ffאל'\", \"' ל\\\\uf8ffת\\\\uf8ffאל.\\\\n' → ' ל\\\\uf8ffתנאל.\\\\n'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'body' של שאלה 3. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 3,
+      "field": "option_א",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'לא \\\\uf8ffיתן ' → 'לא ניתן '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_א' של שאלה 3. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 3,
+      "field": "option_ב",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'\\\\uf8ffיתן ' → 'ניתן '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ב' של שאלה 3. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 3,
+      "field": "option_ג",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'\\\\uf8ffיתן ' → 'ניתן '\", \"' אם \\\\uf8ffית\\\\uf8ffה' → ' אם נית\\\\uf8ffה'\", \"' \\\\uf8ffית\\\\uf8ffה הס' → ' \\\\uf8ffיתנה הס'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ג' של שאלה 3. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 3,
+      "field": "option_ד",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'לא \\\\uf8ffיתן ' → 'לא ניתן '\", \"' כי\\\\n\\\\uf8ffיתן ' → ' כי\\\\nניתן '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ד' של שאלה 3. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 4,
+      "field": "body",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'גת ה\\\\uf8ffחות ' → 'גת הנחות '\", '\\'י הב\\\\uf8ffיין\"\\' → \\'י הבניין\"\\'', \"'ת לש\\\\uf8ffות א' → 'ת לשנות א'\", '\\'י הב\\\\uf8ffיין\"\\' → \\'י הבניין\"\\'']]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'body' של שאלה 4. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 4,
+      "field": "option_א",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'לא \\\\uf8ffיתן ' → 'לא ניתן '\", \"'ן לש\\\\uf8ffות א' → 'ן לשנות א'\", \"'ת\\\\nשו\\\\uf8ffות.' → 'ת\\\\nשונות.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_א' של שאלה 4. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 4,
+      "field": "option_ב",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'ל שי\\\\uf8ffוי ה' → 'ל שינוי ה'\", \"'ית ש\\\\uf8ffערכה' → 'ית שנערכה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ב' של שאלה 4. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 4,
+      "field": "option_ג",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'ל שי\\\\uf8ffוי ה' → 'ל שינוי ה'\", \"'בה ש\\\\uf8ffערכה' → 'בה שנערכה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ג' של שאלה 4. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 4,
+      "field": "option_ד",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ל שי\\\\uf8ffוי ה' → 'ל שינוי ה'\", \"'ית ש\\\\uf8ffערכה' → 'ית שנערכה'\", \"'עביר\\\\uf8ffה לא' → 'עבירנה לא'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ד' של שאלה 4. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 5,
+      "field": "body",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'ן הק\\\\uf8ffדי ש' → 'ן הקנדי ש'\", \"' שמפ\\\\uf8ffה לד' → ' שמפנה לד'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'body' של שאלה 5. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 5,
+      "field": "option_ב",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'ן הק\\\\uf8ffדי.' → 'ן הקנדי.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ב' של שאלה 5. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 5,
+      "field": "option_ג",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'ן הק\\\\uf8ffדי ו' → 'ן הקנדי ו'\", \"'י הע\\\\uf8ffיין.' → 'י העניין.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ג' של שאלה 5. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 5,
+      "field": "option_ד",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'ן הפ\\\\uf8ffימי ' → 'ן הפנימי '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ד' של שאלה 5. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 6,
+      "field": "body",
+      "before": "[8 occurrence(s) of U+F8FF. Examples: [\"'יו\\\\uf8ffי וש' → 'יוני וש'\", \"'ו הש\\\\uf8ffיים ' → 'ו השניים '\", \"'4 הש\\\\uf8ffים ה' → '4 השנים ה'\", \"'\\\\n3 ש\\\\uf8ffים ו' → '\\\\n3 שנים ו'\", \"'יהם \\\\uf8ffקלע ' → 'יהם נקלע '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 8 פעמים בשדה 'body' של שאלה 6. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 6,
+      "field": "option_א",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"' ייע\\\\uf8ffה לד' → ' ייענה לד'\", \"'ל יו\\\\uf8ffי הי' → 'ל יוני הי'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_א' של שאלה 6. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 6,
+      "field": "option_ב",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"' ייע\\\\uf8ffה לד' → ' ייענה לד'\", \"'ל יו\\\\uf8ffי עק' → 'ל יוני עק'\", \"'וף ש\\\\uf8ffחתם ' → 'וף שנחתם '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ב' של שאלה 6. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 6,
+      "field": "option_ג",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"' ייע\\\\uf8ffה לד' → ' ייענה לד'\", \"'ל יו\\\\uf8ffי הי' → 'ל יוני הי'\", \"' לא \\\\uf8ffרשם ' → ' לא נרשם '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ג' של שאלה 6. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 6,
+      "field": "option_ד",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"' ייע\\\\uf8ffה לד' → ' ייענה לד'\", \"'ל יו\\\\uf8ffי אם' → 'ל יוני אם'\", \"'דק ב\\\\uf8ffסיבו' → 'דק בנסיבו'\", \"'ת הע\\\\uf8ffיין.' → 'ת העניין.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ד' של שאלה 6. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 7,
+      "field": "body",
+      "before": "[11 occurrence(s) of U+F8FF. Examples: [\"'ל עו\\\\uf8ffש מא' → 'ל עונש מא'\", \"'על ת\\\\uf8ffאי ב' → 'על תנאי ב'\", \"'ן בש\\\\uf8ffת ,2' → 'ן בשנת ,2'\", \"' והת\\\\uf8ffאי ב' → ' והתנאי ב'\", \"'ל בש\\\\uf8ffת .2' → 'ל בשנת .2'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 11 פעמים בשדה 'body' של שאלה 7. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 7,
+      "field": "option_א",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'עו\\\\uf8ffש מא' → 'עונש מא'\", \"'על ת\\\\uf8ffאי א' → 'על תנאי א'\", \"'י אי\\\\uf8ffו מת' → 'י אינו מת'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_א' של שאלה 7. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 7,
+      "field": "option_ב",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'עו\\\\uf8ffש המ' → 'עונש המ'\", \"'על ת\\\\uf8ffאי ה' → 'על תנאי ה'\", \"'ן בש\\\\uf8ffת .2' → 'ן בשנת .2'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ב' של שאלה 7. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 7,
+      "field": "option_ג",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'עו\\\\uf8ffש המ' → 'עונש המ'\", \"'על ת\\\\uf8ffאי ה' → 'על תנאי ה'\", \"'ן בש\\\\uf8ffת .2' → 'ן בשנת .2'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ג' של שאלה 7. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 7,
+      "field": "option_ד",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'עו\\\\uf8ffש המ' → 'עונש המ'\", \"'על ת\\\\uf8ffאי ט' → 'על תנאי ט'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ד' של שאלה 7. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 8,
+      "field": "body",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"' מזו\\\\uf8ffות ל' → ' מזונות ל'\", \"'לם ק\\\\uf8ffס שה' → 'לם קנס שה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'body' של שאלה 8. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 9,
+      "field": "body",
+      "before": "[14 occurrence(s) of U+F8FF. Examples: [\"'ג הב\\\\uf8ffיין ' → 'ג הבניין '\", \"' ואי\\\\uf8ffו\\\\nמו' → ' ואינו\\\\nמו'\", \"' השכ\\\\uf8ffים. ' → ' השכנים. '\", \"'10 ש\\\\uf8ffים, ' → '10 שנים, '\", \"'להתק\\\\uf8ffת 6 ' → 'להתקנת 6 '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 14 פעמים בשדה 'body' של שאלה 9. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 9,
+      "field": "option_א",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"' התק\\\\uf8ffת דו' → ' התקנת דו'\", \"'מת ש\\\\uf8ffי של' → 'מת שני של'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_א' של שאלה 9. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 9,
+      "field": "option_ב",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"' התק\\\\uf8ffת דו' → ' התקנת דו'\", \"'ם בב\\\\uf8ffיין ' → 'ם בבניין '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ב' של שאלה 9. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 9,
+      "field": "option_ג",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'ה לפ\\\\uf8ffות ל' → 'ה לפנות ל'\", \"' התק\\\\uf8ffת דו' → ' התקנת דו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ג' של שאלה 9. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 9,
+      "field": "option_ד",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'יעה \\\\uf8ffגד ר' → 'יעה נגד ר'\", \"' התק\\\\uf8ffת דו' → ' התקנת דו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ד' של שאלה 9. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 10,
+      "field": "body",
+      "before": "[11 occurrence(s) of U+F8FF. Examples: [\"'להפג\\\\uf8ffה שע' → 'להפגנה שע'\", \"'במדי\\\\uf8ffיות ' → 'במדיניות '\", \"'לה ב\\\\uf8ffושאי' → 'לה בנושאי'\", \"' בסג\\\\uf8ffון ח' → ' בסגנון ח'\", \"'ל גי\\\\uf8ffוי \\\\uf8ff' → 'ל גינוי \\\\uf8ff'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 11 פעמים בשדה 'body' של שאלה 10. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 10,
+      "field": "option_א",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ן וה\\\\uf8ffושא ' → 'ן והנושא '\", \"'של ה\\\\uf8ffילון' → 'של הנילון'\", \"'עתי \\\\uf8ffגדו.' → 'עתי נגדו.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_א' של שאלה 10. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 10,
+      "field": "option_ב",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ות ש\\\\uf8ffעשתה' → 'ות שנעשתה'\", \"'עתי \\\\uf8ffגד ה' → 'עתי נגד ה'\", \"'גד ה\\\\uf8ffילון' → 'גד הנילון'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ב' של שאלה 10. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 10,
+      "field": "option_ג",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'בר ב\\\\uf8ffושא ' → 'בר בנושא '\", \"'שא ה\\\\uf8ffוגע ' → 'שא הנוגע '\", \"'עתי \\\\uf8ffגד ה' → 'עתי נגד ה'\", \"'גד ה\\\\uf8ffילון' → 'גד הנילון'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ג' של שאלה 10. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 11,
+      "field": "body",
+      "before": "[6 occurrence(s) of U+F8FF. Examples: [\"'\\\\uf8ffגד פ' → 'נגד פ'\", \"' פלו\\\\uf8ffי הו' → ' פלוני הו'\", \"'ילי \\\\uf8ffגדו ' → 'ילי נגדו '\", \"' פלו\\\\uf8ffי כי' → ' פלוני כי'\", \"'תו ב\\\\uf8ffסיבו' → 'תו בנסיבו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 6 פעמים בשדה 'body' של שאלה 11. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 11,
+      "field": "option_א",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'\\\\uf8ffקודת' → 'נקודת'\", \"'ירה \\\\uf8ffעשתה' → 'ירה נעשתה'\", \"'ה בת\\\\uf8ffאים ' → 'ה בתנאים '\", \"'אם ה\\\\uf8ffאשם ' → 'אם הנאשם '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_א' של שאלה 11. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 11,
+      "field": "option_ב",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'\\\\uf8ffקודת' → 'נקודת'\", \"'ירה \\\\uf8ffעשתה' → 'ירה נעשתה'\", \"'ה בת\\\\uf8ffאים ' → 'ה בתנאים '\", \"'רר\\\\nה\\\\uf8ffאשם ' → 'רר\\\\nהנאשם '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ב' של שאלה 11. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 11,
+      "field": "option_ג",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'\\\\uf8ffקודת' → 'נקודת'\", \"'ירה \\\\uf8ffעשתה' → 'ירה נעשתה'\", \"'ה בת\\\\uf8ffאים ' → 'ה בתנאים '\", \"'אם ה\\\\uf8ffאשם\\\\n' → 'אם הנאשם\\\\n'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ג' של שאלה 11. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 11,
+      "field": "option_ד",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"'בהם \\\\uf8ffטען ' → 'בהם נטען '\", \"'ל הג\\\\uf8ffה עצ' → 'ל הגנה עצ'\", \"'מית \\\\uf8ffקודת' → 'מית נקודת'\", \"'ירה \\\\uf8ffעשתה' → 'ירה נעשתה'\", \"'ה\\\\nבת\\\\uf8ffאים ' → 'ה\\\\nבתנאים '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'option_ד' של שאלה 11. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 12,
+      "field": "body",
+      "before": "[6 occurrence(s) of U+F8FF. Examples: [\"'אים \\\\uf8ffכון ' → 'אים נכון '\", \"'ון ב\\\\uf8ffוגע ' → 'ון בנוגע '\", \"' הימ\\\\uf8ffעות ' → ' הימנעות '\", \"'שר\\\\nה\\\\uf8ffאשם ' → 'שר\\\\nהנאשם '\", \"' הימ\\\\uf8ffעות ' → ' הימנעות '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 6 פעמים בשדה 'body' של שאלה 12. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 12,
+      "field": "option_ב",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'הימ\\\\uf8ffעות ' → 'הימנעות '\", \"' כשה\\\\uf8ffאשם ' → ' כשהנאשם '\", \"'בר ב\\\\uf8ffאשם\\\\n' → 'בר בנאשם\\\\n'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ב' של שאלה 12. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 12,
+      "field": "option_ג",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'בש\\\\uf8ffי המ' → 'בשני המ'\", \"' לא \\\\uf8ffיתן ' → ' לא ניתן '\", \"'להימ\\\\uf8ffע מה' → 'להימנע מה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ג' של שאלה 12. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 12,
+      "field": "option_ד",
+      "before": "[8 occurrence(s) of U+F8FF. Examples: [\"'בש\\\\uf8ffי המ' → 'בשני המ'\", \"'רים \\\\uf8ffיתן ' → 'רים ניתן '\", \"'להימ\\\\uf8ffע מה' → 'להימנע מה'\", \"'קום \\\\uf8ffוגעי' → 'קום נוגעי'\", \"'להימ\\\\uf8ffעות ' → 'להימנעות '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 8 פעמים בשדה 'option_ד' של שאלה 12. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 13,
+      "field": "body",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'מה \\\\uf8ffדרש ' → 'מה נדרש '\", \"'ין ל\\\\uf8ffקוט ' → 'ין לנקוט '\", \"'קוט \\\\uf8ffגדו ' → 'קוט נגדו '\", \"'ל\\\\nאו\\\\uf8ffס או' → 'ל\\\\nאונס או'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'body' של שאלה 13. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 13,
+      "field": "option_א",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'בר ב\\\\uf8ffסיבו' → 'בר בנסיבו'\", \"'מבחי\\\\uf8ffה או' → 'מבחינה או'\", \"' לא \\\\uf8ffיתן ' → ' לא ניתן '\", \"'י למ\\\\uf8ffוע א' → 'י למנוע א'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_א' של שאלה 13. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 13,
+      "field": "option_ב",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'בר ב\\\\uf8ffסיבו' → 'בר בנסיבו'\", \"'ו למ\\\\uf8ffוע א' → 'ו למנוע א'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ב' של שאלה 13. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 13,
+      "field": "option_ג",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'בר ב\\\\uf8ffסיבו' → 'בר בנסיבו'\", \"'בית \\\\uf8ffיתן\\\\n' → 'בית ניתן\\\\n'\", \"'י למ\\\\uf8ffוע א' → 'י למנוע א'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ג' של שאלה 13. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 13,
+      "field": "option_ד",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'בר ב\\\\uf8ffסיבו' → 'בר בנסיבו'\", \"' לא \\\\uf8ffיתן ' → ' לא ניתן '\", \"'ו למ\\\\uf8ffוע א' → 'ו למנוע א'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ד' של שאלה 13. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 14,
+      "field": "body",
+      "before": "[11 occurrence(s) of U+F8FF. Examples: [\"'ה לש\\\\uf8ffת 20' → 'ה לשנת 20'\", \"'תה ש\\\\uf8ffה; .' → 'תה שנה; .'\", \"' מדי\\\\uf8ffיות\\\\n' → ' מדיניות\\\\n'\", \"'ה לש\\\\uf8ffת 20' → 'ה לשנת 20'\", \"'על ה\\\\uf8ffפקת ' → 'על הנפקת '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 11 פעמים בשדה 'body' של שאלה 14. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 15,
+      "field": "body",
+      "before": "[9 occurrence(s) of U+F8FF. Examples: [\"'ר רז\\\\uf8ffיק מ' → 'ר רזניק מ'\", \"'- ממ\\\\uf8ffיות ' → '- ממניות '\", \"'ר רז\\\\uf8ffיק פ' → 'ר רזניק פ'\", \"'יק פ\\\\uf8ffה לח' → 'יק פנה לח'\", \"'וף ש\\\\uf8ffת .2' → 'וף שנת .2'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 9 פעמים בשדה 'body' של שאלה 15. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 15,
+      "field": "option_א",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'ר רז\\\\uf8ffיק ל' → 'ר רזניק ל'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_א' של שאלה 15. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 15,
+      "field": "option_ב",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'ר רז\\\\uf8ffיק ח' → 'ר רזניק ח'\", \"'יב ל\\\\uf8ffמק א' → 'יב לנמק א'\", \"'בר ב\\\\uf8ffימוק' → 'בר בנימוק'\", \"'ר רז\\\\uf8ffיק ל' → 'ר רזניק ל'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ב' של שאלה 15. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 15,
+      "field": "option_ג",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'ר רז\\\\uf8ffיק מ' → 'ר רזניק מ'\", \"'- ממ\\\\uf8ffיות ' → '- ממניות '\", \"'ה אי\\\\uf8ffה מח' → 'ה אינה מח'\", \"'ר רז\\\\uf8ffיק\\\\nל' → 'ר רזניק\\\\nל'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ג' של שאלה 15. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 15,
+      "field": "option_ד",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'ר רז\\\\uf8ffיק ל' → 'ר רזניק ל'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ד' של שאלה 15. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 16,
+      "field": "body",
+      "before": "[6 occurrence(s) of U+F8FF. Examples: [\"'על מ\\\\uf8ffיות ' → 'על מניות '\", \"'ה, פ\\\\uf8ffה לד' → 'ה, פנה לד'\", \"'3 הש\\\\uf8ffים ה' → '3 השנים ה'\", \"'אחרו\\\\uf8ffות. ' → 'אחרונות. '\", \"' בטע\\\\uf8ffה שמ' → ' בטענה שמ'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 6 פעמים בשדה 'body' של שאלה 16. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 16,
+      "field": "option_ג",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'ה אי\\\\uf8ffה חי' → 'ה אינה חי'\", \"'להיע\\\\uf8ffות ל' → 'להיענות ל'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ג' של שאלה 16. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 16,
+      "field": "option_ד",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'על מ\\\\uf8ffיות ' → 'על מניות '\", \"'ת אי\\\\uf8ffו זכ' → 'ת אינו זכ'\", \"'זה ה\\\\uf8ffדרש ' → 'זה הנדרש '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ד' של שאלה 16. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 17,
+      "field": "body",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'יר ה\\\\uf8ffוגע ' → 'יר הנוגע '\", \"'גע ל\\\\uf8ffסיבו' → 'גע לנסיבו'\", \"'ץ, ל\\\\uf8ffוכח ' → 'ץ, לנוכח '\", \"'ת בע\\\\uf8ffיין.' → 'ת בעניין.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'body' של שאלה 17. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 17,
+      "field": "option_א",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ץ אי\\\\uf8ffו רש' → 'ץ אינו רש'\", \"'לי ש\\\\uf8ffית\\\\uf8ffה' → 'לי שנית\\\\uf8ffה'\", \"'ש\\\\uf8ffית\\\\uf8ffה לו' → 'ש\\\\uf8ffיתנה לו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_א' של שאלה 17. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 17,
+      "field": "option_ב",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'ל, ב\\\\uf8ffוגע ' → 'ל, בנוגע '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ב' של שאלה 17. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 17,
+      "field": "option_ג",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'ץ אי\\\\uf8ffו רש' → 'ץ אינו רש'\", \"'א בפ\\\\uf8ffיו\\\\nע' → 'א בפניו\\\\nע'\", \"'ד מב\\\\uf8ffי הז' → 'ד מבני הז'\", \"'וג ב\\\\uf8ffפרד ' → 'וג בנפרד '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ג' של שאלה 17. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 17,
+      "field": "option_ד",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ל, ב\\\\uf8ffוגע ' → 'ל, בנוגע '\", \"'א בפ\\\\uf8ffיו, ' → 'א בפניו, '\", \"'או ב\\\\uf8ffפרד ' → 'או בנפרד '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ד' של שאלה 17. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 18,
+      "field": "body",
+      "before": "[15 occurrence(s) of U+F8FF. Examples: [\"' פלו\\\\uf8ffי הח' → ' פלוני הח'\", \"'טלפו\\\\uf8ffית ע' → 'טלפונית ע'\", \"' בטע\\\\uf8ffותיו' → ' בטענותיו'\", \"'גיש \\\\uf8ffגד ה' → 'גיש נגד ה'\", \"' פלו\\\\uf8ffי הח' → ' פלוני הח'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 15 פעמים בשדה 'body' של שאלה 18. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 18,
+      "field": "option_א",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"' פלו\\\\uf8ffי עב' → ' פלוני עב'\", \"'כן מ\\\\uf8ffוע מ' → 'כן מנוע מ'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_א' של שאלה 18. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 18,
+      "field": "option_ב",
+      "before": "[6 occurrence(s) of U+F8FF. Examples: [\"' פלו\\\\uf8ffי לא' → ' פלוני לא'\", \"'לטה \\\\uf8ffועדה' → 'לטה נועדה'\", \"'\\\\nבטע\\\\uf8ffותיו' → '\\\\nבטענותיו'\", \"'לא מ\\\\uf8ffוע מ' → 'לא מנוע מ'\", \"'וא מ\\\\uf8ffהל \\\\uf8ff' → 'וא מנהל \\\\uf8ff'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 6 פעמים בשדה 'option_ב' של שאלה 18. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 18,
+      "field": "option_ג",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"' פלו\\\\uf8ffי עב' → ' פלוני עב'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ג' של שאלה 18. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 18,
+      "field": "option_ד",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"' פלו\\\\uf8ffי לא' → ' פלוני לא'\", \"'ת בי\\\\uf8ffיהם,' → 'ת ביניהם,'\", \"' ואי\\\\uf8ffו מ\\\\uf8ff' → ' ואינו מ\\\\uf8ff'\", \"'\\\\uf8ffו מ\\\\uf8ffוע מ' → '\\\\uf8ffו מנוע מ'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ד' של שאלה 18. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 19,
+      "field": "body",
+      "before": "[16 occurrence(s) of U+F8FF. Examples: [\"'פלו\\\\uf8ffי חת' → 'פלוני חת'\", \"'טי ש\\\\uf8ffפתח\\\\n' → 'טי שנפתח\\\\n'\", \"'פתח\\\\n\\\\uf8ffגדו ' → 'פתח\\\\nנגדו '\", \"'ך שכ\\\\uf8ffים ש' → 'ך שכנים ש'\", \"' שמת\\\\uf8ffהל ל' → ' שמתנהל ל'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 16 פעמים בשדה 'body' של שאלה 19. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 19,
+      "field": "option_א",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'לא \\\\uf8ffפל ד' → 'לא נפל ד'\", \"' בהת\\\\uf8ffהלות' → ' בהתנהלות'\", \"' פלו\\\\uf8ffי לע' → ' פלוני לע'\", \"' פלו\\\\uf8ffי, ה' → ' פלוני, ה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_א' של שאלה 19. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 19,
+      "field": "option_ב",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"' פלו\\\\uf8ffי.' → ' פלוני.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ב' של שאלה 19. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 19,
+      "field": "option_ג",
+      "before": "[6 occurrence(s) of U+F8FF. Examples: [\"'לא \\\\uf8ffפל ד' → 'לא נפל ד'\", \"' בהת\\\\uf8ffהלות' → ' בהתנהלות'\", \"' פלו\\\\uf8ffי לע' → ' פלוני לע'\", \"' פלו\\\\uf8ffי, ה' → ' פלוני, ה'\", \"'שך ש\\\\uf8ffים\\\\nר' → 'שך שנים\\\\nר'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 6 פעמים בשדה 'option_ג' של שאלה 19. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 19,
+      "field": "option_ד",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"' פלו\\\\uf8ffי, א' → ' פלוני, א'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ד' של שאלה 19. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 20,
+      "field": "body",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"'ר אי\\\\uf8ffטר\\\\uf8ffט' → 'ר אינטר\\\\uf8ffט'\", \"'י\\\\uf8ffטר\\\\uf8ffט לה' → 'י\\\\uf8ffטרנט לה'\", \"'מציי\\\\uf8ffת כי' → 'מציינת כי'\", \"'א מע\\\\uf8ffיקה ' → 'א מעניקה '\", \"'טי ל\\\\uf8ffגמלי' → 'טי לנגמלי'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'body' של שאלה 20. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 20,
+      "field": "option_א",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"' האי\\\\uf8ffטר\\\\uf8ffט' → ' האינטר\\\\uf8ffט'\", \"'י\\\\uf8ffטר\\\\uf8ffט.' → 'י\\\\uf8ffטרנט.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_א' של שאלה 20. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 20,
+      "field": "option_ב",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"' האי\\\\uf8ffטר\\\\uf8ffט' → ' האינטר\\\\uf8ffט'\", \"'י\\\\uf8ffטר\\\\uf8ffט.' → 'י\\\\uf8ffטרנט.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ב' של שאלה 20. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 20,
+      "field": "option_ג",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ה אי\\\\uf8ffה רש' → 'ה אינה רש'\", \"'\\\\nהאי\\\\uf8ffטר\\\\uf8ffט' → '\\\\nהאינטר\\\\uf8ffט'\", \"'י\\\\uf8ffטר\\\\uf8ffט.' → 'י\\\\uf8ffטרנט.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ג' של שאלה 20. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 20,
+      "field": "option_ד",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ה אי\\\\uf8ffה רש' → 'ה אינה רש'\", \"' האי\\\\uf8ffטר\\\\uf8ffט' → ' האינטר\\\\uf8ffט'\", \"'י\\\\uf8ffטר\\\\uf8ffט.' → 'י\\\\uf8ffטרנט.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ד' של שאלה 20. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 21,
+      "field": "body",
+      "before": "[6 occurrence(s) of U+F8FF. Examples: [\"'המבח\\\\uf8ffים ה' → 'המבחנים ה'\", \"'ם אי\\\\uf8ffו מש' → 'ם אינו מש'\", \"'לבחי\\\\uf8ffת הש' → 'לבחינת הש'\", \"'של ה\\\\uf8ffאשם ' → 'של הנאשם '\", \"'וים\\\\n\\\\uf8ffיסיו' → 'וים\\\\nניסיו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 6 פעמים בשדה 'body' של שאלה 21. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 21,
+      "field": "option_א",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"' אם \\\\uf8ffעשו ' → ' אם נעשו '\", \"'מסוכ\\\\uf8ffת לב' → 'מסוכנת לב'\", \"' כוו\\\\uf8ffת\\\\nהע' → ' כוונת\\\\nהע'\", \"'כרח \\\\uf8ffשקפת' → 'כרח נשקפת'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_א' של שאלה 21. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 21,
+      "field": "option_ב",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"' אם \\\\uf8ffעשו ' → ' אם נעשו '\", \"'ראשו\\\\uf8ffי שא' → 'ראשוני שא'\", \"' שאי\\\\uf8ffו קר' → ' שאינו קר'\", \"'הכוו\\\\uf8ffה הר' → 'הכוונה הר'\", \"'רעה \\\\uf8ffשקפת' → 'רעה נשקפת'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'option_ב' של שאלה 21. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 21,
+      "field": "option_ג",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"' אם \\\\uf8ffעשו ' → ' אם נעשו '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ג' של שאלה 21. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 21,
+      "field": "option_ד",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'של ה\\\\uf8ffאשם ' → 'של הנאשם '\", \"' כוו\\\\uf8ffתו ש' → ' כוונתו ש'\", \"'של ה\\\\uf8ffאשם ' → 'של הנאשם '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ד' של שאלה 21. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 22,
+      "field": "body",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'- הש\\\\uf8ffים ה' → '- השנים ה'\", \"'אחרו\\\\uf8ffות ב' → 'אחרונות ב'\", \"'ו לפ\\\\uf8ffי 20' → 'ו לפני 20'\", \"' מעו\\\\uf8ffיין ' → ' מעוניין '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'body' של שאלה 22. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 22,
+      "field": "option_ג",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"' לא \\\\uf8ffרכשה' → ' לא נרכשה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ג' של שאלה 22. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 22,
+      "field": "option_ד",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: ['\"\\' אי\\\\uf8ffו עו\" → \"\\' אינו עו\"']]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ד' של שאלה 22. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 23,
+      "field": "body",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"'לד\\\\uf8ffי יש' → 'לדני יש'\", \"'ח. ד\\\\uf8ffי קי' → 'ח. דני קי'\", \"' במת\\\\uf8ffה\\\\nלכ' → ' במתנה\\\\nלכ'\", \"'לו ת\\\\uf8ffאים ' → 'לו תנאים '\", \"'בל ד\\\\uf8ffי פט' → 'בל דני פט'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'body' של שאלה 23. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 23,
+      "field": "option_א",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'בת\\\\uf8ffאי ש' → 'בתנאי ש'\", \"'ועד \\\\uf8ffתי\\\\uf8ffת' → 'ועד נתי\\\\uf8ffת'\", \"' \\\\uf8ffתי\\\\uf8ffת המ' → ' \\\\uf8ffתינת המ'\", \"' המת\\\\uf8ffה.' → ' המתנה.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_א' של שאלה 23. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 23,
+      "field": "option_ב",
+      "before": "[6 occurrence(s) of U+F8FF. Examples: [\"'בת\\\\uf8ffאי ש' → 'בתנאי ש'\", \"'ועד \\\\uf8ffתי\\\\uf8ffת' → 'ועד נתי\\\\uf8ffת'\", \"' \\\\uf8ffתי\\\\uf8ffת המ' → ' \\\\uf8ffתינת המ'\", \"' המת\\\\uf8ffה, א' → ' המתנה, א'\", \"' 4 ש\\\\uf8ffים מ' → ' 4 שנים מ'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 6 פעמים בשדה 'option_ב' של שאלה 23. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 23,
+      "field": "option_ד",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"'בת\\\\uf8ffאי ש' → 'בתנאי ש'\", \"' 4 ש\\\\uf8ffים מ' → ' 4 שנים מ'\", \"'\\\\nהמת\\\\uf8ffה, א' → '\\\\nהמתנה, א'\", \"' 3 ש\\\\uf8ffים מ' → ' 3 שנים מ'\", \"' במת\\\\uf8ffה.' → ' במתנה.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'option_ד' של שאלה 23. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 24,
+      "field": "body",
+      "before": "[15 occurrence(s) of U+F8FF. Examples: [\"'חה ש\\\\uf8ffי חת' → 'חה שני חת'\", \"'ו בי\\\\uf8ffיהם ' → 'ו ביניהם '\", \"'את ש\\\\uf8ffי\\\\nבת' → 'את שני\\\\nבת'\", \"'יים \\\\uf8ffגד ע' → 'יים נגד ע'\", \"'כם ש\\\\uf8ffי תש' → 'כם שני תש'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 15 פעמים בשדה 'body' של שאלה 24. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 24,
+      "field": "option_א",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'יף ה\\\\uf8ffוגד ' → 'יף הנוגד '\", \"'ת תק\\\\uf8ffת הצ' → 'ת תקנת הצ'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_א' של שאלה 24. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 24,
+      "field": "option_ב",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'ן מפ\\\\uf8ffי \\\\uf8ffי' → 'ן מפני \\\\uf8ffי'\", \"'פ\\\\uf8ffי \\\\uf8ffיצול' → 'פ\\\\uf8ffי ניצול'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ב' של שאלה 24. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 24,
+      "field": "option_ג",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"' אם \\\\uf8ffקבע ' → ' אם נקבע '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ג' של שאלה 24. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 24,
+      "field": "option_ד",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'כחת \\\\uf8ffזק ו' → 'כחת נזק ו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ד' של שאלה 24. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 25,
+      "field": "body",
+      "before": "[10 occurrence(s) of U+F8FF. Examples: [\"'בן פ\\\\uf8ffה לע' → 'בן פנה לע'\", '\\'\"ד מ\\\\uf8ffחם כ\\' → \\'\"ד מנחם כ\\'', \"' לטע\\\\uf8ffתו, ' → ' לטענתו, '\", \"'ו המ\\\\uf8ffוח י' → 'ו המנוח י'\", \"' רצו\\\\uf8ffו. ר' → ' רצונו. ר'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 10 פעמים בשדה 'body' של שאלה 25. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 25,
+      "field": "option_א",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'עה ב\\\\uf8ffזיקי' → 'עה בנזיקי'\", \"'קין\\\\n\\\\uf8ffגד ע' → 'קין\\\\nנגד ע'\", '\\'\"ד מ\\\\uf8ffחם.\\' → \\'\"ד מנחם.\\'']]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_א' של שאלה 25. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 25,
+      "field": "option_ב",
+      "before": "[6 occurrence(s) of U+F8FF. Examples: [\"'ן אי\\\\uf8ffו בל' → 'ן אינו בל'\", \"'ם טכ\\\\uf8ffיים ' → 'ם טכניים '\", \"'בן ל\\\\uf8ffוכל ' → 'בן לנוכל '\", \"'עה\\\\nב\\\\uf8ffזיקי' → 'עה\\\\nבנזיקי'\", \"'קין \\\\uf8ffגד ע' → 'קין נגד ע'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 6 פעמים בשדה 'option_ב' של שאלה 25. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 25,
+      "field": "option_ג",
+      "before": "[6 occurrence(s) of U+F8FF. Examples: ['\\'\"ד מ\\\\uf8ffחם ח\\' → \\'\"ד מנחם ח\\'', '\\'\"ד מ\\\\uf8ffחם \\\\uf8ff\\' → \\'\"ד מנחם \\\\uf8ff\\'', \"'\\\\uf8ffחם \\\\uf8ffהג כ' → '\\\\uf8ffחם נהג כ'\", \"'פי\\\\nש\\\\uf8ffוהגי' → 'פי\\\\nשנוהגי'\", \"'מיומ\\\\uf8ffים ש' → 'מיומנים ש'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 6 פעמים בשדה 'option_ג' של שאלה 25. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 25,
+      "field": "option_ד",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"' מדי\\\\uf8ffת יש' → ' מדינת יש'\", \"'יעה \\\\uf8ffגד\\\\nע' → 'יעה נגד\\\\nע'\", '\\'\"ד מ\\\\uf8ffחם.\\' → \\'\"ד מנחם.\\'']]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ד' של שאלה 25. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 26,
+      "field": "body",
+      "before": "[12 occurrence(s) of U+F8FF. Examples: [\"'דש י\\\\uf8ffואר ' → 'דש ינואר '\", \"'יחד \\\\uf8ffכס מ' → 'יחד נכס מ'\", \"'ף בי\\\\uf8ffיהם ' → 'ף ביניהם '\", \"'הם ש\\\\uf8ffחתם ' → 'הם שנחתם '\", \"'ישה \\\\uf8ffקבע ' → 'ישה נקבע '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 12 פעמים בשדה 'body' של שאלה 26. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 26,
+      "field": "option_א",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'5- ש\\\\uf8ffים מ' → '5- שנים מ'\", \"'ם הת\\\\uf8ffאי א' → 'ם התנאי א'\", \"'י אי\\\\uf8ffו תק' → 'י אינו תק'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_א' של שאלה 26. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 26,
+      "field": "option_ב",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'הת\\\\uf8ffאי א' → 'התנאי א'\", \"'י אי\\\\uf8ffו מת' → 'י אינו מת'\", \"' 5 ש\\\\uf8ffים, ' → ' 5 שנים, '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ב' של שאלה 26. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 26,
+      "field": "option_ג",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'הת\\\\uf8ffאי ת' → 'התנאי ת'\", \"' אם \\\\uf8ffרשמה' → ' אם נרשמה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ג' של שאלה 26. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 26,
+      "field": "option_ד",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'הת\\\\uf8ffאי ת' → 'התנאי ת'\", \"'טרם \\\\uf8ffחתם ' → 'טרם נחתם '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ד' של שאלה 26. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 27,
+      "field": "body",
+      "before": "[17 occurrence(s) of U+F8FF. Examples: [\"'ש הש\\\\uf8ffי את' → 'ש השני את'\", \"'ל הש\\\\uf8ffי\\\\nיי' → 'ל השני\\\\nיי'\", \"'די ב\\\\uf8ffי הז' → 'די בני הז'\", \"'וש ה\\\\uf8ffותר ' → 'וש הנותר '\", \"'פי ש\\\\uf8ffקבעו' → 'פי שנקבעו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 17 פעמים בשדה 'body' של שאלה 27. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 27,
+      "field": "option_ב",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"' שהת\\\\uf8ffערות' → ' שהתנערות'\", \"'ת אי\\\\uf8ffה כד' → 'ת אינה כד'\", \"'פן ש\\\\uf8ffקבע ' → 'פן שנקבע '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ב' של שאלה 27. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 27,
+      "field": "option_ג",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'פן ש\\\\uf8ffקבע ' → 'פן שנקבע '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ג' של שאלה 27. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 27,
+      "field": "option_ד",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'יזבו\\\\uf8ffו של' → 'יזבונו של'\", \"'יזבו\\\\uf8ffו של' → 'יזבונו של'\", \"'יזבו\\\\uf8ffה של' → 'יזבונה של'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ד' של שאלה 27. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 28,
+      "field": "body",
+      "before": "[18 occurrence(s) of U+F8FF. Examples: [\"'יו\\\\uf8ffתן ש' → 'יונתן ש'\", \"'ה מד\\\\uf8ffיאל.' → 'ה מדניאל.'\", \"'רה ב\\\\uf8ffקאית' → 'רה בנקאית'\", \"'חשבו\\\\uf8ffו של' → 'חשבונו של'\", \"'של ד\\\\uf8ffיאל.' → 'של דניאל.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 18 פעמים בשדה 'body' של שאלה 28. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 28,
+      "field": "option_א",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'יו\\\\uf8ffתן ל' → 'יונתן ל'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_א' של שאלה 28. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 28,
+      "field": "option_ב",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'יו\\\\uf8ffתן ר' → 'יונתן ר'\", \"'כי ד\\\\uf8ffיאל ' → 'כי דניאל '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ב' של שאלה 28. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 28,
+      "field": "option_ג",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'יו\\\\uf8ffתן ר' → 'יונתן ר'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ג' של שאלה 28. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 28,
+      "field": "option_ד",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'יו\\\\uf8ffתן ה' → 'יונתן ה'\", \"'יה מ\\\\uf8ffסה ל' → 'יה מנסה ל'\", \"'של ד\\\\uf8ffיאל ' → 'של דניאל '\", \"'אשר \\\\uf8ffשאר ' → 'אשר נשאר '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ד' של שאלה 28. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 29,
+      "field": "body",
+      "before": "[12 occurrence(s) of U+F8FF. Examples: [\"'ם הע\\\\uf8ffיק ל' → 'ם העניק ל'\", \"' כמת\\\\uf8ffה לי' → ' כמתנה לי'\", \"'ף, א\\\\uf8ffי יו' → 'ף, אני יו'\", \"'ה וא\\\\uf8ffי מב' → 'ה ואני מב'\", \"'\\\\nשתפ\\\\uf8ffקי א' → '\\\\nשתפנקי א'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 12 פעמים בשדה 'body' של שאלה 29. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 29,
+      "field": "option_א",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ם אי\\\\uf8ffו יכ' → 'ם אינו יכ'\", \"'בו מ\\\\uf8ffתי\\\\uf8ffת' → 'בו מנתי\\\\uf8ffת'\", \"'מ\\\\uf8ffתי\\\\uf8ffת מל' → 'מ\\\\uf8ffתינת מל'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_א' של שאלה 29. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 29,
+      "field": "option_ב",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'בו מ\\\\uf8ffתי\\\\uf8ffת' → 'בו מנתי\\\\uf8ffת'\", \"'מ\\\\uf8ffתי\\\\uf8ffת מל' → 'מ\\\\uf8ffתינת מל'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ב' של שאלה 29. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 29,
+      "field": "option_ג",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'בו מ\\\\uf8ffתי\\\\uf8ffת' → 'בו מנתי\\\\uf8ffת'\", \"'מ\\\\uf8ffתי\\\\uf8ffת מל' → 'מ\\\\uf8ffתינת מל'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ג' של שאלה 29. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 29,
+      "field": "option_ד",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"'ב\\\\uf8ffסיבו' → 'בנסיבו'\", \"'ת הע\\\\uf8ffיין ' → 'ת העניין '\", \"'בו מ\\\\uf8ffתי\\\\uf8ffת' → 'בו מנתי\\\\uf8ffת'\", \"'מ\\\\uf8ffתי\\\\uf8ffת מל' → 'מ\\\\uf8ffתינת מל'\", \"'שלא \\\\uf8ffערך ' → 'שלא נערך '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'option_ד' של שאלה 29. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 30,
+      "field": "body",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ו הת\\\\uf8ffהגות' → 'ו התנהגות'\", \"'להימ\\\\uf8ffע מע' → 'להימנע מע'\", \"'חלת \\\\uf8ffפש?' → 'חלת נפש?'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'body' של שאלה 30. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 30,
+      "field": "option_א",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'להת\\\\uf8ffהגות' → 'להתנהגות'\", \"' שאי\\\\uf8ffה רצ' → ' שאינה רצ'\", \"' רצו\\\\uf8ffית א' → ' רצונית א'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_א' של שאלה 30. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 30,
+      "field": "option_ב",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'להת\\\\uf8ffהגות' → 'להתנהגות'\", \"' שאי\\\\uf8ffה רצ' → ' שאינה רצ'\", \"' רצו\\\\uf8ffית ש' → ' רצונית ש'\", \"' שאי\\\\uf8ffה מו' → ' שאינה מו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ב' של שאלה 30. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 30,
+      "field": "option_ג",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'להת\\\\uf8ffהגות' → 'להתנהגות'\", \"' שאי\\\\uf8ffה רצ' → ' שאינה רצ'\", \"' רצו\\\\uf8ffית ש' → ' רצונית ש'\", \"' שאי\\\\uf8ffה מו' → ' שאינה מו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ג' של שאלה 30. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 30,
+      "field": "option_ד",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'להת\\\\uf8ffהגות' → 'להתנהגות'\", \"' שאי\\\\uf8ffה רצ' → ' שאינה רצ'\", \"' רצו\\\\uf8ffית ש' → ' רצונית ש'\", \"'ך אי\\\\uf8ffה מו' → 'ך אינה מו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ד' של שאלה 30. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 31,
+      "field": "body",
+      "before": "[19 occurrence(s) of U+F8FF. Examples: [\"'- ממ\\\\uf8ffיות ' → '- ממניות '\", '\\'מפו \\\\uf8ffעים\"\\' → \\'מפו נעים\"\\'', \"'אשר \\\\uf8ffסחרת' → 'אשר נסחרת'\", \"'לי מ\\\\uf8ffיות ' → 'לי מניות '\", \"'יות \\\\uf8ffוספי' → 'יות נוספי'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 19 פעמים בשדה 'body' של שאלה 31. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 31,
+      "field": "option_א",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'יעה \\\\uf8ffגזרת' → 'יעה נגזרת'\", \"'ח אי\\\\uf8ffו יכ' → 'ח אינו יכ'\", \"'יעה \\\\uf8ffגזרת' → 'יעה נגזרת'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_א' של שאלה 31. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 31,
+      "field": "option_ב",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'יעה \\\\uf8ffגזרת' → 'יעה נגזרת'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ב' של שאלה 31. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 31,
+      "field": "option_ג",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ח אי\\\\uf8ffם יכ' → 'ח אינם יכ'\", \"'יעה \\\\uf8ffגזרת' → 'יעה נגזרת'\", \"'ת שת\\\\uf8ffאי ה' → 'ת שתנאי ה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ג' של שאלה 31. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 31,
+      "field": "option_ד",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"'- ממ\\\\uf8ffיות ' → '- ממניות '\", \"'יעה \\\\uf8ffגזרת' → 'יעה נגזרת'\", \"'א אי\\\\uf8ffו יכ' → 'א אינו יכ'\", \"'ח אי\\\\uf8ffו יכ' → 'ח אינו יכ'\", \"'יעה \\\\uf8ffגזרת' → 'יעה נגזרת'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'option_ד' של שאלה 31. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 32,
+      "field": "body",
+      "before": "[13 occurrence(s) of U+F8FF. Examples: [\"' מעו\\\\uf8ffיין ' → ' מעוניין '\", \"' מתפ\\\\uf8ffה בע' → ' מתפנה בע'\", \"'המעו\\\\uf8ffיי\\\\uf8ffי' → 'המעוניי\\\\uf8ffי'\", \"'ו\\\\uf8ffיי\\\\uf8ffים ל' → 'ו\\\\uf8ffיינים ל'\", \"' את \\\\uf8ffוסח ' → ' את נוסח '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 13 פעמים בשדה 'body' של שאלה 32. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 32,
+      "field": "option_א",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"' כץ \\\\uf8ffכרת ' → ' כץ נכרת '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_א' של שאלה 32. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 32,
+      "field": "option_ב",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'טרם \\\\uf8ffחתם ' → 'טרם נחתם '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ב' של שאלה 32. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 32,
+      "field": "option_ג",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'ך הכ\\\\uf8ffיסה ' → 'ך הכניסה '\", \"'ת בי\\\\uf8ffיהם.' → 'ת ביניהם.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ג' של שאלה 32. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 32,
+      "field": "option_ד",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"' מעו\\\\uf8ffיי\\\\uf8ffת' → ' מעוניי\\\\uf8ffת'\", \"'ו\\\\uf8ffיי\\\\uf8ffת בה' → 'ו\\\\uf8ffיינת בה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ד' של שאלה 32. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 33,
+      "field": "body",
+      "before": "[13 occurrence(s) of U+F8FF. Examples: [\"'על מ\\\\uf8ffיות ' → 'על מניות '\", \"'024 \\\\uf8ffקבעה' → '024 נקבעה'\", \"'לי מ\\\\uf8ffיות ' → 'לי מניות '\", \"'ק מי\\\\uf8ffויה ' → 'ק מינויה '\", \"'ש\\\\nטי\\\\uf8ffה עמ' → 'ש\\\\nטינה עמ'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 13 פעמים בשדה 'body' של שאלה 33. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 33,
+      "field": "option_א",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"' בתק\\\\uf8ffון, ' → ' בתקנון, '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_א' של שאלה 33. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 33,
+      "field": "option_ב",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"' שאי\\\\uf8ffה \\\\uf8ffי' → ' שאינה \\\\uf8ffי'\", \"'י\\\\uf8ffה \\\\uf8ffית\\\\uf8ffת' → 'י\\\\uf8ffה נית\\\\uf8ffת'\", \"' \\\\uf8ffית\\\\uf8ffת לה' → ' \\\\uf8ffיתנת לה'\", \"' בתק\\\\uf8ffון. ' → ' בתקנון. '\", \"'ן אי\\\\uf8ffו יכ' → 'ן אינו יכ'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'option_ב' של שאלה 33. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 33,
+      "field": "option_ג",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"' לא \\\\uf8ffיתן ' → ' לא ניתן '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ג' של שאלה 33. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 34,
+      "field": "body",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'ר בב\\\\uf8ffיין ' → 'ר בבניין '\", \"'. לב\\\\uf8ffיין ' → '. לבניין '\", \"'מה כ\\\\uf8ffדרש.' → 'מה כנדרש.'\", \"' להת\\\\uf8ffתק מ' → ' להתנתק מ'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'body' של שאלה 34. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 34,
+      "field": "option_א",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"' להת\\\\uf8ffתק מ' → ' להתנתק מ'\", \"'שר ש\\\\uf8ffי של' → 'שר שני של'\", \"'עם ה\\\\uf8ffיתוק' → 'עם הניתוק'\", \"'\\\\nתקי\\\\uf8ffה של' → '\\\\nתקינה של'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_א' של שאלה 34. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 34,
+      "field": "option_ב",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"' להת\\\\uf8ffתק מ' → ' להתנתק מ'\", \"'ות ה\\\\uf8ffיתוק' → 'ות הניתוק'\", \"' תקי\\\\uf8ffה של' → ' תקינה של'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ב' של שאלה 34. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 34,
+      "field": "option_ג",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"' להת\\\\uf8ffתק מ' → ' להתנתק מ'\", \"'שר\\\\nש\\\\uf8ffי של' → 'שר\\\\nשני של'\", \"'עם ה\\\\uf8ffיתוק' → 'עם הניתוק'\", \"' תקי\\\\uf8ffה של' → ' תקינה של'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ג' של שאלה 34. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 34,
+      "field": "option_ד",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'ם בב\\\\uf8ffיין ' → 'ם בבניין '\", \"' להת\\\\uf8ffתק מ' → ' להתנתק מ'\", \"'ות ה\\\\uf8ffיתוק' → 'ות הניתוק'\", \"' תקי\\\\uf8ffה של' → ' תקינה של'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ד' של שאלה 34. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 35,
+      "field": "body",
+      "before": "[13 occurrence(s) of U+F8FF. Examples: [\"' את \\\\uf8ffורית' → ' את נורית'\", \"'בן ל\\\\uf8ffורית' → 'בן לנורית'\", \"'תב ל\\\\uf8ffורית' → 'תב לנורית'\", '\\'ת: \"\\\\uf8ffורית\\' → \\'ת: \"נורית\\'', \"'אי ש\\\\uf8ffחיה ' → 'אי שנחיה '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 13 פעמים בשדה 'body' של שאלה 35. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 35,
+      "field": "option_א",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'\\\\uf8ffורית' → 'נורית'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_א' של שאלה 35. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 35,
+      "field": "option_ב",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'ד). \\\\uf8ffורית' → 'ד). נורית'\", \"'ת אי\\\\uf8ffה זכ' → 'ת אינה זכ'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ב' של שאלה 35. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 35,
+      "field": "option_ג",
+      "before": "[6 occurrence(s) of U+F8FF. Examples: [\"'אם \\\\uf8ffורית' → 'אם נורית'\", \"'ק לפ\\\\uf8ffי מו' → 'ק לפני מו'\", \"'ם לע\\\\uf8ffיי\\\\uf8ffי' → 'ם לעניי\\\\uf8ffי'\", \"'ע\\\\uf8ffיי\\\\uf8ffי יר' → 'ע\\\\uf8ffייני יר'\", \"'היה \\\\uf8ffיתן\\\\n' → 'היה ניתן\\\\n'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 6 פעמים בשדה 'option_ג' של שאלה 35. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 35,
+      "field": "option_ד",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'על \\\\uf8ffורית' → 'על נורית'\", \"'שבו \\\\uf8ffורית' → 'שבו נורית'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ד' של שאלה 35. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 36,
+      "field": "body",
+      "before": "[7 occurrence(s) of U+F8FF. Examples: [\"'יב ה\\\\uf8ffמצא ' → 'יב הנמצא '\", \"' ומו\\\\uf8ffה לו' → ' ומונה לו'\", \"' לו \\\\uf8ffאמן ' → ' לו נאמן '\", \"'אמן \\\\uf8ffפגע ' → 'אמן נפגע '\", \"'ייב \\\\uf8ffגרמו' → 'ייב נגרמו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 7 פעמים בשדה 'body' של שאלה 36. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 36,
+      "field": "option_א",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ין ה\\\\uf8ffזקים' → 'ין הנזקים'\", \"' תוק\\\\uf8ffה ל\\\\uf8ff' → ' תוקנה ל\\\\uf8ff'\", \"'\\\\uf8ffה ל\\\\uf8ffאמן.' → '\\\\uf8ffה לנאמן.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_א' של שאלה 36. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 36,
+      "field": "option_ב",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"' תוק\\\\uf8ffה ל\\\\uf8ff' → ' תוקנה ל\\\\uf8ff'\", \"'\\\\uf8ffה ל\\\\uf8ffאמן,' → '\\\\uf8ffה לנאמן,'\", \"'אוטו\\\\uf8ffומיה' → 'אוטונומיה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ב' של שאלה 36. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 36,
+      "field": "option_ג",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"' תוק\\\\uf8ffה ל\\\\uf8ff' → ' תוקנה ל\\\\uf8ff'\", \"'\\\\uf8ffה ל\\\\uf8ffאמן,' → '\\\\uf8ffה לנאמן,'\", \"'אוטו\\\\uf8ffומיה' → 'אוטונומיה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_ג' של שאלה 36. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 36,
+      "field": "option_ד",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'ין ה\\\\uf8ffזקים' → 'ין הנזקים'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ד' של שאלה 36. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 37,
+      "field": "body",
+      "before": "[13 occurrence(s) of U+F8FF. Examples: [\"'ד\\\\uf8ffי \\\\uf8ffפ' → 'דני \\\\uf8ffפ'\", \"'ד\\\\uf8ffי \\\\uf8ffפגע ' → 'ד\\\\uf8ffי נפגע '\", \"'בתאו\\\\uf8ffת דר' → 'בתאונת דר'\", \"'עת ש\\\\uf8ffהג ב' → 'עת שנהג ב'\", \"'ות ד\\\\uf8ffי לא' → 'ות דני לא'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 13 פעמים בשדה 'body' של שאלה 37. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 37,
+      "field": "option_א",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'ד\\\\uf8ffי כפ' → 'דני כפ'\", \"'תו ה\\\\uf8ffזיקי' → 'תו הנזיקי'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_א' של שאלה 37. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 37,
+      "field": "option_ב",
+      "before": "[6 occurrence(s) of U+F8FF. Examples: [\"'ד\\\\uf8ffי כפ' → 'דני כפ'\", \"'תו ה\\\\uf8ffזיקי' → 'תו הנזיקי'\", \"'ים ל\\\\uf8ffפגעי' → 'ים לנפגעי'\", \"' תאו\\\\uf8ffות ד' → ' תאונות ד'\", \"'ים ל\\\\uf8ffפגעי' → 'ים לנפגעי'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 6 פעמים בשדה 'option_ב' של שאלה 37. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 37,
+      "field": "option_ג",
+      "before": "[5 occurrence(s) of U+F8FF. Examples: [\"'ד\\\\uf8ffי אי' → 'דני אי'\", \"'י אי\\\\uf8ffו כפ' → 'י אינו כפ'\", \"'תו ה\\\\uf8ffזיקי' → 'תו הנזיקי'\", \"'ים ל\\\\uf8ffפגעי' → 'ים לנפגעי'\", \"' תאו\\\\uf8ffות\\\\nד' → ' תאונות\\\\nד'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 5 פעמים בשדה 'option_ג' של שאלה 37. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 37,
+      "field": "option_ד",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'בתאו\\\\uf8ffת דר' → 'בתאונת דר'\", \"'ים ד\\\\uf8ffי כל' → 'ים דני כל'\", \"'ל אי\\\\uf8ffו יכ' → 'ל אינו יכ'\", \"'דת\\\\nה\\\\uf8ffזיקי' → 'דת\\\\nהנזיקי'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'option_ד' של שאלה 37. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 38,
+      "field": "body",
+      "before": "[8 occurrence(s) of U+F8FF. Examples: [\"'ין ה\\\\uf8ffתו\\\\uf8ffי' → 'ין הנתו\\\\uf8ffי'\", \"'ה\\\\uf8ffתו\\\\uf8ffים ה' → 'ה\\\\uf8ffתונים ה'\", \"'ם אי\\\\uf8ffו רל' → 'ם אינו רל'\", \"'רלוו\\\\uf8ffטי כ' → 'רלוונטי כ'\", \"'אשר \\\\uf8ffבח\\\\uf8ffת' → 'אשר נבח\\\\uf8ffת'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 8 פעמים בשדה 'body' של שאלה 38. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 38,
+      "field": "option_א",
+      "before": "[3 occurrence(s) of U+F8FF. Examples: [\"'ה\\\\uf8ffחה ש' → 'הנחה ש'\", \"'של ה\\\\uf8ffתבע ' → 'של הנתבע '\", \"'בע ב\\\\uf8ffוגע ' → 'בע בנוגע '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 3 פעמים בשדה 'option_א' של שאלה 38. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 38,
+      "field": "option_ג",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'יל ה\\\\uf8ffתבע.' → 'יל הנתבע.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ג' של שאלה 38. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 38,
+      "field": "option_ד",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'וע ה\\\\uf8ffתבע.' → 'וע הנתבע.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ד' של שאלה 38. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 39,
+      "field": "body",
+      "before": "[4 occurrence(s) of U+F8FF. Examples: [\"'בכוו\\\\uf8ffה אל' → 'בכוונה אל'\", \"'בוס \\\\uf8ffוסע ' → 'בוס נוסע '\", \"'ים ל\\\\uf8ffפגעי' → 'ים לנפגעי'\", \"' תאו\\\\uf8ffות ד' → ' תאונות ד'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 4 פעמים בשדה 'body' של שאלה 39. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 39,
+      "field": "option_א",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'יזבו\\\\uf8ffו של' → 'יזבונו של'\", \"'ל המ\\\\uf8ffוח, ' → 'ל המנוח, '\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_א' של שאלה 39. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 39,
+      "field": "option_ב",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'יזבו\\\\uf8ffו של' → 'יזבונו של'\", \"'ל המ\\\\uf8ffוח י' → 'ל המנוח י'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ב' של שאלה 39. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 39,
+      "field": "option_ג",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'ם במ\\\\uf8ffוח י' → 'ם במנוח י'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ג' של שאלה 39. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 39,
+      "field": "option_ד",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'ן המ\\\\uf8ffוח ו' → 'ן המנוח ו'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ד' של שאלה 39. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 40,
+      "field": "body",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'ם אי\\\\uf8ffו הכ' → 'ם אינו הכ'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'body' של שאלה 40. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 40,
+      "field": "option_א",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'כוו\\\\uf8ffה לה' → 'כוונה לה'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_א' של שאלה 40. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 40,
+      "field": "option_ב",
+      "before": "[2 occurrence(s) of U+F8FF. Examples: [\"'ג אי\\\\uf8ffו \\\\uf8ffכ' → 'ג אינו \\\\uf8ffכ'\", \"'י\\\\uf8ffו \\\\uf8ffכון.' → 'י\\\\uf8ffו נכון.'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 2 פעמים בשדה 'option_ב' של שאלה 40. הוחלף ב-U+05E0 (Hebrew nun)."
+    },
+    {
+      "question_number": 40,
+      "field": "option_ד",
+      "before": "[1 occurrence(s) of U+F8FF. Examples: [\"'\\\\uf8ffזק כ' → 'נזק כ'\"]]",
+      "after": "[replaced with נ (U+05E0)]",
+      "rule": "uf8ff→נ",
+      "reason": "U+F8FF (Apple Private Use Area) מייצג את האות נ (nun) עברית באמצעות font mapping פרטי בקובץ PDF זה. מופיע 1 פעמים בשדה 'option_ד' של שאלה 40. הוחלף ב-U+05E0 (Hebrew nun)."
+    }
+  ]
+}

@@ -1,5 +1,3 @@
-כן. זה קובץ CLAUDE.md מלא, נקי, בלי חזרות מיותרות.
-
 # CLAUDE.md
 ## Project Overview
 This project is a Hebrew RTL PWA / Web Mobile First application for practicing past Israeli Bar Association qualification exams.

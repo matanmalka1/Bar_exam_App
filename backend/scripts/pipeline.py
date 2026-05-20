@@ -76,6 +76,7 @@ Example:
 EXPECTED_Q     = 40
 OPTION_LETTERS = ['א', 'ב', 'ג', 'ד']
 VALID_ANSWERS  = set(OPTION_LETTERS)
+DISQUALIFIED_ANSWER = "נפסלה"
 PART_HEBREW = {
     "A": "חלק א",
     "B": "חלק ב",
@@ -95,11 +96,8 @@ SOFT_HYPHEN = '\xad'
 # The part name is supplied by --part-name because each exam part differs.
 HEADER_MARKER_B = '00:00'        # exam timer — never appears in question text
 
-# Additional header date pattern (secondary check)
-HEADER_MARKER_DATE = '28.04.2025'
-
-# Answer-key marker in answers PDF: .N X'  (ASCII apostrophe U+0027)
-A_MARKER_RE = re.compile(r"\.\s*(\d{1,2})\s+([א-ד])'")
+# Answer-key marker in answers PDF: .N X' or .N נפסלה
+A_MARKER_RE = re.compile(r"\.\s*(\d{1,2})\s+((?:[א-ד]')|נפסלה)")
 
 # Option start (beginning of line, letter + optional space + period)
 OPTION_START_RE = re.compile(r"^([אבגד])\s*\.", re.MULTILINE)
@@ -137,7 +135,7 @@ class ParsedQuestion:
 @dataclass
 class ParsedAnswer:
     number:    int
-    correct:   str         # "א" / "ב" / "ג" / "ד"
+    correct:   str         # "א" / "ב" / "ג" / "ד" / "נפסלה"
     reference: str
     flags:     list = field(default_factory=list)
 
@@ -437,11 +435,11 @@ def check_header_artifacts(
     הסבר:
     - Q24 מכיל 'חלק ב' בטקסט החוקי הלגיטימי → לא מספיק לבדוק מילה בודדת
     - '00:00' לעולם לא מופיע בשאלה → בדיקה בטוחה
-    - '28.04.2025' + 'חלק ב' = combination חד-משמעית של header
+    - שם החלק + '00:00' = combination חד-משמעית של header, ללא תלות בתאריך המועד
     """
     combos = [
         (part_name, HEADER_MARKER_B),
-        (HEADER_MARKER_DATE, part_hebrew),
+        (part_hebrew, HEADER_MARKER_B),
     ]
     if HEADER_MARKER_B in text:
         qa.hard_failures.append(
@@ -465,7 +463,7 @@ def find_questions_section_start(lines: list) -> int:
     """מוצא את אינדקס השורה הראשונה של השאלות (אחרי הוראות)."""
     last_hatzlacha = -1
     for i, line in enumerate(lines):
-        if re.search(r'ב\s+ה\s+צ\s+ל\s+ח\s+ה', line):
+        if re.search(r'ב\s*ה\s*צ\s*ל\s*ח\s*ה', line):
             last_hatzlacha = i
 
     if last_hatzlacha == -1:
@@ -488,8 +486,17 @@ def split_question_blocks(questions_text: str) -> list:
     מפצל את חלק השאלות ל-tuples של (מספר_שאלה, טקסט_הבלוק).
     מטפל גם ב-'.13 טקסט' וגם ב-'.13טקסט' (ללא רווח).
     """
-    marker_re = re.compile(r"(?m)^\.(\d{1,2})(?=\s|\D)", re.UNICODE)
-    matches = list(marker_re.finditer(questions_text))
+    marker_re = re.compile(r"(?m)^\.(\d{1,2})(?!\d)(?=\s*\S)", re.UNICODE)
+    candidates = list(marker_re.finditer(questions_text))
+    matches = []
+    expected_next = 1
+    for candidate in candidates:
+        q_num = int(candidate.group(1))
+        if q_num == expected_next:
+            matches.append(candidate)
+            expected_next += 1
+            if expected_next > EXPECTED_Q:
+                break
     if not matches:
         raise ValueError("HARD-FAIL: לא נמצאו סמני שאלות בחלק השאלות.")
 
@@ -654,7 +661,7 @@ def extract_answers(norm_a_text: str, qa: QAReport, norm_log: list) -> dict:
     answers = {}
     for i, m in enumerate(markers):
         q_num        = int(m.group(1))
-        answer       = m.group(2)
+        answer       = m.group(2).replace("'", "")
         marker_start = m.start()
         marker_end   = m.end()
 
@@ -681,8 +688,8 @@ def extract_answers(norm_a_text: str, qa: QAReport, norm_log: list) -> dict:
         reference = _clean_reference(' '.join(ref_parts))
 
         # ולידציה
-        if answer not in VALID_ANSWERS:
-            qa.hard_failures.append(f"A{q_num}: תשובה '{answer}' אינה אחת מ-א/ב/ג/ד")
+        if answer not in VALID_ANSWERS and answer != DISQUALIFIED_ANSWER:
+            qa.hard_failures.append(f"A{q_num}: תשובה '{answer}' אינה אחת מ-א/ב/ג/ד/נפסלה")
             continue
 
         if not reference:
@@ -757,11 +764,13 @@ def merge_and_validate(
         q = q_by_num[num]
         a = answers[num]
 
-        if a.correct not in VALID_ANSWERS:
+        if a.correct == DISQUALIFIED_ANSWER:
+            pass
+        elif a.correct not in VALID_ANSWERS:
             qa.hard_failures.append(f"Q{num}: תשובה נכונה '{a.correct}' לא חוקית")
             continue
 
-        if a.correct not in q.options:
+        if a.correct != DISQUALIFIED_ANSWER and a.correct not in q.options:
             qa.hard_failures.append(
                 f"Q{num}: תשובה נכונה '{a.correct}' לא מופיעה באפשרויות {list(q.options.keys())}"
             )
@@ -772,10 +781,12 @@ def merge_and_validate(
             continue
 
         stable_id = f"{exam_date}_{part}_{num:03d}"
+        is_invalidated = a.correct == DISQUALIFIED_ANSWER
 
         output.append({
             "stable_id":      stable_id,
             "number":         num,
+            "status":         "invalidated" if is_invalidated else "active",
             "body":           q.body,
             "options": {
                 "א": q.options["א"],
@@ -783,8 +794,12 @@ def merge_and_validate(
                 "ג": q.options["ג"],
                 "ד": q.options["ד"],
             },
-            "correct_answer": a.correct,
+            "correct_answer": None if is_invalidated else a.correct,
             "reference":      a.reference,
+            "invalidation_note": (
+                "השאלה נפסלה לפי מפתח התשובות הרשמי"
+                if is_invalidated else None
+            ),
             "_flags":         q.flags + a.flags,   # dev only — לא נכנס ל-DB
         })
 

@@ -1,6 +1,4 @@
-כן. זה קובץ CLAUDE.md מלא, נקי, בלי חזרות מיותרות.
-
-# CLAUDE.md
+# AGENTS.md
 ## Project Overview
 This project is a Hebrew RTL PWA / Web Mobile First application for practicing past Israeli Bar Association qualification exams.
 The app is intended for multiple examinees preparing for the Israeli Bar exam.
