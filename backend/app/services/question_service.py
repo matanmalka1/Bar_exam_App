@@ -6,7 +6,6 @@ from app.models.question import Question
 from app.repositories import question_repository
 from app.schemas.question import ExamSummary, QuestionOptions, QuestionOut
 
-
 PART_NAMES = {"B": "דין דיוני", "C": "דין מהותי"}
 MONTH_LABELS = {"04": "אפריל", "06": "יוני", "12": "דצמבר"}
 ANSWER_LABELS = {"A": "א", "B": "ב", "C": "ג", "D": "ד"}

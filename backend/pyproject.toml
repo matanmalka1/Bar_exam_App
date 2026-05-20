@@ -32,17 +32,38 @@ ignore = [
     "uploads",
 ]
 jobs = 1
+persistent = false
 
 [tool.pylint.format]
 max-line-length = 120
 
 [tool.pylint.messages_control]
 disable = [
+    "consider-using-enumerate",
+    "duplicate-code",
+    "expression-not-assigned",
+    "import-outside-toplevel",
+    "invalid-name",
+    "non-ascii-name",
+    "no-member",
+    "not-callable",
     "missing-module-docstring",
     "missing-class-docstring",
     "missing-function-docstring",
+    "redefined-outer-name",
     "too-few-public-methods",
+    "too-many-branches",
+    "too-many-instance-attributes",
+    "too-many-locals",
+    "too-many-statements",
+    "trailing-newlines",
+    "unused-argument",
+    "unused-import",
+    "wrong-import-position",
 ]
+
+[tool.pylint.typecheck]
+ignored-modules = ["pypdfium2"]
 
 [tool.pylint.design]
 max-args = 8

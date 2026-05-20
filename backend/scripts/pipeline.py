@@ -21,16 +21,15 @@ Bar Exam PDF → JSON pipeline  —  v2
 כלל עקרון: אם יש ספק — manual_review. לא מנחשים. לא מתקנים אוטומטית ללא תיעוד.
 """
 
-import re
-import json
-import sys
 import argparse
+import json
+import re
+import sys
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from dataclasses import dataclass, field, asdict
 from typing import Optional
 
 import pypdfium2 as pdfium
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  CLI

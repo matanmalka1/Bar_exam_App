@@ -22,7 +22,6 @@ if str(BACKEND_DIR) not in sys.path:
 
 from app.models.question import Question  # noqa: E402
 
-
 EXPECTED_TOTAL = 320
 EXPECTED_ACTIVE = 319
 EXPECTED_INVALIDATED = 1

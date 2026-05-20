@@ -7,7 +7,6 @@ from app.db.session import get_session
 from app.schemas.question import ExamSummary, QuestionOut
 from app.services import question_service
 
-
 router = APIRouter()
 
 

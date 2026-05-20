@@ -2,7 +2,6 @@ from fastapi import FastAPI
 
 from app.routers.questions import router as questions_router
 
-
 app = FastAPI(title="Bar Exam API")
 
 

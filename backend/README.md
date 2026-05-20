@@ -114,7 +114,7 @@ pytest tests/ -v
 
 ```bash
 ruff check .
-pylint app scripts tests alembic
+pylint app scripts tests alembic/env.py alembic/versions/*.py
 ```
 
 ## Data Model
