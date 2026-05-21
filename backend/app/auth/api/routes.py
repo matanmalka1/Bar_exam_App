@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import CurrentUser
@@ -11,7 +11,14 @@ from app.auth.schemas.auth import (
     RegisterRequest,
     TokenResponse,
 )
+from app.auth.schemas.password_reset import (
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
+)
 from app.auth.services import auth_service
+from app.auth.services import password_reset_service
 from app.auth.services.auth_service import AuthBundle, AuthError
 from app.core.config import (
     AUTH_REFRESH_TOKEN_EXPIRE_DAYS,
@@ -99,3 +106,29 @@ def logout(
 @router.get("/me", response_model=AuthUserOut)
 def me(current_user: CurrentUser) -> AuthUserOut:
     return AuthUserOut.model_validate(current_user)
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse)
+def forgot_password(
+    payload: ForgotPasswordRequest,
+    request: Request,
+    session: Annotated[Session, Depends(get_session)],
+) -> ForgotPasswordResponse:
+    requested_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+    message = password_reset_service.request_password_reset(
+        session, payload.email, requested_ip, user_agent
+    )
+    return ForgotPasswordResponse(message=message)
+
+
+@router.post("/reset-password", response_model=ResetPasswordResponse)
+def reset_password(
+    payload: ResetPasswordRequest,
+    session: Annotated[Session, Depends(get_session)],
+) -> ResetPasswordResponse:
+    try:
+        message = password_reset_service.reset_password(session, payload.token, payload.new_password)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return ResetPasswordResponse(message=message)

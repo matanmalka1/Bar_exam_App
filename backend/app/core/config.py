@@ -41,3 +41,7 @@ def _samesite_policy(value: str) -> SameSitePolicy:
 
 
 REFRESH_COOKIE_SAMESITE: SameSitePolicy = _samesite_policy(os.getenv("REFRESH_COOKIE_SAMESITE", "lax"))
+
+PASSWORD_RESET_TOKEN_EXPIRE_MINUTES = int(os.getenv("PASSWORD_RESET_TOKEN_EXPIRE_MINUTES", "30"))
+FRONTEND_PASSWORD_RESET_URL = os.getenv("FRONTEND_PASSWORD_RESET_URL", "http://localhost:5173/reset-password")
+PASSWORD_RESET_DEV_LOG = os.getenv("PASSWORD_RESET_DEV_LOG", "false").lower() == "true"

@@ -1,8 +1,6 @@
-import re
-
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-_PASSWORD_RE = re.compile(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*[^a-zA-Z0-9]).{8,}$')
+from app.auth.password_policy import validate_password
 
 
 class LoginRequest(BaseModel):
@@ -26,11 +24,7 @@ class RegisterRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def _validate_password_complexity(cls, v: str) -> str:
-        if not _PASSWORD_RE.match(v):
-            raise ValueError(
-                "Password must contain at least one uppercase letter, one lowercase letter, and one special character"
-            )
-        return v
+        return validate_password(v)
 
     @field_validator("email", mode="before")
     @classmethod
