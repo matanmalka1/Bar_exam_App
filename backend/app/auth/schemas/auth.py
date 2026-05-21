@@ -1,9 +1,23 @@
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=1, max_length=128)
+
+
+class RegisterRequest(BaseModel):
+    full_name: str = Field(min_length=1, max_length=128)
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("full_name")
+    @classmethod
+    def _trim_full_name(cls, v: str) -> str:
+        trimmed = v.strip()
+        if not trimmed:
+            raise ValueError("full_name must not be blank")
+        return trimmed
 
 
 class AuthUserOut(BaseModel):
@@ -19,3 +33,8 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: AuthUserOut
+
+
+class RefreshResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

@@ -1,4 +1,8 @@
 import os
+from typing import Literal, cast
+
+SameSitePolicy = Literal["lax", "strict", "none"]
+_ALLOWED_SAMESITE: tuple[SameSitePolicy, ...] = ("lax", "strict", "none")
 
 
 def _parse_csv_env(value: str | None, default: list[str]) -> list[str]:
@@ -23,4 +27,17 @@ CORS_ORIGINS = _parse_csv_env(
 
 AUTH_SECRET_KEY = os.getenv("AUTH_SECRET_KEY", "dev-secret-change-me")
 AUTH_ALGORITHM = os.getenv("AUTH_ALGORITHM", "HS256")
-AUTH_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("AUTH_ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+AUTH_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("AUTH_ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
+AUTH_REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("AUTH_REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+
+REFRESH_COOKIE_NAME = os.getenv("REFRESH_COOKIE_NAME", "refresh_token")
+REFRESH_COOKIE_PATH = os.getenv("REFRESH_COOKIE_PATH", "/api/v1/auth")
+REFRESH_COOKIE_SECURE = os.getenv("REFRESH_COOKIE_SECURE", "false").lower() == "true"
+def _samesite_policy(value: str) -> SameSitePolicy:
+    lower = value.lower()
+    if lower in _ALLOWED_SAMESITE:
+        return cast(SameSitePolicy, lower)
+    return "lax"
+
+
+REFRESH_COOKIE_SAMESITE: SameSitePolicy = _samesite_policy(os.getenv("REFRESH_COOKIE_SAMESITE", "lax"))
