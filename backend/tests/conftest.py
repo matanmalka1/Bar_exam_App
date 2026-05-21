@@ -1,26 +1,26 @@
+from __future__ import annotations
+
 import sys
 from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-from sqlalchemy.pool import StaticPool
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-from app.db.base import Base
-from app.db.deps import get_session
-from app.main import app
-from app.models.question import Question
+if TYPE_CHECKING:
+    from fastapi.testclient import TestClient
+    from sqlalchemy.orm import Session
 
-QuestionFactory = Callable[..., Question]
-SeedDatabase = Callable[[Session], None]
+    from app.models.question import Question
+
+QuestionFactory = Callable[..., "Question"]
+SeedDatabase = Callable[["Session"], None]
 
 
 @pytest.fixture
@@ -34,6 +34,8 @@ def make_question() -> QuestionFactory:
         correct_answer: str | None = "A",
         invalidation_note: str | None = None,
     ) -> Question:
+        from app.models.question import Question
+
         return Question(
             stable_id=f"{exam_date.strftime('%Y-%m')}_{part}_{number:03d}",
             exam_date=exam_date,
@@ -57,6 +59,15 @@ def make_question() -> QuestionFactory:
 def client_builder() -> Callable[[SeedDatabase], Iterator[TestClient]]:
     @contextmanager
     def _build_client(seed_database: SeedDatabase) -> Iterator[TestClient]:
+        from fastapi.testclient import TestClient
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import Session
+        from sqlalchemy.pool import StaticPool
+
+        from app.db.base import Base
+        from app.db.deps import get_session
+        from app.main import app
+
         engine = create_engine(
             "sqlite+pysqlite:///:memory:",
             connect_args={"check_same_thread": False},

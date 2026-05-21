@@ -13,6 +13,7 @@ from app.core.exceptions import (
     http_error_code_for_status,
     http_error_message_for_status,
 )
+from app.core.logging_context import get_request_id
 
 logger = logging.getLogger(__name__)
 
@@ -25,16 +26,18 @@ def error_response(
     code: str,
     message: str,
     details: Any | None = None,
+    request_id: str | None = None,
 ) -> JSONResponse:
+    error: dict[str, Any] = {
+        "code": code,
+        "message": message,
+        "details": details,
+    }
+    if request_id:
+        error["request_id"] = request_id
     return JSONResponse(
         status_code=status_code,
-        content={
-            "error": {
-                "code": code,
-                "message": message,
-                "details": details,
-            }
-        },
+        content={"error": error},
     )
 
 
@@ -49,53 +52,66 @@ def validation_error_details(errors: list[dict[str, Any]]) -> list[dict[str, Any
     ]
 
 
+def _request_id(request: Any) -> str | None:
+    return getattr(getattr(request, "state", None), "request_id", None) or get_request_id()
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
-    async def app_error_handler(_request: Any, exc: AppError) -> JSONResponse:
+    async def app_error_handler(request: Any, exc: AppError) -> JSONResponse:
+        if exc.status_code >= 500:
+            logger.error("app_error: %s", exc.code)
+        else:
+            logger.warning("app_error: %s", exc.code)
         return error_response(
             status_code=exc.status_code,
             code=exc.code,
             message=exc.message,
             details=exc.details,
+            request_id=_request_id(request),
         )
 
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(_request: Any, exc: RequestValidationError) -> JSONResponse:
+    async def validation_exception_handler(request: Any, exc: RequestValidationError) -> JSONResponse:
         return error_response(
             status_code=422,
             code="validation_error",
             message="חלק מהשדות אינם תקינים",
-            details=validation_error_details(exc.errors()),
+            details=validation_error_details(list(exc.errors())),
+            request_id=_request_id(request),
         )
 
     @app.exception_handler(StarletteHTTPException)
-    async def http_exception_handler(_request: Any, exc: StarletteHTTPException) -> JSONResponse:
+    async def http_exception_handler(request: Any, exc: StarletteHTTPException) -> JSONResponse:
         status_code = exc.status_code
         return error_response(
             status_code=status_code,
             code=http_error_code_for_status(status_code),
             message=_http_error_message(exc),
             details=None,
+            request_id=_request_id(request),
         )
 
     @app.exception_handler(SQLAlchemyError)
-    async def sqlalchemy_exception_handler(_request: Any, exc: SQLAlchemyError) -> JSONResponse:
+    async def sqlalchemy_exception_handler(request: Any, exc: SQLAlchemyError) -> JSONResponse:
         logger.exception("Unhandled database error")
         return error_response(
             status_code=500,
             code="database_error",
             message="אירעה שגיאת מסד נתונים",
             details=None,
+            request_id=_request_id(request),
         )
 
     @app.exception_handler(Exception)
-    async def generic_exception_handler(_request: Any, exc: Exception) -> JSONResponse:
+    async def generic_exception_handler(request: Any, exc: Exception) -> JSONResponse:
         logger.exception("Unhandled application error")
         return error_response(
             status_code=500,
             code="internal_server_error",
             message="אירעה שגיאה לא צפויה",
             details=None,
+            request_id=_request_id(request),
         )
 
 

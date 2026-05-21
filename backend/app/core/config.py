@@ -54,6 +54,14 @@ class Settings(BaseSettings):
     FRONTEND_PASSWORD_RESET_URL: str = "http://localhost:5173/reset-password"
     PASSWORD_RESET_DEV_LOG: bool = False
 
+    # ── observability ─────────────────────────────────────────────────────────
+    LOG_LEVEL: str = "INFO"
+    OBSERVABILITY_JSON_LOGS: bool = True
+    SENTRY_ENABLED: bool = False
+    SENTRY_DSN: str = ""
+    SENTRY_ENVIRONMENT: str = "development"
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.0
+
     # ── Brevo ─────────────────────────────────────────────────────────────────
     BREVO_API_KEY: str = ""
     BREVO_SENDER_EMAIL: str = "matan1391@gmail.com"
@@ -62,7 +70,7 @@ class Settings(BaseSettings):
 
     # ── production guard ──────────────────────────────────────────────────────
     @model_validator(mode="after")
-    def _validate_production(self) -> "Settings":
+    def _validate_production(self) -> Settings:
         if self.ENV != "production":
             return self
 
@@ -114,3 +122,10 @@ BREVO_API_KEY = settings.BREVO_API_KEY
 BREVO_SENDER_EMAIL = settings.BREVO_SENDER_EMAIL
 BREVO_SENDER_NAME = settings.BREVO_SENDER_NAME
 BREVO_TEMPLATE_PASSWORD_RESET = settings.BREVO_TEMPLATE_PASSWORD_RESET
+
+LOG_LEVEL = settings.LOG_LEVEL
+OBSERVABILITY_JSON_LOGS = settings.OBSERVABILITY_JSON_LOGS
+SENTRY_ENABLED = settings.SENTRY_ENABLED
+SENTRY_DSN = settings.SENTRY_DSN
+SENTRY_ENVIRONMENT = settings.SENTRY_ENVIRONMENT
+SENTRY_TRACES_SAMPLE_RATE = settings.SENTRY_TRACES_SAMPLE_RATE

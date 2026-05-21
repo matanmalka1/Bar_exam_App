@@ -7,17 +7,26 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.auth.api.routes import router as auth_router
-from app.core.config import CORS_ORIGINS
+from app.core.config import CORS_ORIGINS, settings
 from app.core.exception_handlers import register_exception_handlers
+from app.core.logging_config import configure_logging
+from app.core.sentry import configure_sentry
 from app.db.deps import get_session
+from app.middleware.request_id import RequestIDMiddleware
+from app.middleware.request_logging import RequestLoggingMiddleware
 from app.routers.practice_sessions import router as sessions_router
 from app.routers.questions import router as questions_router
 from app.routers.stats import router as stats_router
 from app.routers.users import router as users_router
 
+configure_logging(settings)
+configure_sentry(settings)
+
 app = FastAPI(title="Bar Exam API")
 register_exception_handlers(app)
 
+# Middleware order (add_middleware is LIFO — last added runs first on request path):
+# RequestID → RequestLogging → CORS → route
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
@@ -25,6 +34,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(RequestIDMiddleware)
 
 
 @app.get("/health")
