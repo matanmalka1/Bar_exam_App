@@ -11,13 +11,21 @@ FastAPI backend for the Bar Exam Study app. The app serves original Israeli Bar 
 - Email/password auth with JWT access tokens and HttpOnly refresh cookies is implemented.
 - User progress endpoints are scoped to the authenticated user.
 - Stats overview is implemented.
-- Password reset is not implemented.
+- Backend password reset endpoints are implemented.
+
+## Source Data Rules
+
+- Preserve official question text and answer order exactly.
+- Do not rewrite Hebrew wording.
+- Do not add legal explanations.
+- Do not infer missing answers.
+- Do not override official answer keys.
+- Do not repair official data silently.
+- Use `stable_id` as the question business identifier.
+- Invalid source data must fail validation or be marked for manual review.
 
 ## Non-Negotiable Product Rules
 
-- Preserve official question text and answer order exactly.
-- Do not add legal explanations.
-- Do not infer or repair official answer data silently.
 - Do not expose answer keys before a user is allowed to see them.
 - Do not accept client-provided `user_id` for user progress.
 - Use `/users/me/*` for authenticated user data.

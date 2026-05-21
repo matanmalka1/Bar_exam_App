@@ -6,6 +6,16 @@ Define the JSON to DB import step for the bar exam question bank.
 
 The import stage loads already validated pipeline output files into the database. It does not parse PDFs, normalize text, or repair question data.
 
+## 1.1 Source Data Rules
+
+- Preserve original question text exactly.
+- Do not rewrite Hebrew wording.
+- Do not change answer order.
+- Do not infer missing answers.
+- Do not override official answer keys.
+- Use `stable_id` as the question business identifier.
+- Invalid source data must fail validation or be marked for manual review.
+
 ## 2. Allowed Input Files
 
 The importer may read only final question JSON files:
@@ -161,6 +171,8 @@ The importer (`scripts/import_questions.py`) is:
 If validation fails for any file or question, the importer rolls back the entire import.
 
 The importer does not silently delete DB rows that are absent from the input. Missing or extra input data must be caught by validation before import is considered successful.
+
+Validation must hard-fail on missing question numbers, malformed question structure, duplicate `stable_id`, missing answer keys for active questions, invalid answer labels, and invalidated questions that still contain a correct answer. Source inconsistencies that cannot be repaired mechanically must remain in `manual_review_items` until checked against the official PDF.
 
 ### Run command
 

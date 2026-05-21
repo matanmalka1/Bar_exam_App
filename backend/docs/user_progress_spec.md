@@ -44,6 +44,17 @@ Request body:
 
 Extra fields are rejected.
 
+## DB Invariants
+
+- `practice_sessions.mode` is constrained to `exam`, `simulation`, `practice`, `mistakes`, or `bookmarks`.
+- `practice_sessions.status` is constrained to `active`, `completed`, or `abandoned`.
+- `practice_sessions.part` is either `B`, `C`, or null.
+- `practice_session_questions` has `unique(session_id, question_id)`.
+- `practice_session_questions` has `unique(session_id, position)` and `position >= 1`.
+- `user_answers` has `unique(session_id, question_id)`.
+- `user_answers.selected_answer` is stored as `A`/`B`/`C`/`D`.
+- `bookmarked_questions` has `unique(user_id, question_id)`.
+
 ## Mode Behavior
 
 | Mode | Selection | Answer visibility |
@@ -55,6 +66,12 @@ Extra fields are rejected.
 | `bookmarks` | Current user's bookmarked questions | Revealed after the question is answered |
 
 Session question order is created once and then stays fixed.
+
+Answer visibility is enforced by the backend:
+
+- `practice`, `mistakes`, and `bookmarks` expose `correct_answer`, `reference`, and `is_correct` only after the user answered that question.
+- `exam` and `simulation` hide answer keys and correctness while the session is active.
+- Completed `exam` and `simulation` sessions reveal answer keys and return result breakdowns.
 
 ## Answers
 
@@ -77,6 +94,17 @@ Within an active session, submitting the same question again updates the existin
 
 Completion freezes scoring. Exam and simulation completions include `part_breakdown` and a mistake list. Invalidated official questions are excluded from scoring denominators.
 
+Official `exam` sessions include invalidated questions to preserve the source exam. Invalidated questions keep `correct_answer = null`, stay visible in the session, and are excluded from scoring denominators and mistake lists. `simulation` selects only active questions.
+
+## Mistakes Semantics
+
+- Mistake history is preserved; old answer rows are not deleted when a later session fixes a question.
+- Active mistakes are computed from completed sessions only.
+- A question is an active mistake when the latest completed-session answer for that question is wrong.
+- Latest answer ordering is `answered_at DESC, id DESC`.
+- Repeated mistakes are questions with at least two wrong answers across completed sessions.
+- Active sessions are ignored by mistakes queries.
+
 ## User Routes
 
 - `GET /api/v1/users/me/sessions`
@@ -86,3 +114,11 @@ Completion freezes scoring. Exam and simulation completions include `part_breakd
 - `DELETE /api/v1/users/me/bookmarks/{stable_id}`
 
 All are scoped to the authenticated user.
+
+## Critical Tests Expected
+
+- Exam and simulation sessions do not leak answer keys before completion.
+- Invalidated questions are excluded from scoring and stats denominators.
+- Mistakes endpoint follows latest-answer semantics.
+- Session question order is preserved after creation.
+- Bookmark add/remove operations are idempotent.

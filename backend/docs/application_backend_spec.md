@@ -22,6 +22,8 @@ Router -> Service -> Repository -> ORM model
 - `POST /api/v1/auth/login`
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
+- `POST /api/v1/auth/forgot-password`
+- `POST /api/v1/auth/reset-password`
 - `GET /api/v1/exams`
 - `GET /api/v1/questions`
 - `GET /api/v1/questions/review`
@@ -46,6 +48,8 @@ Router -> Service -> Repository -> ORM model
 
 ## Answer Visibility
 
+Answer visibility is enforced by backend services, not only by the UI.
+
 Practice question endpoints do not expose official answer data:
 
 - `GET /api/v1/questions`
@@ -58,8 +62,14 @@ Review endpoints expose `correct_answer` and `reference`:
 
 Session payloads follow mode-specific visibility:
 
-- `practice`, `mistakes`, `bookmarks`: answer key is revealed for a question after the user answers it.
-- `exam`, `simulation`: answer key is hidden while active and revealed after completion.
+| Context | `correct_answer` / `reference` behavior |
+| --- | --- |
+| `GET /api/v1/questions` | Never returned |
+| `GET /api/v1/questions/{stable_id}` | Never returned |
+| Review endpoints | Returned for QA/review use |
+| Active `practice`, `mistakes`, `bookmarks` session | Returned only for questions the user already answered |
+| Active `exam` or `simulation` session | Hidden for every question |
+| Completed `exam` or `simulation` session | Revealed for all questions |
 
 ## User Scoping
 

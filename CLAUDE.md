@@ -29,16 +29,23 @@ Frontend repository: `/Users/matanmalka/Desktop/Bar_exam_frontend`.
 - Supports practice, exam, simulation, mistakes, and bookmarks sessions.
 - Hides answer keys in exam/simulation sessions until completion.
 - Exposes aggregate stats for the authenticated user.
+- Supports backend forgot-password and reset-password endpoints.
 
-Password reset is not implemented.
+Frontend reset-password pages may lag behind the backend; verify the frontend repo before documenting UI support.
 
-## Product Rules
+## Source Data Rules
 
 - Preserve imported legal question text exactly.
 - Do not rewrite Hebrew wording.
 - Do not change answer option order.
 - Do not add legal explanations.
 - Do not infer missing official answers.
+- Do not override official answer keys.
+- Do not use internal database IDs as business identifiers; use `stable_id` for questions.
+- Invalid source data must fail validation or be marked for manual review.
+
+## Product Rules
+
 - Do not expose `correct_answer` or `reference` in pre-submit practice payloads.
 - Do not accept `user_id` from clients for progress APIs. Use the authenticated user from the token.
 - Use `/users/me/*` for user-scoped routes.
@@ -57,6 +64,8 @@ Auth:
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
 - `GET /api/v1/auth/me`
+- `POST /api/v1/auth/forgot-password`
+- `POST /api/v1/auth/reset-password`
 
 Questions:
 
@@ -97,6 +106,9 @@ Important keys:
 - `REFRESH_COOKIE_PATH`
 - `REFRESH_COOKIE_SECURE`
 - `REFRESH_COOKIE_SAMESITE`
+- `PASSWORD_RESET_TOKEN_EXPIRE_MINUTES`
+- `FRONTEND_PASSWORD_RESET_URL`
+- `PASSWORD_RESET_DEV_LOG`
 
 ## Commands
 

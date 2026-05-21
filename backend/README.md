@@ -10,8 +10,7 @@ FastAPI backend for a Hebrew RTL Israeli bar-exam practice app.
 - Authenticated practice sessions for `practice`, `exam`, `simulation`, `mistakes`, and `bookmarks`.
 - User-scoped sessions, mistakes, bookmarks, and stats via `/users/me/*`.
 - Read-only question endpoints and answer-review endpoints.
-
-Password reset is not implemented.
+- Backend forgot-password and reset-password endpoints.
 
 ## Requirements
 
@@ -81,6 +80,9 @@ Interactive docs are available at `/docs` when the API is running.
 | `REFRESH_COOKIE_PATH` | `/api/v1/auth` |
 | `REFRESH_COOKIE_SECURE` | `false` |
 | `REFRESH_COOKIE_SAMESITE` | `lax` |
+| `PASSWORD_RESET_TOKEN_EXPIRE_MINUTES` | `30` |
+| `FRONTEND_PASSWORD_RESET_URL` | `http://localhost:5173/reset-password` |
+| `PASSWORD_RESET_DEV_LOG` | `false` |
 
 Use a strong `AUTH_SECRET_KEY` outside local development.
 
@@ -95,6 +97,8 @@ Auth:
 | `POST` | `/api/v1/auth/refresh` | Reads refresh cookie, returns new access token |
 | `POST` | `/api/v1/auth/logout` | Revokes current token version and clears refresh cookie |
 | `GET` | `/api/v1/auth/me` | Bearer token required |
+| `POST` | `/api/v1/auth/forgot-password` | Creates reset token for active users and returns a generic message |
+| `POST` | `/api/v1/auth/reset-password` | Uses a valid reset token to update password and invalidate existing tokens |
 
 Questions:
 
@@ -122,6 +126,16 @@ Authenticated progress:
 | `GET` | `/api/v1/users/me/stats/overview` | Aggregate stats |
 
 There is no `/api/v1/users/dev` endpoint and progress endpoints do not accept client-provided `user_id`.
+
+## Source Data Rules
+
+- Preserve original question text exactly.
+- Do not rewrite Hebrew wording.
+- Do not change answer order.
+- Do not infer missing answers.
+- Do not override official answer keys.
+- Use `stable_id` as the question business identifier.
+- Invalid source data must fail validation or be marked for manual review.
 
 ## Session Modes
 
