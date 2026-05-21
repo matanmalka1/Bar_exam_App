@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, Path, Query
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import CurrentUser
@@ -8,8 +8,6 @@ from app.db.deps import get_session
 from app.schemas.answer import BookmarkedQuestionOut, BookmarkOut, BookmarkRemovedOut, MistakeOut
 from app.schemas.session import SessionSummaryOut
 from app.services import answer_service, practice_session_service
-from app.services.answer_service import AnswerError
-from app.services.practice_session_service import SessionError
 
 router = APIRouter()
 
@@ -22,10 +20,7 @@ def list_my_sessions(
     session: Annotated[Session, Depends(get_session)],
     status: Annotated[Literal["active", "completed", "abandoned"] | None, Query()] = None,
 ) -> list[SessionSummaryOut]:
-    try:
-        return practice_session_service.list_user_sessions(session, current_user.id, status)
-    except SessionError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return practice_session_service.list_user_sessions(session, current_user.id, status)
 
 
 @router.get("/users/me/mistakes", response_model=list[MistakeOut])
@@ -33,10 +28,7 @@ def get_my_mistakes(
     current_user: CurrentUser,
     session: Annotated[Session, Depends(get_session)],
 ) -> list[MistakeOut]:
-    try:
-        return answer_service.list_mistakes(session, current_user.id)
-    except AnswerError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return answer_service.list_mistakes(session, current_user.id)
 
 
 @router.post("/users/me/bookmarks/{stable_id}", response_model=BookmarkOut)
@@ -45,10 +37,7 @@ def add_my_bookmark(
     current_user: CurrentUser,
     session: Annotated[Session, Depends(get_session)],
 ) -> BookmarkOut:
-    try:
-        return answer_service.add_bookmark(session, current_user.id, stable_id)
-    except AnswerError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return answer_service.add_bookmark(session, current_user.id, stable_id)
 
 
 @router.delete("/users/me/bookmarks/{stable_id}", response_model=BookmarkRemovedOut)
@@ -57,10 +46,7 @@ def delete_my_bookmark(
     current_user: CurrentUser,
     session: Annotated[Session, Depends(get_session)],
 ) -> BookmarkRemovedOut:
-    try:
-        answer_service.remove_bookmark(session, current_user.id, stable_id)
-    except AnswerError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    answer_service.remove_bookmark(session, current_user.id, stable_id)
     return BookmarkRemovedOut(removed=True)
 
 
@@ -69,7 +55,4 @@ def list_my_bookmarks(
     current_user: CurrentUser,
     session: Annotated[Session, Depends(get_session)],
 ) -> list[BookmarkedQuestionOut]:
-    try:
-        return answer_service.list_bookmarks(session, current_user.id)
-    except AnswerError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return answer_service.list_bookmarks(session, current_user.id)

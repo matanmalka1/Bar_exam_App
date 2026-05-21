@@ -127,6 +127,46 @@ Authenticated progress:
 
 There is no `/api/v1/users/dev` endpoint and progress endpoints do not accept client-provided `user_id`.
 
+## Error Responses
+
+All API errors use one JSON envelope so the Hebrew frontend can render errors consistently:
+
+```json
+{
+  "error": {
+    "code": "string_machine_readable_code",
+    "message": "הודעת שגיאה בעברית",
+    "details": null
+  }
+}
+```
+
+- `error.code` is stable enough for frontend branching.
+- `error.message` is safe for user display.
+- `error.details` is `null` unless the handler has frontend-friendly structured details.
+- Legacy top-level `detail` responses are not part of the current API contract.
+- Pydantic/FastAPI request validation uses `validation_error`; domain-level `422` errors use `unprocessable_entity`.
+
+Validation errors return `422` with:
+
+```json
+{
+  "error": {
+    "code": "validation_error",
+    "message": "חלק מהשדות אינם תקינים",
+    "details": [
+      {
+        "field": "items.0.name",
+        "message": "Field required",
+        "type": "missing"
+      }
+    ]
+  }
+}
+```
+
+Database and unhandled server errors are logged with stack traces, but client responses do not expose SQL, connection strings, tracebacks, or internal exception messages.
+
 ## Source Data Rules
 
 - Preserve original question text exactly.

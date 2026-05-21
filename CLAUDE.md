@@ -30,8 +30,7 @@ Frontend repository: `/Users/matanmalka/Desktop/Bar_exam_frontend`.
 - Hides answer keys in exam/simulation sessions until completion.
 - Exposes aggregate stats for the authenticated user.
 - Supports backend forgot-password and reset-password endpoints.
-
-Frontend reset-password pages may lag behind the backend; verify the frontend repo before documenting UI support.
+- Uses global exception handlers to return one frontend-safe error envelope.
 
 ## Source Data Rules
 
@@ -89,6 +88,25 @@ Progress:
 - `GET /api/v1/users/me/stats/overview`
 
 There is no `/api/v1/users/dev` endpoint.
+
+## Error Contract
+
+Successful responses keep their endpoint-specific schema. Error responses always use:
+
+```json
+{
+  "error": {
+    "code": "string_machine_readable_code",
+    "message": "הודעת שגיאה בעברית",
+    "details": null
+  }
+}
+```
+
+- Pydantic/FastAPI validation errors use `validation_error`.
+- Domain `422` errors use `unprocessable_entity`, not `validation_error`.
+- Domain errors may include frontend-friendly business context in `error.details`.
+- SQLAlchemy and generic 500 handlers log stack traces but do not expose internals to clients.
 
 ## Environment
 

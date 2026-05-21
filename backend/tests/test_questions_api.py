@@ -220,7 +220,11 @@ def test_get_question_returns_404_for_unknown_valid_stable_id(client: TestClient
     response = client.get("/api/v1/questions/2026-05_B_001")
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "question not found"}
+    assert response.json()["error"] == {
+        "code": "not_found",
+        "message": "המשאב המבוקש לא נמצא",
+        "details": None,
+    }
 
 
 def test_invalidated_question_has_no_correct_answer_and_note(client: TestClient):

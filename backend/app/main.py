@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.api.routes import router as auth_router
 from app.core.config import CORS_ORIGINS
+from app.core.exception_handlers import register_exception_handlers
 from app.db.deps import get_session
 from app.routers.practice_sessions import router as sessions_router
 from app.routers.questions import router as questions_router
@@ -15,6 +16,7 @@ from app.routers.stats import router as stats_router
 from app.routers.users import router as users_router
 
 app = FastAPI(title="Bar Exam API")
+register_exception_handlers(app)
 
 app.add_middleware(
     CORSMiddleware,

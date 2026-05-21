@@ -12,6 +12,7 @@ FastAPI backend for the Bar Exam Study app. The app serves original Israeli Bar 
 - User progress endpoints are scoped to the authenticated user.
 - Stats overview is implemented.
 - Backend password reset endpoints are implemented.
+- Global exception handling returns a consistent frontend-safe error envelope.
 
 ## Source Data Rules
 
@@ -37,6 +38,9 @@ FastAPI backend for the Bar Exam Study app. The app serves original Israeli Bar 
 - Repository owns database access.
 - ORM models stay free of business logic.
 - Pydantic schemas define API contracts.
+- Error responses must use `{ "error": { "code", "message", "details" } }`.
+- Reserve `validation_error` for FastAPI/Pydantic request validation; domain-level 422 errors use `unprocessable_entity`.
+- Do not leak SQL, connection strings, tracebacks, or internal exception messages to clients.
 - Use SQLAlchemy 2.0 `select()` patterns.
 - Keep comments short and only for non-obvious behavior.
 

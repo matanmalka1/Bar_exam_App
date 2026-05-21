@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Cookie, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import CurrentUser
@@ -19,7 +19,7 @@ from app.auth.schemas.password_reset import (
 )
 from app.auth.services import auth_service
 from app.auth.services import password_reset_service
-from app.auth.services.auth_service import AuthBundle, AuthError
+from app.auth.services.auth_service import AuthBundle
 from app.core.config import (
     AUTH_REFRESH_TOKEN_EXPIRE_DAYS,
     REFRESH_COOKIE_NAME,
@@ -61,10 +61,7 @@ def register(
     response: Response,
     session: Annotated[Session, Depends(get_session)],
 ) -> TokenResponse:
-    try:
-        bundle = auth_service.register(session, payload)
-    except AuthError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    bundle = auth_service.register(session, payload)
     return _respond(response, bundle)
 
 
@@ -74,10 +71,7 @@ def login(
     response: Response,
     session: Annotated[Session, Depends(get_session)],
 ) -> TokenResponse:
-    try:
-        bundle = auth_service.login(session, payload)
-    except AuthError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    bundle = auth_service.login(session, payload)
     return _respond(response, bundle)
 
 
@@ -86,10 +80,7 @@ def refresh(
     session: Annotated[Session, Depends(get_session)],
     refresh_token: Annotated[str | None, Cookie(alias=REFRESH_COOKIE_NAME)] = None,
 ) -> RefreshResponse:
-    try:
-        return auth_service.refresh(session, refresh_token)
-    except AuthError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return auth_service.refresh(session, refresh_token)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -125,8 +116,5 @@ def reset_password(
     payload: ResetPasswordRequest,
     session: Annotated[Session, Depends(get_session)],
 ) -> ResetPasswordResponse:
-    try:
-        message = password_reset_service.reset_password(session, payload.token, payload.new_password)
-    except AuthError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    message = password_reset_service.reset_password(session, payload.token, payload.new_password)
     return ResetPasswordResponse(message=message)

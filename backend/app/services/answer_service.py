@@ -1,5 +1,12 @@
 from sqlalchemy.orm import Session
 
+from app.core.exceptions import (
+    AppError,
+    app_error_code_for_status,
+    app_error_message_for_status,
+    contains_hebrew,
+    frontend_safe_details,
+)
 from app.repositories import (
     answer_repository,
     bookmark_repository,
@@ -21,8 +28,14 @@ HEBREW_TO_DB = {v: k for k, v in ANSWER_LABELS.items()}
 DB_TO_HEBREW = ANSWER_LABELS
 
 
-class AnswerError(Exception):
+class AnswerError(AppError):
     def __init__(self, status_code: int, detail: str) -> None:
+        super().__init__(
+            code=app_error_code_for_status(status_code),
+            message=detail if contains_hebrew(detail) else app_error_message_for_status(status_code),
+            status_code=status_code,
+            details=frontend_safe_details(detail),
+        )
         self.status_code = status_code
         self.detail = detail
 

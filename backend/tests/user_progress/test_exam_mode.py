@@ -189,7 +189,7 @@ def test_answer_invalidated_exam_question_returns_422_and_does_not_increment_ans
         json={"stable_id": "2025-12_B_020", "selected_answer": "א"},
     )
     assert response.status_code == 422
-    assert response.json()["detail"] == "cannot answer invalidated question"
+    assert response.json()["error"]["code"] == "unprocessable_entity"
 
     after = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
     assert after["answered_count"] == 0

@@ -13,6 +13,7 @@ Router -> Service -> Repository -> ORM model
 - Repositories own SQLAlchemy queries.
 - ORM models contain schema definitions and constraints only.
 - API contracts live in Pydantic schemas.
+- Global exception formatting lives in `app/core/exception_handlers.py`.
 
 ## Public Endpoints
 
@@ -74,3 +75,48 @@ Session payloads follow mode-specific visibility:
 ## User Scoping
 
 Progress APIs use the authenticated user from the access token. The request body does not accept `user_id`, and legacy `/users/{user_id}/...` routes are not present.
+
+## Error Contract
+
+Successful responses keep their endpoint-specific Pydantic shape. Error responses are normalized globally and always use this envelope:
+
+```json
+{
+  "error": {
+    "code": "string_machine_readable_code",
+    "message": "Hebrew user-facing message",
+    "details": null
+  }
+}
+```
+
+Handlers are registered once in `app/main.py` via `register_exception_handlers(app)`.
+
+| Error source | Status | Code | Message |
+| --- | --- | --- | --- |
+| `AppError` domain/application errors | exception-defined | exception-defined | exception-defined Hebrew message |
+| FastAPI/Pydantic request validation | `422` | `validation_error` | `חלק מהשדות אינם תקינים` |
+| Domain/application unprocessable input | `422` | `unprocessable_entity` | `חלק מהנתונים אינם תקינים` or an explicit Hebrew domain message |
+| SQLAlchemy errors | `500` | `database_error` | `אירעה שגיאת מסד נתונים` |
+| Unhandled exceptions | `500` | `internal_server_error` | `אירעה שגיאה לא צפויה` |
+| HTTP `401` | `401` | `unauthorized` | `יש להתחבר כדי להמשיך` |
+| HTTP `403` | `403` | `forbidden` | `אין לך הרשאה לבצע פעולה זו` |
+| HTTP `404` | `404` | `not_found` | `המשאב המבוקש לא נמצא` |
+| HTTP `409` | `409` | `conflict` | `הפעולה מתנגשת עם מצב קיים` |
+| HTTP `429` | `429` | `rate_limit_exceeded` | `יותר מדי ניסיונות. נסה שוב מאוחר יותר` |
+
+Validation `details` are normalized for UI rendering:
+
+```json
+[
+  {
+    "field": "items.0.name",
+    "message": "Field required",
+    "type": "missing"
+  }
+]
+```
+
+The field path strips transport prefixes such as `body`, `query`, and `path`, so `["body", "items", 0, "name"]` becomes `items.0.name`.
+
+SQLAlchemy and generic exception handlers must log the original exception with a stack trace and must not leak SQL, connection strings, tracebacks, table names, or internal exception messages to clients.

@@ -19,20 +19,33 @@ from app.auth.security import (
     hash_password,
     verify_password,
 )
+from app.core.exceptions import AppError, app_error_code_for_status, app_error_message_for_status, contains_hebrew
 from app.models.user import User
 from app.repositories import user_repository
 
 
-class AuthError(Exception):
+class AuthError(AppError):
     def __init__(self, status_code: int, detail: str) -> None:
-        super().__init__(detail)
+        message = detail if contains_hebrew(detail) else app_error_message_for_status(status_code)
+        super().__init__(
+            code=app_error_code_for_status(status_code),
+            message=message,
+            status_code=status_code,
+        )
         self.status_code = status_code
         self.detail = detail
 
 
-INVALID_CREDENTIALS = AuthError(401, "Invalid email or password")
-INVALID_REFRESH = AuthError(401, "Invalid or expired refresh token")
-EMAIL_TAKEN = AuthError(409, "כבר קיים משתמש עם האימייל הזה")
+def invalid_credentials() -> AuthError:
+    return AuthError(401, "Invalid email or password")
+
+
+def invalid_refresh() -> AuthError:
+    return AuthError(401, "Invalid or expired refresh token")
+
+
+def email_taken() -> AuthError:
+    return AuthError(409, "כבר קיים משתמש עם האימייל הזה")
 
 
 @dataclass(frozen=True)
@@ -57,9 +70,9 @@ def _issue_bundle(user: User) -> AuthBundle:
 def login(session: Session, payload: LoginRequest) -> AuthBundle:
     user = user_repository.get_by_email(session, _normalize_email(payload.email))
     if user is None or not user.is_active:
-        raise INVALID_CREDENTIALS
+        raise invalid_credentials()
     if not verify_password(payload.password, user.password_hash):
-        raise INVALID_CREDENTIALS
+        raise invalid_credentials()
 
     user.last_login_at = datetime.now(UTC)
     session.flush()
@@ -71,7 +84,7 @@ def login(session: Session, payload: LoginRequest) -> AuthBundle:
 def register(session: Session, payload: RegisterRequest) -> AuthBundle:
     email = _normalize_email(payload.email)
     if user_repository.get_by_email(session, email) is not None:
-        raise EMAIL_TAKEN
+        raise email_taken()
     try:
         user = user_repository.create(
             session,
@@ -81,7 +94,7 @@ def register(session: Session, payload: RegisterRequest) -> AuthBundle:
         )
     except IntegrityError as exc:
         session.rollback()
-        raise EMAIL_TAKEN from exc
+        raise email_taken() from exc
 
     user.last_login_at = datetime.now(UTC)
     session.flush()
@@ -92,24 +105,24 @@ def register(session: Session, payload: RegisterRequest) -> AuthBundle:
 
 def refresh(session: Session, refresh_token: str | None) -> RefreshResponse:
     if not refresh_token:
-        raise INVALID_REFRESH
+        raise invalid_refresh()
     try:
         payload = decode_refresh_token(refresh_token)
     except jwt.PyJWTError as exc:
-        raise INVALID_REFRESH from exc
+        raise invalid_refresh() from exc
 
     sub = payload.get("sub")
     token_version = payload.get("token_version")
     if not isinstance(sub, str) or not isinstance(token_version, int):
-        raise INVALID_REFRESH
+        raise invalid_refresh()
     try:
         user_id = int(sub)
     except ValueError as exc:
-        raise INVALID_REFRESH from exc
+        raise invalid_refresh() from exc
 
     user = user_repository.get_by_id(session, user_id)
     if user is None or not user.is_active or user.token_version != token_version:
-        raise INVALID_REFRESH
+        raise invalid_refresh()
 
     access = create_access_token(user_id=user.id, token_version=user.token_version)
     return RefreshResponse(access_token=access)

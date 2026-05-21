@@ -44,7 +44,7 @@ def test_login_wrong_password_returns_401(client_builder: ClientBuilder) -> None
     with client_builder(_seed_user()) as client:
         r = client.post("/api/v1/auth/login", json={"email": EMAIL, "password": "nope"})
         assert r.status_code == 401
-        assert r.json()["detail"] == "Invalid email or password"
+        assert r.json()["error"]["code"] == "unauthorized"
 
 
 def test_login_unknown_email_returns_401(client_builder: ClientBuilder) -> None:
