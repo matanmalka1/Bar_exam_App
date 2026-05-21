@@ -100,9 +100,7 @@ def configure_logging(settings: Settings, *, force: bool = False) -> None:
     if settings.OBSERVABILITY_JSON_LOGS:
         handler.setFormatter(JsonFormatter())
     else:
-        handler.setFormatter(
-            logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
-        )
+        handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
 
     root.addHandler(handler)
 

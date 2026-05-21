@@ -22,9 +22,7 @@ class Settings(BaseSettings):
     ENV: Literal["development", "production", "test"] = "development"
 
     # ── database ─────────────────────────────────────────────────────────────
-    DATABASE_URL: str = (
-        "postgresql+psycopg://postgres:postgres@localhost:5432/bar_exam_study"
-    )
+    DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@localhost:5432/bar_exam_study"
 
     # ── CORS ─────────────────────────────────────────────────────────────────
     # Accepts CSV string ("http://a,http://b") or JSON array in .env / env vars.
@@ -34,6 +32,7 @@ class Settings(BaseSettings):
         raw = self.CORS_ORIGINS.strip()
         if raw.startswith("["):
             import json
+
             return json.loads(raw)
         return [item.strip() for item in raw.split(",") if item.strip()]
 
