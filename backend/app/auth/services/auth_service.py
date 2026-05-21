@@ -115,6 +115,16 @@ def refresh(session: Session, refresh_token: str | None) -> RefreshResponse:
     return RefreshResponse(access_token=access)
 
 
-def logout(session: Session, user: User) -> None:
+def logout_by_refresh_token(session: Session, refresh_token: str | None) -> None:
+    if not refresh_token:
+        return
+    try:
+        payload = decode_refresh_token(refresh_token)
+        user_id = int(payload["sub"])
+    except (jwt.PyJWTError, KeyError, TypeError, ValueError):
+        return
+    user = user_repository.get_by_id(session, user_id)
+    if user is None:
+        return
     user_repository.increment_token_version(user)
     session.commit()

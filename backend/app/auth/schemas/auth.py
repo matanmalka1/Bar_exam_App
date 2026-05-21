@@ -19,6 +19,11 @@ class RegisterRequest(BaseModel):
             raise ValueError("full_name must not be blank")
         return trimmed
 
+    @field_validator("email", mode="before")
+    @classmethod
+    def _normalize_email_input(cls, v: object) -> object:
+        return v.strip().lower() if isinstance(v, str) else v
+
 
 class AuthUserOut(BaseModel):
     id: int

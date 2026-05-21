@@ -60,7 +60,7 @@ def create_refresh_token(*, user_id: int, token_version: int) -> str:
 
 def decode_access_token(token: str) -> dict[str, Any]:
     payload = jwt.decode(token, AUTH_SECRET_KEY, algorithms=[AUTH_ALGORITHM])
-    if payload.get("type") not in (ACCESS_TOKEN_TYPE, None):
+    if payload.get("type") != ACCESS_TOKEN_TYPE:
         raise jwt.InvalidTokenError("wrong token type")
     return payload
 

@@ -87,10 +87,10 @@ def refresh(
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(
-    current_user: CurrentUser,
     session: Annotated[Session, Depends(get_session)],
+    refresh_token: Annotated[str | None, Cookie(alias=REFRESH_COOKIE_NAME)] = None,
 ) -> Response:
-    auth_service.logout(session, current_user)
+    auth_service.logout_by_refresh_token(session, refresh_token)
     response = Response(status_code=status.HTTP_204_NO_CONTENT)
     _clear_refresh_cookie(response)
     return response
