@@ -16,7 +16,7 @@ def configure_sentry(settings: Settings) -> None:
 
     from app.core.logging_context import get_request_id
 
-    def _before_send(event: dict, hint: object) -> dict:  # type: ignore[type-arg]
+    def _before_send(event: dict, _hint: object) -> dict:  # type: ignore[type-arg]
         event.setdefault("tags", {})["request_id"] = get_request_id()
         return event
 

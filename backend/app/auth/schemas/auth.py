@@ -15,7 +15,7 @@ class RegisterRequest(BaseModel):
 
     @field_validator("full_name")
     @classmethod
-    def _trim_full_name(cls, v: str) -> str:
+    def _trim_full_name(_cls, v: str) -> str:
         trimmed = v.strip()
         if not trimmed:
             raise ValueError("full_name must not be blank")
@@ -23,12 +23,12 @@ class RegisterRequest(BaseModel):
 
     @field_validator("password")
     @classmethod
-    def _validate_password_complexity(cls, v: str) -> str:
+    def _validate_password_complexity(_cls, v: str) -> str:
         return validate_password(v)
 
     @field_validator("email", mode="before")
     @classmethod
-    def _normalize_email_input(cls, v: object) -> object:
+    def _normalize_email_input(_cls, v: object) -> object:
         return v.strip().lower() if isinstance(v, str) else v
 
 

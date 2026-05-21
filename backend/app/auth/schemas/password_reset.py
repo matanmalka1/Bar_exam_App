@@ -17,7 +17,7 @@ class ResetPasswordRequest(BaseModel):
 
     @field_validator("new_password")
     @classmethod
-    def _check_password(cls, v: str) -> str:
+    def _check_password(_cls, v: str) -> str:
         return validate_password(v)
 
 
