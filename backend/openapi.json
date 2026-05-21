@@ -49,6 +49,205 @@
         }
       }
     },
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register",
+        "operationId": "register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refresh",
+        "operationId": "refresh_api_v1_auth_refresh_post",
+        "parameters": [
+          {
+            "name": "refresh_token",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Refresh Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Logout",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "parameters": [
+          {
+            "name": "refresh_token",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Refresh Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Me",
+        "operationId": "me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthUserOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/exams": {
       "get": {
         "summary": "Get Exams",
@@ -300,13 +499,23 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/api/v1/practice-sessions/{session_id}": {
       "get": {
         "summary": "Get Session Detail",
         "operationId": "get_session_detail_api_v1_practice_sessions__session_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "session_id",
@@ -346,6 +555,11 @@
       "post": {
         "summary": "Submit Answer",
         "operationId": "submit_answer_api_v1_practice_sessions__session_id__answers_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "session_id",
@@ -403,6 +617,11 @@
       "post": {
         "summary": "Complete Session",
         "operationId": "complete_session_api_v1_practice_sessions__session_id__complete_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "session_id",
@@ -438,21 +657,10 @@
         }
       }
     },
-    "/api/v1/users/{user_id}/stats/overview": {
+    "/api/v1/users/me/stats/overview": {
       "get": {
-        "summary": "Get User Stats Overview",
-        "operationId": "get_user_stats_overview_api_v1_users__user_id__stats_overview_get",
-        "parameters": [
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "User Id"
-            }
-          }
-        ],
+        "summary": "Get My Stats Overview",
+        "operationId": "get_my_stats_overview_api_v1_users_me_stats_overview_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -463,52 +671,25 @@
                 }
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
           }
-        }
-      }
-    },
-    "/api/v1/users/dev": {
-      "post": {
-        "summary": "Create Dev User",
-        "operationId": "create_dev_user_api_v1_users_dev_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserOut"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/users/{user_id}/sessions": {
-      "get": {
-        "summary": "List User Sessions",
-        "operationId": "list_user_sessions_api_v1_users__user_id__sessions_get",
-        "parameters": [
+        },
+        "security": [
           {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "User Id"
-            }
-          },
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/me/sessions": {
+      "get": {
+        "summary": "List My Sessions",
+        "operationId": "list_my_sessions_api_v1_users_me_sessions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
           {
             "name": "status",
             "in": "query",
@@ -541,7 +722,7 @@
                   "items": {
                     "$ref": "#/components/schemas/SessionSummaryOut"
                   },
-                  "title": "Response List User Sessions Api V1 Users  User Id  Sessions Get"
+                  "title": "Response List My Sessions Api V1 Users Me Sessions Get"
                 }
               }
             }
@@ -559,63 +740,43 @@
         }
       }
     },
-    "/api/v1/users/{user_id}/mistakes": {
+    "/api/v1/users/me/mistakes": {
       "get": {
-        "summary": "Get Mistakes",
-        "operationId": "get_mistakes_api_v1_users__user_id__mistakes_get",
-        "parameters": [
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "User Id"
-            }
-          }
-        ],
+        "summary": "Get My Mistakes",
+        "operationId": "get_my_mistakes_api_v1_users_me_mistakes_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/MistakeOut"
                   },
-                  "title": "Response Get Mistakes Api V1 Users  User Id  Mistakes Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "type": "array",
+                  "title": "Response Get My Mistakes Api V1 Users Me Mistakes Get"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
-    "/api/v1/users/{user_id}/bookmarks/{stable_id}": {
+    "/api/v1/users/me/bookmarks/{stable_id}": {
       "post": {
-        "summary": "Add Bookmark",
-        "operationId": "add_bookmark_api_v1_users__user_id__bookmarks__stable_id__post",
-        "parameters": [
+        "summary": "Add My Bookmark",
+        "operationId": "add_my_bookmark_api_v1_users_me_bookmarks__stable_id__post",
+        "security": [
           {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "User Id"
-            }
-          },
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
           {
             "name": "stable_id",
             "in": "path",
@@ -651,18 +812,14 @@
         }
       },
       "delete": {
-        "summary": "Delete Bookmark",
-        "operationId": "delete_bookmark_api_v1_users__user_id__bookmarks__stable_id__delete",
-        "parameters": [
+        "summary": "Delete My Bookmark",
+        "operationId": "delete_my_bookmark_api_v1_users_me_bookmarks__stable_id__delete",
+        "security": [
           {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "User Id"
-            }
-          },
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
           {
             "name": "stable_id",
             "in": "path",
@@ -698,47 +855,31 @@
         }
       }
     },
-    "/api/v1/users/{user_id}/bookmarks": {
+    "/api/v1/users/me/bookmarks": {
       "get": {
-        "summary": "List User Bookmarks",
-        "operationId": "list_user_bookmarks_api_v1_users__user_id__bookmarks_get",
-        "parameters": [
-          {
-            "name": "user_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "User Id"
-            }
-          }
-        ],
+        "summary": "List My Bookmarks",
+        "operationId": "list_my_bookmarks_api_v1_users_me_bookmarks_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/BookmarkedQuestionOut"
                   },
-                  "title": "Response List User Bookmarks Api V1 Users  User Id  Bookmarks Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "type": "array",
+                  "title": "Response List My Bookmarks Api V1 Users Me Bookmarks Get"
                 }
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     }
   },
@@ -840,6 +981,35 @@
           "selected_answer"
         ],
         "title": "AnswerSubmitIn"
+      },
+      "AuthUserOut": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "email",
+          "is_active"
+        ],
+        "title": "AuthUserOut"
       },
       "BookmarkOut": {
         "properties": {
@@ -1042,6 +1212,27 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest"
       },
       "MistakeOut": {
         "properties": {
@@ -1334,6 +1525,52 @@
         ],
         "title": "QuestionReviewOut"
       },
+      "RefreshResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token"
+        ],
+        "title": "RefreshResponse"
+      },
+      "RegisterRequest": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Full Name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name",
+          "email",
+          "password"
+        ],
+        "title": "RegisterRequest"
+      },
       "SessionAnswerInline": {
         "properties": {
           "selected_answer": {
@@ -1444,10 +1681,6 @@
       },
       "SessionCreateIn": {
         "properties": {
-          "user_id": {
-            "type": "integer",
-            "title": "User Id"
-          },
           "mode": {
             "type": "string",
             "enum": [
@@ -1504,9 +1737,9 @@
             "default": false
           }
         },
+        "additionalProperties": false,
         "type": "object",
         "required": [
-          "user_id",
           "mode"
         ],
         "title": "SessionCreateIn"
@@ -1873,41 +2106,27 @@
         ],
         "title": "StatsOverviewOut"
       },
-      "UserOut": {
+      "TokenResponse": {
         "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "display_name": {
+          "access_token": {
             "type": "string",
-            "title": "Display Name"
+            "title": "Access Token"
           },
-          "user_key": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Key"
-          },
-          "created_at": {
+          "token_type": {
             "type": "string",
-            "format": "date-time",
-            "title": "Created At"
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserOut"
           }
         },
         "type": "object",
         "required": [
-          "id",
-          "display_name",
-          "user_key",
-          "created_at"
+          "access_token",
+          "user"
         ],
-        "title": "UserOut"
+        "title": "TokenResponse"
       },
       "ValidationError": {
         "properties": {
@@ -1948,6 +2167,12 @@
           "type"
         ],
         "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

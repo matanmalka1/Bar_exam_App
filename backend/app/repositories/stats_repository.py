@@ -52,7 +52,7 @@ def list_completed_session_stats_inputs(session: Session, user_id: int) -> list[
 
 
 def count_active_mistakes(session: Session, user_id: int) -> int:
-    # Intentionally duplicates Phase 2 mistakes endpoint semantics without importing answer_repository.
+    # Keep repositories independent while matching the mistakes endpoint semantics.
     user_answers = (
         select(
             UserAnswer.id.label("ua_id"),

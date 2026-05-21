@@ -113,27 +113,24 @@ They are computed at display time from `exam_date` and `part`.
 
 `options.א` → `option_a`, `options.ב` → `option_b`, `options.ג` → `option_c`, `options.ד` → `option_d`.
 
-## 7. DB Tables For MVP
+## 7. DB Tables
 
-The MVP data model includes:
+The current data model includes:
 
 - `questions`
 - `users`
-- `sessions`
+- `practice_sessions`
+- `practice_session_questions`
 - `user_answers`
 - `bookmarked_questions`
 
-Current import scope:
-
-Only `questions` is implemented in the first import step.
-
-The other tables are defined for later application features and are out of scope for the initial JSON to DB import.
+Current import scope is only `questions`. User, session, answer, and bookmark rows are created by the application at runtime.
 
 There is no separate `exams` table. Exam metadata is derived from `questions.exam_date` and `questions.part` at query time.
 
-There is no separate `answer_keys` table in the MVP implementation. `correct_answer` and `reference` are stored directly on `questions` as an intentional simplification because each imported question has exactly one official answer key row. The API must still avoid exposing those fields in pre-submit practice payloads.
+There is no separate `answer_keys` table. `correct_answer` and `reference` are stored directly on `questions` because each imported question has exactly one official answer key row. The API must still avoid exposing those fields in pre-submit practice payloads.
 
-Invalidated questions remain in the `questions` table. They keep their stable IDs, are included in source-data QA views, are excluded from active question counts, and must not be selected for normal practice or simulation unless a future QA-only flow explicitly requests them.
+Invalidated questions remain in the `questions` table. They keep their stable IDs, are included in source-data QA views, are excluded from active question counts, and are not selected for simulation. Official exam replay includes them to preserve the source exam.
 
 ## 8. Constraints
 
@@ -233,13 +230,13 @@ Expected successful import output:
 
 ## 12. Running Migrations
 
-Apply the questions table migration before running the importer:
+Apply all migrations before running the importer:
 
 ```bash
 alembic upgrade head
 ```
 
-This creates the `questions` table with all constraints and indexes.
+This creates the tables, constraints, and indexes expected by the application.
 
 ## 13. Running Tests
 
@@ -247,7 +244,7 @@ This creates the `questions` table with all constraints and indexes.
 pytest tests/test_import_questions.py -v
 ```
 
-The test suite has 8 tests and covers:
+The import tests cover:
 
 - active question with `correct_answer=null` → fails validation
 - invalidated question with non-null `correct_answer` → fails validation
@@ -277,13 +274,10 @@ These are covered by `.gitignore` at the repo root.
 
 ## 15. Out Of Scope
 
-The following are not part of this stage:
+The following are not part of the import stage:
 
-- API
 - UI
-- auth implementation
-- simulation logic
-- statistics
+- password reset
 - admin upload
 - PDF parsing
 - text normalization

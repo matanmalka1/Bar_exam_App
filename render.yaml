@@ -20,3 +20,13 @@ services:
         value: HS256
       - key: AUTH_ACCESS_TOKEN_EXPIRE_MINUTES
         value: "60"
+      - key: AUTH_REFRESH_TOKEN_EXPIRE_DAYS
+        value: "7"
+      - key: REFRESH_COOKIE_NAME
+        value: refresh_token
+      - key: REFRESH_COOKIE_PATH
+        value: /api/v1/auth
+      - key: REFRESH_COOKIE_SECURE
+        value: "false"
+      - key: REFRESH_COOKIE_SAMESITE
+        value: lax

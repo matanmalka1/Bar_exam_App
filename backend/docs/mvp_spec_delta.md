@@ -1,70 +1,42 @@
-# MVP Spec Delta — Implementation Corrections
+# Current Data Model Decisions
 
-This document records where the implemented data layer diverges from the conceptual model described in `CLAUDE.md` and `bar_exam_mvp_spec.docx`. These are not regressions — they are intentional decisions made during implementation. The spec documents should be read in light of these corrections.
+This file records implemented data-model decisions that are easy to misread from older planning material.
 
-## 1. correct_answer storage
+## Answers
 
-**Spec said:** correct_answer is one of `א` / `ב` / `ג` / `ד`
+Imported JSON and API responses use Hebrew answer labels:
 
-**Implemented:** correct_answer is stored as `A` / `B` / `C` / `D` in the DB.
+- `א`
+- `ב`
+- `ג`
+- `ד`
 
-Hebrew letters are an input and display concern only. The importer maps them:
+The database stores `correct_answer` and submitted answers as:
 
-| Input | DB  |
-|-------|-----|
-| `א`   | `A` |
-| `ב`   | `B` |
-| `ג`   | `C` |
-| `ד`   | `D` |
+- `A`
+- `B`
+- `C`
+- `D`
 
-The API layer reverses this mapping for display.
+The importer maps Hebrew to Latin values. API services map values back to Hebrew for clients.
 
-## 2. exam_date type
+## Exam Dates
 
-**Spec said:** exam_date is a `YYYY-MM` string.
+API and import JSON use `YYYY-MM`.
 
-**Implemented:** exam_date is a `DATE` column, stored as the first day of the exam month.
+The database stores `questions.exam_date` as a date on the first day of that month:
 
-Examples:
-- `"2024-06"` → `2024-06-01`
-- `"2025-04"` → `2025-04-01`
+- `2024-06` -> `2024-06-01`
+- `2025-04` -> `2025-04-01`
 
-API responses expose this as `YYYY-MM` by formatting the date.
+## Exam Metadata
 
-## 3. label and part_name not persisted
+There is no `exams` table. Labels and part names are computed from `questions.exam_date` and `questions.part`.
 
-**Spec said:** Question JSON includes `label` and `part_name`.
+## Answer Keys
 
-**Implemented:** `label` and `part_name` are present in the input JSON but are not stored in the DB. They are computed at display time from `exam_date` and `part`:
+There is no separate answer-key table. `questions.correct_answer` and `questions.reference` store the official answer key data.
 
-| part | part_name   |
-|------|-------------|
-| `B`  | דין דיוני   |
-| `C`  | דין מהותי   |
+## Invalidated Questions
 
-Hebrew exam labels (e.g. `יוני 2024`) are computed from `exam_date`.
-
-## 4. No Exam table
-
-**Spec said:** There is an `Exam` entity with fields `id`, `exam_date`, `year`, `month`, `label`, `part`, `part_name`.
-
-**Implemented:** No `Exam` table exists. Exam metadata is derived from `questions.exam_date` and `questions.part` at query time.
-
-The API endpoint `GET /api/v1/exams` will compute and return exam metadata from the questions table directly.
-
-## 5. Ingestion complete — application backend not yet started
-
-The data ingestion layer is complete:
-
-- `questions` table created and migrated
-- All 320 questions imported (319 active, 1 invalidated)
-- Import script, validation, and tests are in place
-
-The following layers are **not yet implemented**:
-
-- FastAPI application
-- `users`, `sessions`, `user_answers`, `bookmarked_questions` tables
-- Auth
-- Simulation logic
-- Statistics
-- Frontend
+Invalidated questions keep their stable IDs and remain in the `questions` table. Official exam mode includes them to preserve source order, but scoring excludes them.
