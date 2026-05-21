@@ -36,3 +36,11 @@ services:
         sync: false
       - key: PASSWORD_RESET_DEV_LOG
         value: "false"
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        value: matan1391@gmail.com
+      - key: BREVO_SENDER_NAME
+        value: "איפוס סיסמה - בר עורכי דין"
+      - key: BREVO_TEMPLATE_PASSWORD_RESET
+        value: "4"
