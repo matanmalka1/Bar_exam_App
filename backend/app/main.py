@@ -2,11 +2,10 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
-
-from slowapi.errors import RateLimitExceeded
 
 from app.auth.api.routes import router as auth_router
 from app.core.config import CORS_ORIGINS, settings
