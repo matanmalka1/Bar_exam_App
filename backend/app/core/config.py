@@ -1,6 +1,10 @@
 import os
 from typing import Literal, cast
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 SameSitePolicy = Literal["lax", "strict", "none"]
 _ALLOWED_SAMESITE: tuple[SameSitePolicy, ...] = ("lax", "strict", "none")
 
@@ -45,3 +49,8 @@ REFRESH_COOKIE_SAMESITE: SameSitePolicy = _samesite_policy(os.getenv("REFRESH_CO
 PASSWORD_RESET_TOKEN_EXPIRE_MINUTES = int(os.getenv("PASSWORD_RESET_TOKEN_EXPIRE_MINUTES", "30"))
 FRONTEND_PASSWORD_RESET_URL = os.getenv("FRONTEND_PASSWORD_RESET_URL", "http://localhost:5173/reset-password")
 PASSWORD_RESET_DEV_LOG = os.getenv("PASSWORD_RESET_DEV_LOG", "false").lower() == "true"
+
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
+BREVO_SENDER_EMAIL = os.getenv("BREVO_SENDER_EMAIL", "matan1391@gmail.com")
+BREVO_SENDER_NAME = os.getenv("BREVO_SENDER_NAME", "איפוס סיסמה - בר עורכי דין")
+BREVO_TEMPLATE_PASSWORD_RESET = int(os.getenv("BREVO_TEMPLATE_PASSWORD_RESET", "4"))

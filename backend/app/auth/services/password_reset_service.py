@@ -12,6 +12,7 @@ from app.core.config import (
     PASSWORD_RESET_DEV_LOG,
     PASSWORD_RESET_TOKEN_EXPIRE_MINUTES,
 )
+from app.core.email_service import send_password_reset_email
 from app.repositories import password_reset_token_repository, user_repository
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,13 @@ def request_password_reset(
     if PASSWORD_RESET_DEV_LOG:
         url = f"{FRONTEND_PASSWORD_RESET_URL}?token={raw}"
         logger.info("[DEV ONLY] Password reset URL: %s", url)
+
+    reset_url = f"{FRONTEND_PASSWORD_RESET_URL}?token={raw}"
+    first_name = user.full_name.split()[0] if user.full_name else user.email
+    try:
+        send_password_reset_email(user.email, first_name, reset_url)
+    except Exception:
+        logger.exception("Failed to send password reset email to %s", user.email)
 
     return _FORGOT_MESSAGE
 
