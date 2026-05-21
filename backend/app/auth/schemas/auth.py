@@ -1,4 +1,8 @@
+import re
+
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+
+_PASSWORD_RE = re.compile(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*[^a-zA-Z0-9]).{8,}$')
 
 
 class LoginRequest(BaseModel):
@@ -18,6 +22,15 @@ class RegisterRequest(BaseModel):
         if not trimmed:
             raise ValueError("full_name must not be blank")
         return trimmed
+
+    @field_validator("password")
+    @classmethod
+    def _validate_password_complexity(cls, v: str) -> str:
+        if not _PASSWORD_RE.match(v):
+            raise ValueError(
+                "Password must contain at least one uppercase letter, one lowercase letter, and one special character"
+            )
+        return v
 
     @field_validator("email", mode="before")
     @classmethod

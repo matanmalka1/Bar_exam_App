@@ -115,7 +115,7 @@ def _empty_seed(_session: Session) -> None:
     return None
 
 
-REG_PAYLOAD = {"full_name": "  New Person  ", "email": "NEW@Mail.com", "password": "longenough"}
+REG_PAYLOAD = {"full_name": "  New Person  ", "email": "NEW@Mail.com", "password": "Longenough1!"}
 
 
 def test_register_creates_user_and_returns_token_and_cookie(client_builder: ClientBuilder) -> None:
@@ -137,7 +137,7 @@ def test_register_then_login_works(client_builder: ClientBuilder) -> None:
         client.cookies.clear()
         r = client.post(
             "/api/v1/auth/login",
-            json={"email": "new@mail.com", "password": "longenough"},
+            json={"email": "new@mail.com", "password": "Longenough1!"},
         )
         assert r.status_code == 200
         assert r.json()["user"]["email"] == "new@mail.com"
@@ -157,11 +157,11 @@ def test_register_email_normalization_collides(client_builder: ClientBuilder) ->
     with client_builder(_empty_seed) as client:
         client.post(
             "/api/v1/auth/register",
-            json={"full_name": "A", "email": "test@mail.com", "password": "longenough"},
+            json={"full_name": "A", "email": "test@mail.com", "password": "Longenough1!"},
         )
         r = client.post(
             "/api/v1/auth/register",
-            json={"full_name": "B", "email": "TEST@MAIL.COM", "password": "longenough"},
+            json={"full_name": "B", "email": "TEST@MAIL.COM", "password": "Longenough1!"},
         )
         assert r.status_code == 409
 
@@ -170,7 +170,7 @@ def test_register_invalid_email_rejected(client_builder: ClientBuilder) -> None:
     with client_builder(_empty_seed) as client:
         r = client.post(
             "/api/v1/auth/register",
-            json={"full_name": "X", "email": "not-an-email", "password": "longenough"},
+            json={"full_name": "X", "email": "not-an-email", "password": "Longenough1!"},
         )
         assert r.status_code == 422
 
@@ -184,11 +184,38 @@ def test_register_short_password_rejected(client_builder: ClientBuilder) -> None
         assert r.status_code == 422
 
 
+def test_register_weak_password_no_upper_rejected(client_builder: ClientBuilder) -> None:
+    with client_builder(_empty_seed) as client:
+        r = client.post(
+            "/api/v1/auth/register",
+            json={"full_name": "X", "email": "ok@mail.com", "password": "nouppercase1!"},
+        )
+        assert r.status_code == 422
+
+
+def test_register_weak_password_no_lower_rejected(client_builder: ClientBuilder) -> None:
+    with client_builder(_empty_seed) as client:
+        r = client.post(
+            "/api/v1/auth/register",
+            json={"full_name": "X", "email": "ok@mail.com", "password": "NOLOWERCASE1!"},
+        )
+        assert r.status_code == 422
+
+
+def test_register_weak_password_no_special_rejected(client_builder: ClientBuilder) -> None:
+    with client_builder(_empty_seed) as client:
+        r = client.post(
+            "/api/v1/auth/register",
+            json={"full_name": "X", "email": "ok@mail.com", "password": "NoSpecial1234"},
+        )
+        assert r.status_code == 422
+
+
 def test_register_blank_name_rejected(client_builder: ClientBuilder) -> None:
     with client_builder(_empty_seed) as client:
         r = client.post(
             "/api/v1/auth/register",
-            json={"full_name": "    ", "email": "ok@mail.com", "password": "longenough"},
+            json={"full_name": "    ", "email": "ok@mail.com", "password": "Longenough1!"},
         )
         assert r.status_code == 422
 
@@ -284,14 +311,14 @@ def test_register_trims_and_lowercases_email_with_whitespace(client_builder: Cli
     with client_builder(_empty_seed) as client:
         r = client.post(
             "/api/v1/auth/register",
-            json={"full_name": "X", "email": "  MiXed@MAIL.com  ", "password": "longenough"},
+            json={"full_name": "X", "email": "  MiXed@MAIL.com  ", "password": "Longenough1!"},
         )
         assert r.status_code == 201, r.text
         assert r.json()["user"]["email"] == "mixed@mail.com"
         # Duplicate via the trimmed form
         dup = client.post(
             "/api/v1/auth/register",
-            json={"full_name": "Y", "email": "mixed@mail.com", "password": "longenough"},
+            json={"full_name": "Y", "email": "mixed@mail.com", "password": "Longenough1!"},
         )
         assert dup.status_code == 409
 
