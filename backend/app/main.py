@@ -6,10 +6,13 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from slowapi.errors import RateLimitExceeded
+
 from app.auth.api.routes import router as auth_router
 from app.core.config import CORS_ORIGINS, settings
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging_config import configure_logging
+from app.core.rate_limit import limiter, rate_limit_exceeded_handler
 from app.core.sentry import configure_sentry
 from app.db.deps import get_session
 from app.middleware.request_id import RequestIDMiddleware
@@ -23,6 +26,8 @@ configure_logging(settings)
 configure_sentry(settings)
 
 app = FastAPI(title="Bar Exam API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)  # type: ignore[arg-type]
 register_exception_handlers(app)
 
 # Middleware order (add_middleware is LIFO — last added runs first on request path):

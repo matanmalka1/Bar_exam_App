@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     SENTRY_ENVIRONMENT: str = "development"
     SENTRY_TRACES_SAMPLE_RATE: float = 0.0
 
+    # ── rate limiting ────────────────────────────────────────────────────────
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_STORAGE_URI: str = "memory://"
+
     # ── Brevo ─────────────────────────────────────────────────────────────────
     BREVO_API_KEY: str = ""
     BREVO_SENDER_EMAIL: str = "matan1391@gmail.com"
@@ -121,6 +125,9 @@ BREVO_API_KEY = settings.BREVO_API_KEY
 BREVO_SENDER_EMAIL = settings.BREVO_SENDER_EMAIL
 BREVO_SENDER_NAME = settings.BREVO_SENDER_NAME
 BREVO_TEMPLATE_PASSWORD_RESET = settings.BREVO_TEMPLATE_PASSWORD_RESET
+
+RATE_LIMIT_ENABLED = settings.RATE_LIMIT_ENABLED
+RATE_LIMIT_STORAGE_URI = settings.RATE_LIMIT_STORAGE_URI
 
 LOG_LEVEL = settings.LOG_LEVEL
 OBSERVABILITY_JSON_LOGS = settings.OBSERVABILITY_JSON_LOGS

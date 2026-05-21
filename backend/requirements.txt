@@ -16,3 +16,4 @@ SQLAlchemy==2.0.44
 uvicorn[standard]==0.38.0
 vulture==2.16
 sentry-sdk[fastapi]>=2.0.0
+slowapi>=0.1.9

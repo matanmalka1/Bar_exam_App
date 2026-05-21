@@ -17,8 +17,7 @@ from app.auth.schemas.password_reset import (
     ResetPasswordRequest,
     ResetPasswordResponse,
 )
-from app.auth.services import auth_service
-from app.auth.services import password_reset_service
+from app.auth.services import auth_service, password_reset_service
 from app.auth.services.auth_service import AuthBundle
 from app.core.config import (
     AUTH_REFRESH_TOKEN_EXPIRE_DAYS,
@@ -27,6 +26,7 @@ from app.core.config import (
     REFRESH_COOKIE_SAMESITE,
     REFRESH_COOKIE_SECURE,
 )
+from app.core.rate_limit import get_email_key, limiter
 from app.db.deps import get_session
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -56,7 +56,10 @@ def _respond(response: Response, bundle: AuthBundle) -> TokenResponse:
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def register(
+@limiter.limit("5/minute")
+@limiter.limit("3/hour", key_func=get_email_key("auth:register"))
+async def register(
+    request: Request,
     payload: RegisterRequest,
     response: Response,
     session: Annotated[Session, Depends(get_session)],
@@ -66,7 +69,10 @@ def register(
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(
+@limiter.limit("10/minute")
+@limiter.limit("5/minute", key_func=get_email_key("auth:login"))
+async def login(
+    request: Request,
     payload: LoginRequest,
     response: Response,
     session: Annotated[Session, Depends(get_session)],
@@ -100,7 +106,9 @@ def me(current_user: CurrentUser) -> AuthUserOut:
 
 
 @router.post("/forgot-password", response_model=ForgotPasswordResponse)
-def forgot_password(
+@limiter.limit("5/minute")
+@limiter.limit("3/hour", key_func=get_email_key("auth:forgot-password"))
+async def forgot_password(
     payload: ForgotPasswordRequest,
     request: Request,
     session: Annotated[Session, Depends(get_session)],
@@ -112,7 +120,9 @@ def forgot_password(
 
 
 @router.post("/reset-password", response_model=ResetPasswordResponse)
-def reset_password(
+@limiter.limit("10/minute")
+async def reset_password(
+    request: Request,
     payload: ResetPasswordRequest,
     session: Annotated[Session, Depends(get_session)],
 ) -> ResetPasswordResponse:
