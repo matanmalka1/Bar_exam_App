@@ -160,7 +160,6 @@ def test_mistakes_mode_excludes_invalidated_questions(client: TestClient):
     sid = client.post(
         "/api/v1/practice-sessions",
         json={
-            
             "mode": "practice",
             "exam_date": "2025-04",
             "part": "B",

@@ -147,9 +147,7 @@ def test_reset_password_old_password_rejected(client_builder: ClientBuilder) -> 
 
 def test_reset_password_expired_token_returns_400(client_builder: ClientBuilder) -> None:
     raw = "expiredtoken123"
-    with client_builder(
-        _seed_user_with_token(raw_token=raw, expires_delta=timedelta(minutes=-1))
-    ) as client:
+    with client_builder(_seed_user_with_token(raw_token=raw, expires_delta=timedelta(minutes=-1))) as client:
         r = client.post(RESET_URL, json={"token": raw, "new_password": NEW_PASSWORD})
         assert r.status_code == 400
 

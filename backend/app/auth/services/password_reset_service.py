@@ -22,6 +22,8 @@ _INVALID_TOKEN_MSG = "קישור איפוס הסיסמה אינו תקין או 
 
 def _invalid_token() -> AuthError:
     return AuthError(400, _INVALID_TOKEN_MSG)
+
+
 _FORGOT_MESSAGE = "אם קיים משתמש עם האימייל הזה, נשלחו הוראות לאיפוס סיסמה"
 _RESET_MESSAGE = "הסיסמה אופסה בהצלחה"
 

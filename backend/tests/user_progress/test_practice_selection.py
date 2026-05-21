@@ -8,7 +8,6 @@ def test_question_count_returns_exactly_n_unique(client: TestClient):
     response = client.post(
         "/api/v1/practice-sessions",
         json={
-            
             "mode": "practice",
             "exam_date": "2025-04",
             "part": "B",
@@ -31,7 +30,6 @@ def test_question_count_exceeds_pool_returns_422(client: TestClient):
     response = client.post(
         "/api/v1/practice-sessions",
         json={
-            
             "mode": "practice",
             "exam_date": "2025-04",
             "part": "B",
@@ -46,7 +44,6 @@ def test_exam_date_restricts_selection(client_multi: TestClient):
     response = client_multi.post(
         "/api/v1/practice-sessions",
         json={
-            
             "mode": "practice",
             "exam_date": "2025-06",
             "part": "B",
@@ -65,7 +62,6 @@ def test_subject_pool_spans_all_exams_when_date_omitted(client_multi: TestClient
     response = client_multi.post(
         "/api/v1/practice-sessions",
         json={
-            
             "mode": "practice",
             "part": "B",
             "question_count": 40,

@@ -116,9 +116,7 @@ def forgot_password(
 ) -> ForgotPasswordResponse:
     requested_ip = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
-    message = password_reset_service.request_password_reset(
-        session, payload.email, requested_ip, user_agent
-    )
+    message = password_reset_service.request_password_reset(session, payload.email, requested_ip, user_agent)
     return ForgotPasswordResponse(message=message)
 
 

@@ -8,7 +8,6 @@ def test_create_session_basic(client: TestClient):
     response = client.post(
         "/api/v1/practice-sessions",
         json={
-            
             "mode": "practice",
             "exam_date": "2025-04",
             "part": "B",
@@ -26,7 +25,6 @@ def test_create_session_includes_invalidated_when_requested(client: TestClient):
     response = client.post(
         "/api/v1/practice-sessions",
         json={
-            
             "mode": "practice",
             "exam_date": "2025-04",
             "part": "B",

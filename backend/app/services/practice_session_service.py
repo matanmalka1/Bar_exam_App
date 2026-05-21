@@ -40,7 +40,6 @@ class SessionError(Exception):
 
 
 def create_session(session: Session, user_id: int, payload: SessionCreateIn) -> SessionSummaryOut:
-
     if payload.mode == "exam":
         ps = _create_exam_session(session, user_id, payload)
     elif payload.mode == "simulation":

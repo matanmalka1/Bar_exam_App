@@ -61,9 +61,7 @@ def test_login_inactive_user_returns_401(client_builder: ClientBuilder) -> None:
 
 def test_me_returns_user_with_valid_token(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_user()) as client:
-        token = client.post(
-            "/api/v1/auth/login", json={"email": EMAIL, "password": PASSWORD}
-        ).json()["access_token"]
+        token = client.post("/api/v1/auth/login", json={"email": EMAIL, "password": PASSWORD}).json()["access_token"]
         r = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
         assert r.status_code == 200
         assert r.json()["email"] == EMAIL
@@ -83,9 +81,7 @@ def test_me_rejects_invalid_token(client_builder: ClientBuilder) -> None:
 
 def test_logout_invalidates_previous_token(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_user()) as client:
-        token = client.post(
-            "/api/v1/auth/login", json={"email": EMAIL, "password": PASSWORD}
-        ).json()["access_token"]
+        token = client.post("/api/v1/auth/login", json={"email": EMAIL, "password": PASSWORD}).json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
         assert client.get("/api/v1/auth/me", headers=headers).status_code == 200
@@ -329,5 +325,3 @@ def test_refresh_stale_token_version_rejected(client_builder: ClientBuilder) -> 
         client.cookies.set(REFRESH_COOKIE_NAME, bad)
         r = client.post("/api/v1/auth/refresh")
         assert r.status_code == 401
-
-
