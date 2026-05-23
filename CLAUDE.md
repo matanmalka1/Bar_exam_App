@@ -80,12 +80,14 @@ Progress:
 - `GET /api/v1/practice-sessions/{session_id}`
 - `POST /api/v1/practice-sessions/{session_id}/answers`
 - `POST /api/v1/practice-sessions/{session_id}/complete`
+- `DELETE /api/v1/practice-sessions/{session_id}`
 - `GET /api/v1/users/me/sessions`
 - `GET /api/v1/users/me/mistakes`
 - `GET /api/v1/users/me/bookmarks`
 - `POST /api/v1/users/me/bookmarks/{stable_id}`
 - `DELETE /api/v1/users/me/bookmarks/{stable_id}`
 - `GET /api/v1/users/me/stats/overview`
+- `DELETE /api/v1/users/me/data`
 
 There is no `/api/v1/users/dev` endpoint.
 
@@ -110,10 +112,11 @@ Successful responses keep their endpoint-specific schema. Error responses always
 
 ## Environment
 
-See `backend/.env.example`.
+Copy `backend/.env.example` to `backend/.env`. `pydantic-settings` auto-loads `.env` on startup.
 
 Important keys:
 
+- `ENV` — `development` / `production` / `test`
 - `DATABASE_URL`
 - `CORS_ORIGINS`
 - `AUTH_SECRET_KEY`
@@ -127,6 +130,11 @@ Important keys:
 - `PASSWORD_RESET_TOKEN_EXPIRE_MINUTES`
 - `FRONTEND_PASSWORD_RESET_URL`
 - `PASSWORD_RESET_DEV_LOG`
+- `LOG_LEVEL`
+- `OBSERVABILITY_JSON_LOGS`
+- `SENTRY_ENABLED`, `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`
+- `RATE_LIMIT_ENABLED`, `RATE_LIMIT_STORAGE_URI`
+- `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `BREVO_SENDER_NAME`, `BREVO_TEMPLATE_PASSWORD_RESET`
 
 ## Commands
 

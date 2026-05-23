@@ -112,8 +112,10 @@ Official `exam` sessions include invalidated questions to preserve the source ex
 - `GET /api/v1/users/me/bookmarks`
 - `POST /api/v1/users/me/bookmarks/{stable_id}`
 - `DELETE /api/v1/users/me/bookmarks/{stable_id}`
+- `DELETE /api/v1/users/me/data`
+- `DELETE /api/v1/practice-sessions/{session_id}`
 
-All are scoped to the authenticated user.
+All are scoped to the authenticated user. `DELETE /users/me/data` resets all progress rows for the current user. `DELETE /practice-sessions/{session_id}` abandons an active session.
 
 ## Critical Tests Expected
 

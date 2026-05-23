@@ -15,6 +15,16 @@ Router -> Service -> Repository -> ORM model
 - API contracts live in Pydantic schemas.
 - Global exception formatting lives in `app/core/exception_handlers.py`.
 
+## Middleware
+
+Middleware stack (outermost to innermost on request path):
+
+1. `RequestIDMiddleware` — attaches `X-Request-Id` to every request and response.
+2. `RequestLoggingMiddleware` — logs method, path, status, and duration per request.
+3. `CORSMiddleware` — standard FastAPI CORS, origins from `CORS_ORIGINS`.
+
+Rate limiting uses `slowapi` (key: remote address). The `RateLimitExceeded` handler returns the standard error envelope with code `rate_limit_exceeded`.
+
 ## Public Endpoints
 
 - `GET /health`
@@ -40,12 +50,14 @@ Router -> Service -> Repository -> ORM model
 - `GET /api/v1/practice-sessions/{session_id}`
 - `POST /api/v1/practice-sessions/{session_id}/answers`
 - `POST /api/v1/practice-sessions/{session_id}/complete`
+- `DELETE /api/v1/practice-sessions/{session_id}`
 - `GET /api/v1/users/me/sessions`
 - `GET /api/v1/users/me/mistakes`
 - `GET /api/v1/users/me/bookmarks`
 - `POST /api/v1/users/me/bookmarks/{stable_id}`
 - `DELETE /api/v1/users/me/bookmarks/{stable_id}`
 - `GET /api/v1/users/me/stats/overview`
+- `DELETE /api/v1/users/me/data`
 
 ## Answer Visibility
 

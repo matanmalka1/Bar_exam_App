@@ -26,7 +26,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Set `DATABASE_URL` and `AUTH_SECRET_KEY` in your shell, service manager, or dotenv loader if you do not want the local defaults. The code reads environment variables directly; it does not auto-load `.env`.
+Copy `.env.example` to `.env` and edit as needed. `pydantic-settings` auto-loads `.env` when the app starts.
 
 Default local database URL:
 
@@ -70,6 +70,7 @@ Interactive docs are available at `/docs` when the API is running.
 
 | Key | Default |
 | --- | --- |
+| `ENV` | `development` |
 | `DATABASE_URL` | `postgresql+psycopg://postgres:postgres@localhost:5432/bar_exam_study` |
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` |
 | `AUTH_SECRET_KEY` | `dev-secret-change-me` |
@@ -83,8 +84,20 @@ Interactive docs are available at `/docs` when the API is running.
 | `PASSWORD_RESET_TOKEN_EXPIRE_MINUTES` | `30` |
 | `FRONTEND_PASSWORD_RESET_URL` | `http://localhost:5173/reset-password` |
 | `PASSWORD_RESET_DEV_LOG` | `false` |
+| `LOG_LEVEL` | `INFO` |
+| `OBSERVABILITY_JSON_LOGS` | `true` |
+| `SENTRY_ENABLED` | `false` |
+| `SENTRY_DSN` | `` |
+| `SENTRY_ENVIRONMENT` | `development` |
+| `SENTRY_TRACES_SAMPLE_RATE` | `0.0` |
+| `RATE_LIMIT_ENABLED` | `true` |
+| `RATE_LIMIT_STORAGE_URI` | `memory://` |
+| `BREVO_API_KEY` | `` |
+| `BREVO_SENDER_EMAIL` | `matan1391@gmail.com` |
+| `BREVO_SENDER_NAME` | `איפוס סיסמה - בר עורכי דין` |
+| `BREVO_TEMPLATE_PASSWORD_RESET` | `4` |
 
-Use a strong `AUTH_SECRET_KEY` outside local development.
+Use a strong `AUTH_SECRET_KEY` outside local development. In production, `ENV=production` enforces additional guards (see `app/core/config.py`).
 
 ## API Summary
 
@@ -118,12 +131,14 @@ Authenticated progress:
 | `GET` | `/api/v1/practice-sessions/{session_id}` | Returns session detail for current user |
 | `POST` | `/api/v1/practice-sessions/{session_id}/answers` | Submits or updates an answer while active |
 | `POST` | `/api/v1/practice-sessions/{session_id}/complete` | Completes session and freezes score |
+| `DELETE` | `/api/v1/practice-sessions/{session_id}` | Abandons an active session |
 | `GET` | `/api/v1/users/me/sessions` | Current user's sessions |
 | `GET` | `/api/v1/users/me/mistakes` | Current active mistakes |
 | `GET` | `/api/v1/users/me/bookmarks` | Current bookmarks |
 | `POST` | `/api/v1/users/me/bookmarks/{stable_id}` | Adds bookmark |
 | `DELETE` | `/api/v1/users/me/bookmarks/{stable_id}` | Removes bookmark |
 | `GET` | `/api/v1/users/me/stats/overview` | Aggregate stats |
+| `DELETE` | `/api/v1/users/me/data` | Resets all progress data for current user |
 
 There is no `/api/v1/users/dev` endpoint and progress endpoints do not accept client-provided `user_id`.
 
@@ -189,7 +204,16 @@ Database and unhandled server errors are logged with stack traces, but client re
 
 Exam and simulation answer keys are hidden until completion. Practice, mistakes, and bookmarks reveal feedback after the question is answered.
 
+## Observability
+
+- Structured JSON logs via `LOG_LEVEL` and `OBSERVABILITY_JSON_LOGS`. Set `OBSERVABILITY_JSON_LOGS=false` for human-readable dev output.
+- Each request gets a `X-Request-Id` header (middleware: `app/middleware/request_id.py`). Request/response pairs are logged by `app/middleware/request_logging.py`.
+- Sentry integration is off by default (`SENTRY_ENABLED=false`). Set `SENTRY_DSN` and `SENTRY_ENABLED=true` to enable.
+- Rate limiting uses `slowapi` with in-memory storage by default. Use `RATE_LIMIT_STORAGE_URI=redis://...` for multi-process deployments.
+
 ## Checks
+
+Run all checks from `backend/`:
 
 ```bash
 pytest
