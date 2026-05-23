@@ -51,6 +51,25 @@ def list_completed_session_stats_inputs(session: Session, user_id: int) -> list[
     return list(session.execute(statement).all())
 
 
+def get_session_counts_by_mode(session: Session, user_id: int) -> Row:
+    """Return (practices_completed, exams_completed, simulations_completed) for completed sessions."""
+    statement = select(
+        func.coalesce(
+            func.sum(case((PracticeSession.mode == "practice", 1), else_=0)), 0
+        ).label("practices_completed"),
+        func.coalesce(
+            func.sum(case((PracticeSession.mode == "exam", 1), else_=0)), 0
+        ).label("exams_completed"),
+        func.coalesce(
+            func.sum(case((PracticeSession.mode == "simulation", 1), else_=0)), 0
+        ).label("simulations_completed"),
+    ).where(
+        PracticeSession.user_id == user_id,
+        PracticeSession.status == "completed",
+    )
+    return session.execute(statement).one()
+
+
 def count_active_mistakes(session: Session, user_id: int) -> int:
     # Keep repositories independent while matching the mistakes endpoint semantics.
     user_answers = (
@@ -86,6 +105,44 @@ def count_active_mistakes(session: Session, user_id: int) -> int:
     latest = select(ranked.c.qid, ranked.c.is_correct).where(ranked.c.rn == 1).subquery()
     statement = select(func.count()).select_from(latest).where(latest.c.is_correct.is_(False))
     return int(session.scalar(statement) or 0)
+
+
+def get_mastery_totals(session: Session, user_id: int) -> Row:
+    """Latest answer per unique question; returns (unique_answered, latest_correct)."""
+    user_answers = (
+        select(
+            UserAnswer.question_id.label("qid"),
+            UserAnswer.is_correct.label("is_correct"),
+            UserAnswer.answered_at.label("answered_at"),
+            UserAnswer.id.label("ua_id"),
+        )
+        .join(PracticeSession, PracticeSession.id == UserAnswer.session_id)
+        .join(Question, Question.id == UserAnswer.question_id)
+        .where(
+            PracticeSession.user_id == user_id,
+            PracticeSession.status == "completed",
+            Question.status == "active",
+        )
+        .subquery()
+    )
+    ranked = (
+        select(
+            user_answers.c.qid,
+            user_answers.c.is_correct,
+            func.row_number()
+            .over(
+                partition_by=user_answers.c.qid,
+                order_by=(user_answers.c.answered_at.desc(), user_answers.c.ua_id.desc()),
+            )
+            .label("rn"),
+        )
+    ).subquery()
+    latest = select(ranked.c.qid, ranked.c.is_correct).where(ranked.c.rn == 1).subquery()
+    statement = select(
+        func.count().label("unique_answered"),
+        func.coalesce(func.sum(case((latest.c.is_correct.is_(True), 1), else_=0)), 0).label("latest_correct"),
+    ).select_from(latest)
+    return session.execute(statement).one()
 
 
 def count_repeated_mistakes(session: Session, user_id: int) -> int:

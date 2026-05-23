@@ -30,6 +30,9 @@ def get_overview(session: Session, user_id: int) -> StatsOverviewOut:
         raise StatsError(404, "user not found")
 
     total_answered, correct_answered = stats_repository.get_answer_totals(session, user_id)
+    mastery_row = stats_repository.get_mastery_totals(session, user_id)
+    unique_answered = int(mastery_row.unique_answered)
+    latest_correct = int(mastery_row.latest_correct)
     part_rows = stats_repository.get_answer_totals_by_part(session, user_id)
     parts = {
         row.part: PartStatsOut(
@@ -40,16 +43,28 @@ def get_overview(session: Session, user_id: int) -> StatsOverviewOut:
     }
     completed_session_rows = stats_repository.list_completed_session_stats_inputs(session, user_id)
     valid_durations = _valid_completed_session_durations(completed_session_rows)
+    session_counts = stats_repository.get_session_counts_by_mode(session, user_id)
+
+    total_answered_int = int(total_answered)
+    correct_answered_int = int(correct_answered)
 
     return StatsOverviewOut(
-        total_answered=int(total_answered),
-        overall_success_rate=_success_rate(int(correct_answered), int(total_answered)),
+        total_answered=total_answered_int,
+        overall_success_rate=_success_rate(correct_answered_int, total_answered_int),
+        mastery_rate=_success_rate(latest_correct, unique_answered),
+        unique_answered_questions=unique_answered,
+        total_answer_attempts=total_answered_int,
+        latest_correct_answers=latest_correct,
         part_b=parts.get("B", PartStatsOut(total_answered=0, success_rate=None)),
         part_c=parts.get("C", PartStatsOut(total_answered=0, success_rate=None)),
-        simulations_completed=sum(1 for row in completed_session_rows if row.mode == "exam"),
+        simulations_completed=int(session_counts.simulations_completed),
         active_mistakes_count=stats_repository.count_active_mistakes(session, user_id),
         repeated_mistakes_count=stats_repository.count_repeated_mistakes(session, user_id),
         avg_session_duration_seconds=_average_duration_seconds(valid_durations),
+        practices_completed=int(session_counts.practices_completed),
+        exams_completed=int(session_counts.exams_completed),
+        incorrect_answers=max(0, total_answered_int - correct_answered_int),
+        total_study_seconds=_total_study_seconds(valid_durations),
     )
 
 
@@ -64,6 +79,10 @@ def _average_duration_seconds(durations: list[tuple[datetime, datetime]]) -> int
         return None
     total_seconds = sum((completed_at - started_at).total_seconds() for started_at, completed_at in durations)
     return round(total_seconds / len(durations))
+
+
+def _total_study_seconds(durations: list[tuple[datetime, datetime]]) -> int:
+    return round(sum((completed_at - started_at).total_seconds() for started_at, completed_at in durations))
 
 
 def _valid_completed_session_durations(rows: list) -> list[tuple[datetime, datetime]]:

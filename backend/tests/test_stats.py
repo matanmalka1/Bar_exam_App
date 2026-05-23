@@ -95,12 +95,20 @@ def test_user_with_no_completed_sessions_returns_empty_stats(
     assert body == {
         "total_answered": 0,
         "overall_success_rate": None,
+        "mastery_rate": None,
+        "unique_answered_questions": 0,
+        "total_answer_attempts": 0,
+        "latest_correct_answers": 0,
         "part_b": {"total_answered": 0, "success_rate": None},
         "part_c": {"total_answered": 0, "success_rate": None},
         "simulations_completed": 0,
         "active_mistakes_count": 0,
         "repeated_mistakes_count": 0,
         "avg_session_duration_seconds": None,
+        "practices_completed": 0,
+        "exams_completed": 0,
+        "incorrect_answers": 0,
+        "total_study_seconds": 0,
     }
 
 
@@ -204,7 +212,7 @@ def test_invalidated_questions_are_excluded_from_totals_rates_and_repeated_mista
     assert body["repeated_mistakes_count"] == 0
 
 
-def test_simulations_completed_counts_only_completed_exam_sessions(
+def test_session_counts_by_mode_only_count_completed_sessions(
     client_builder: ClientBuilder, make_question: QuestionFactory
 ) -> None:
     def seed(session: Session) -> None:
@@ -215,7 +223,9 @@ def test_simulations_completed_counts_only_completed_exam_sessions(
                 _session(1, mode="exam", status="completed", completed_at=BASE_TIME + timedelta(minutes=10)),
                 _session(2, mode="exam", status="active", completed_at=None),
                 _session(3, mode="simulation", status="completed", completed_at=BASE_TIME + timedelta(minutes=10)),
-                _session(4, mode="practice", status="completed", completed_at=BASE_TIME + timedelta(minutes=10)),
+                _session(4, mode="simulation", status="active", completed_at=None),
+                _session(5, mode="practice", status="completed", completed_at=BASE_TIME + timedelta(minutes=10)),
+                _session(6, mode="practice", status="abandoned", completed_at=None),
             ]
         )
 
@@ -223,6 +233,8 @@ def test_simulations_completed_counts_only_completed_exam_sessions(
         body = _stats(client)
 
     assert body["simulations_completed"] == 1
+    assert body["exams_completed"] == 1
+    assert body["practices_completed"] == 1
 
 
 def test_active_sessions_do_not_contribute_to_answer_or_mistake_stats(
@@ -411,6 +423,115 @@ def test_avg_duration_averages_multiple_completed_sessions_and_ignores_invalid_t
         body = _stats(client)
 
     assert body["avg_session_duration_seconds"] == 15
+
+
+def test_incorrect_answers_is_total_minus_correct_clamped_to_zero(
+    client_builder: ClientBuilder, make_question: QuestionFactory
+) -> None:
+    def seed(session: Session) -> None:
+        session.add(_user())
+        q1 = make_question(date(2025, 4, 1), "B", 1)
+        q2 = make_question(date(2025, 4, 1), "B", 2)
+        session.add_all([q1, q2])
+        session.flush()
+        session.add(_session(1, completed_at=BASE_TIME + timedelta(minutes=10)))
+        session.add_all(
+            [
+                _answer(1, session_id=1, question_id=q1.id, is_correct=True),
+                _answer(2, session_id=1, question_id=q2.id, is_correct=False),
+            ]
+        )
+
+    with client_builder(seed) as client:
+        body = _stats(client)
+
+    assert body["incorrect_answers"] == 1
+    assert body["total_answered"] == 2
+
+
+def test_incorrect_answers_is_zero_when_all_correct(
+    client_builder: ClientBuilder, make_question: QuestionFactory
+) -> None:
+    def seed(session: Session) -> None:
+        session.add(_user())
+        q1 = make_question(date(2025, 4, 1), "B", 1)
+        session.add(q1)
+        session.flush()
+        session.add(_session(1, completed_at=BASE_TIME + timedelta(minutes=10)))
+        session.add(_answer(1, session_id=1, question_id=q1.id, is_correct=True))
+
+    with client_builder(seed) as client:
+        body = _stats(client)
+
+    assert body["incorrect_answers"] == 0
+
+
+def test_total_study_seconds_sums_valid_completed_session_durations(
+    client_builder: ClientBuilder,
+) -> None:
+    def seed(session: Session) -> None:
+        session.add(_user())
+        session.add_all(
+            [
+                # 30 seconds
+                _session(1, completed_at=BASE_TIME + timedelta(seconds=30)),
+                # 60 seconds
+                _session(2, completed_at=BASE_TIME + timedelta(seconds=60)),
+                # no completed_at — excluded
+                _session(3, completed_at=None),
+                # completed_at < started_at — excluded
+                _session(
+                    4,
+                    started_at=BASE_TIME + timedelta(seconds=10),
+                    completed_at=BASE_TIME,
+                ),
+                # active session — excluded
+                _session(5, status="active", completed_at=None),
+            ]
+        )
+
+    with client_builder(seed) as client:
+        body = _stats(client)
+
+    assert body["total_study_seconds"] == 90
+
+
+def test_total_study_seconds_is_zero_when_no_valid_sessions(client_builder: ClientBuilder) -> None:
+    def seed(session: Session) -> None:
+        session.add(_user())
+        session.add_all(
+            [
+                _session(1, status="active", completed_at=None),
+                _session(2, status="completed", completed_at=None),
+            ]
+        )
+
+    with client_builder(seed) as client:
+        body = _stats(client)
+
+    assert body["total_study_seconds"] == 0
+
+
+def test_mistakes_and_bookmarks_modes_excluded_from_practices_completed(
+    client_builder: ClientBuilder, make_question: QuestionFactory
+) -> None:
+    def seed(session: Session) -> None:
+        session.add(_user())
+        session.add(make_question(date(2025, 4, 1), "B", 1))
+        session.add_all(
+            [
+                _session(1, mode="practice", status="completed", completed_at=BASE_TIME + timedelta(minutes=5)),
+                _session(2, mode="mistakes", status="completed", completed_at=BASE_TIME + timedelta(minutes=5)),
+                _session(3, mode="bookmarks", status="completed", completed_at=BASE_TIME + timedelta(minutes=5)),
+            ]
+        )
+
+    with client_builder(seed) as client:
+        body = _stats(client)
+
+    assert body["practices_completed"] == 1
+    assert body["exams_completed"] == 0
+    assert body["simulations_completed"] == 0
 
 
 def test_no_db_query_in_stats_code() -> None:
