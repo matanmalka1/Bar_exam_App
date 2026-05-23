@@ -7,11 +7,19 @@ from app.auth.dependencies import CurrentUser
 from app.db.deps import get_session
 from app.schemas.answer import BookmarkedQuestionOut, BookmarkOut, BookmarkRemovedOut, MistakeOut
 from app.schemas.session import SessionSummaryOut
-from app.services import answer_service, practice_session_service
+from app.services import answer_service, practice_session_service, user_service
 
 router = APIRouter()
 
 STABLE_ID_PATTERN = r"^\d{4}-(0[1-9]|1[0-2])_[BC]_(00[1-9]|0[1-3][0-9]|040)$"
+
+
+@router.delete("/users/me/data", status_code=204)
+def reset_my_data(
+    current_user: CurrentUser,
+    session: Annotated[Session, Depends(get_session)],
+) -> None:
+    user_service.reset_user_data(session, current_user.id)
 
 
 @router.get("/users/me/sessions", response_model=list[SessionSummaryOut])
