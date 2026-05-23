@@ -89,8 +89,8 @@ SOFT_HYPHEN = "\xad"
 # The part name is supplied by --part-name because each exam part differs.
 HEADER_MARKER_B = "00:00"  # exam timer — never appears in question text
 
-# Answer-key marker in answers PDF: .N X' or .N נפסלה
-A_MARKER_RE = re.compile(r"\.\s*(\d{1,2})\s+((?:[א-ד]')|נפסלה)")
+# Answer-key marker in answers PDF: .N X', .N נפסלה, or .N אבגד (נפסלה)
+A_MARKER_RE = re.compile(r"\.\s*(\d{1,2})\s+((?:[א-ד]')|(?:אבגד\s*\n?\s*\(נפסלה\))|נפסלה)")
 
 # Option start (beginning of line, letter + optional space + period)
 OPTION_START_RE = re.compile(r"^([אבגד])\s*\.", re.MULTILINE)
@@ -100,6 +100,9 @@ OPTION_SPLIT_RE = re.compile(r"(?m)^([אבגד])\s*\.\s*", re.UNICODE)
 
 # Space-bounded גד → potential missing נ  (after uf8ff normalization)
 GAD_RE = re.compile(r"(?<!\w)גד(?!\w)", re.UNICODE)
+
+# Trailing page footer leaked from PDF extraction into the final option.
+PAGE_FOOTER_RE = re.compile(r"\s+\d{1,2}/\d{1,2}\s*$")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -508,14 +511,16 @@ def split_question_blocks(questions_text: str) -> list:
     מפצל את חלק השאלות ל-tuples של (מספר_שאלה, טקסט_הבלוק).
     מטפל גם ב-'.13 טקסט' וגם ב-'.13טקסט' (ללא רווח).
     """
-    marker_re = re.compile(r"(?m)^\.(\d{1,2})(?!\d)(?=\s*\S)", re.UNICODE)
+    marker_re = re.compile(r"(?<!\d)\.(\d{1,2})(?!\d)(?=\s*\S)", re.UNICODE)
     candidates = list(marker_re.finditer(questions_text))
     matches = []
     expected_next = 1
     for candidate in candidates:
         q_num = int(candidate.group(1))
         if q_num == expected_next:
-            matches.append(candidate)
+            line_start = questions_text.rfind("\n", 0, candidate.start()) + 1
+            block_start = line_start if questions_text[line_start : candidate.start()].strip() else candidate.start()
+            matches.append((candidate, block_start))
             expected_next += 1
             if expected_next > EXPECTED_Q:
                 break
@@ -523,10 +528,9 @@ def split_question_blocks(questions_text: str) -> list:
         raise ValueError("HARD-FAIL: לא נמצאו סמני שאלות בחלק השאלות.")
 
     blocks = []
-    for i, m in enumerate(matches):
+    for i, (m, start) in enumerate(matches):
         q_num = int(m.group(1))
-        start = m.start()
-        end = matches[i + 1].start() if i + 1 < len(matches) else len(questions_text)
+        end = matches[i + 1][1] if i + 1 < len(matches) else len(questions_text)
         block_text = questions_text[start:end].strip()
         blocks.append((q_num, block_text))
 
@@ -547,8 +551,8 @@ def parse_question_block(
     """
     flags = []
 
-    # הסרת קידומת .N
-    block_text = re.sub(r"^\.\d{1,2}\s*", "", block_text).strip()
+    # הסרת סמן .N. בחלק מקובצי ה-RTL הסמן מופיע בסוף שורת הפתיחה של השאלה.
+    block_text = re.sub(rf"(?<!\d)\.{q_num}(?!\d)\s*", "", block_text, count=1).strip()
 
     # מציאת תחילת אפשרויות התשובה
     first_option_match = OPTION_START_RE.search(block_text)
@@ -588,6 +592,20 @@ def parse_question_block(
             if letter in OPTION_LETTERS:
                 # Normalization per option
                 text = apply_field_normalization(q_num, f"option_{letter}", text, norm_log)
+                footer_match = PAGE_FOOTER_RE.search(text)
+                if footer_match is not None:
+                    before = text
+                    text = PAGE_FOOTER_RE.sub("", text).strip()
+                    norm_log.append(
+                        NormRecord(
+                            question_number=q_num,
+                            field=f"option_{letter}",
+                            before=before[-40:],
+                            after=text[-40:],
+                            rule="remove-trailing-page-footer",
+                            reason="מספר עמוד PDF זלג לסוף אפשרות התשובה והוסר ללא שינוי בתוכן השאלה.",
+                        )
+                    )
                 # בדיקת header artifacts
                 check_header_artifacts(q_num, f"option_{letter}", text, qa, part_name, part_hebrew)
                 options[letter] = text
@@ -695,6 +713,8 @@ def extract_answers(norm_a_text: str, qa: QAReport, norm_log: list) -> dict:
     for i, m in enumerate(markers):
         q_num = int(m.group(1))
         answer = m.group(2).replace("'", "")
+        if "נפסלה" in answer:
+            answer = DISQUALIFIED_ANSWER
         marker_start = m.start()
         marker_end = m.end()
 

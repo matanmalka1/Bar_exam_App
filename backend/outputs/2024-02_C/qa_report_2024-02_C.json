@@ -1,0 +1,19 @@
+{
+  "exam_date": "2024-02",
+  "part": "C",
+  "questions_count": 40,
+  "answers_count": 40,
+  "missing_questions": [],
+  "missing_answers": [],
+  "duplicate_q_ids": [],
+  "duplicate_ids": [],
+  "invalid_options": [],
+  "short_question_bodies": [],
+  "short_answer_options": [],
+  "suspicious_references": [],
+  "source_artifacts": [],
+  "hard_failures": [],
+  "manual_review": [],
+  "manual_review_items": [],
+  "warnings": []
+}
