@@ -353,6 +353,16 @@ def complete_session(session: Session, session_id: int, user_id: int) -> Session
     )
 
 
+def abandon_session(session: Session, session_id: int, user_id: int) -> None:
+    ps = practice_session_repository.get_session_by_id(session, session_id)
+    if ps is None or ps.user_id != user_id:
+        raise SessionError(404, "session not found")
+    if ps.status != "active":
+        raise SessionError(409, f"session is {ps.status}")
+    practice_session_repository.abandon_session(session, session_id)
+    session.commit()
+
+
 def _build_part_breakdown(rows: list, answers_by_qid: dict) -> dict[str, PartBreakdown]:
     breakdown: dict[str, PartBreakdown] = {}
     for part in ("B", "C"):

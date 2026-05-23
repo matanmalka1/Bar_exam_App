@@ -55,3 +55,12 @@ def complete_session(
     session: Annotated[Session, Depends(get_session)],
 ) -> SessionCompleteOut:
     return practice_session_service.complete_session(session, session_id, current_user.id)
+
+
+@router.delete("/practice-sessions/{session_id}", status_code=204)
+def abandon_session(
+    session_id: int,
+    current_user: CurrentUser,
+    session: Annotated[Session, Depends(get_session)],
+) -> None:
+    practice_session_service.abandon_session(session, session_id, current_user.id)

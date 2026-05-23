@@ -135,6 +135,14 @@ def increment_answered_count(session: Session, session_id: int) -> None:
     )
 
 
+def abandon_session(session: Session, session_id: int) -> None:
+    session.execute(
+        update(PracticeSession)
+        .where(PracticeSession.id == session_id)
+        .values(status="abandoned")
+    )
+
+
 def complete_session(
     session: Session,
     session_id: int,
