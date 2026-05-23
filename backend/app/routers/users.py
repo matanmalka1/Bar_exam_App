@@ -19,8 +19,9 @@ def list_my_sessions(
     current_user: CurrentUser,
     session: Annotated[Session, Depends(get_session)],
     status: Annotated[Literal["active", "completed", "abandoned"] | None, Query()] = None,
+    mode: Annotated[Literal["exam", "simulation", "practice", "mistakes", "bookmarks"] | None, Query()] = None,
 ) -> list[SessionSummaryOut]:
-    return practice_session_service.list_user_sessions(session, current_user.id, status)
+    return practice_session_service.list_user_sessions(session, current_user.id, status, mode)
 
 
 @router.get("/users/me/mistakes", response_model=list[MistakeOut])

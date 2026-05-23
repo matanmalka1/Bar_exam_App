@@ -115,10 +115,14 @@ def get_session_question_link(session: Session, session_id: int, question_id: in
     ).one_or_none()
 
 
-def list_sessions_by_user(session: Session, user_id: int, status: str | None) -> list[PracticeSession]:
+def list_sessions_by_user(
+    session: Session, user_id: int, status: str | None, mode: str | None = None
+) -> list[PracticeSession]:
     statement = select(PracticeSession).where(PracticeSession.user_id == user_id)
     if status is not None:
         statement = statement.where(PracticeSession.status == status)
+    if mode is not None:
+        statement = statement.where(PracticeSession.mode == mode)
     statement = statement.order_by(PracticeSession.created_at.desc(), PracticeSession.id.desc())
     return list(session.scalars(statement).all())
 
@@ -138,6 +142,7 @@ def complete_session(
     correct_count: int,
     score_percent: Decimal,
     completed_at: datetime,
+    part_breakdown_json: str | None = None,
 ) -> None:
     session.execute(
         update(PracticeSession)
@@ -147,5 +152,6 @@ def complete_session(
             correct_count=correct_count,
             score_percent=score_percent,
             completed_at=completed_at,
+            part_breakdown_json=part_breakdown_json,
         )
     )

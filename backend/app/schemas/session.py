@@ -31,6 +31,7 @@ class SessionSummaryOut(BaseModel):
     started_at: datetime
     completed_at: datetime | None
     created_at: datetime
+    part_breakdown: dict[str, "PartBreakdown"] | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

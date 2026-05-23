@@ -1,3 +1,4 @@
+import json
 import random
 from datetime import UTC, date, datetime
 from decimal import ROUND_HALF_UP, Decimal
@@ -290,10 +291,12 @@ def get_session_detail(session: Session, session_id: int, user_id: int) -> Sessi
     return SessionDetailOut(**summary, questions=question_outs)
 
 
-def list_user_sessions(session: Session, user_id: int, status: str | None) -> list[SessionSummaryOut]:
+def list_user_sessions(
+    session: Session, user_id: int, status: str | None, mode: str | None = None
+) -> list[SessionSummaryOut]:
     if user_repository.get_by_id(session, user_id) is None:
         raise SessionError(404, "user not found")
-    sessions = practice_session_repository.list_sessions_by_user(session, user_id, status)
+    sessions = practice_session_repository.list_sessions_by_user(session, user_id, status, mode)
     return [_summary(s) for s in sessions]
 
 
@@ -314,20 +317,25 @@ def complete_session(session: Session, session_id: int, user_id: int) -> Session
         else Decimal("0.00")
     )
     now = datetime.now(UTC)
+    part_breakdown: dict[str, PartBreakdown] | None = None
+    mistakes: list[ExamMistakeOut] | None = None
+    part_breakdown_json: str | None = None
+    if ps.mode in ("exam", "simulation"):
+        answers_by_qid = {a.question_id: a for a in answers}
+        part_breakdown = _build_part_breakdown(rows, answers_by_qid)
+        mistakes = _build_exam_mistakes(rows, answers_by_qid)
+        part_breakdown_json = json.dumps(
+            {k: v.model_dump(mode="json") for k, v in part_breakdown.items()}
+        )
+
     practice_session_repository.complete_session(
         session,
         session_id,
         correct_count=correct_count,
         score_percent=score,
         completed_at=now,
+        part_breakdown_json=part_breakdown_json,
     )
-
-    part_breakdown: dict[str, PartBreakdown] | None = None
-    mistakes: list[ExamMistakeOut] | None = None
-    if ps.mode in ("exam", "simulation"):
-        answers_by_qid = {a.question_id: a for a in answers}
-        part_breakdown = _build_part_breakdown(rows, answers_by_qid)
-        mistakes = _build_exam_mistakes(rows, answers_by_qid)
 
     session.commit()
     session.refresh(ps)
@@ -423,6 +431,10 @@ def _select_questions(
 
 
 def _summary(ps: PracticeSession) -> SessionSummaryOut:
+    part_breakdown = None
+    if ps.part_breakdown_json:
+        raw = json.loads(ps.part_breakdown_json)
+        part_breakdown = {k: PartBreakdown(**v) for k, v in raw.items()}
     return SessionSummaryOut(
         id=ps.id,
         user_id=ps.user_id,
@@ -437,6 +449,7 @@ def _summary(ps: PracticeSession) -> SessionSummaryOut:
         started_at=ps.started_at,
         completed_at=ps.completed_at,
         created_at=ps.created_at,
+        part_breakdown=part_breakdown,
     )
 
 
