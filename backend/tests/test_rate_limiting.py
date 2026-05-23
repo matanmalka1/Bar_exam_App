@@ -13,6 +13,7 @@ X-Forwarded-For, so all TestClient requests are the same IP — email-limit
 tests therefore exhaust IP limit first; they verify the 429 fires correctly
 regardless of which limit triggers).
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator

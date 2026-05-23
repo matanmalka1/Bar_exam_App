@@ -54,15 +54,11 @@ def list_completed_session_stats_inputs(session: Session, user_id: int) -> list[
 def get_session_counts_by_mode(session: Session, user_id: int) -> Row:
     """Return (practices_completed, exams_completed, simulations_completed) for completed sessions."""
     statement = select(
-        func.coalesce(
-            func.sum(case((PracticeSession.mode == "practice", 1), else_=0)), 0
-        ).label("practices_completed"),
-        func.coalesce(
-            func.sum(case((PracticeSession.mode == "exam", 1), else_=0)), 0
-        ).label("exams_completed"),
-        func.coalesce(
-            func.sum(case((PracticeSession.mode == "simulation", 1), else_=0)), 0
-        ).label("simulations_completed"),
+        func.coalesce(func.sum(case((PracticeSession.mode == "practice", 1), else_=0)), 0).label("practices_completed"),
+        func.coalesce(func.sum(case((PracticeSession.mode == "exam", 1), else_=0)), 0).label("exams_completed"),
+        func.coalesce(func.sum(case((PracticeSession.mode == "simulation", 1), else_=0)), 0).label(
+            "simulations_completed"
+        ),
     ).where(
         PracticeSession.user_id == user_id,
         PracticeSession.status == "completed",

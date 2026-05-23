@@ -319,13 +319,13 @@ def complete_session(session: Session, session_id: int, user_id: int) -> Session
         answers_by_qid = {a.question_id: a for a in answers}
         part_breakdown = _build_part_breakdown(rows, answers_by_qid)
         mistakes = _build_exam_mistakes(rows, answers_by_qid)
-        part_breakdown_json = json.dumps(
-            {k: v.model_dump(mode="json") for k, v in part_breakdown.items()}
-        )
+        part_breakdown_json = json.dumps({k: v.model_dump(mode="json") for k, v in part_breakdown.items()})
         score = _exam_score(part_breakdown)
     else:
         score = (
-            (Decimal(correct_count * 100) / Decimal(score_denominator)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            (Decimal(correct_count * 100) / Decimal(score_denominator)).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
             if score_denominator > 0
             else Decimal("0.00")
         )

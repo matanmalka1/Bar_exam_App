@@ -22,6 +22,7 @@ def _reset_rate_limiter() -> Generator[None, None, None]:
     yield
     limiter._storage.reset()
 
+
 if TYPE_CHECKING:
     from fastapi.testclient import TestClient
     from sqlalchemy.orm import Session

@@ -356,9 +356,7 @@ def run_post_import_validation(session: Session) -> dict[str, Any]:
         errors.append(f"duplicate stable_id rows found: {duplicate_stable_ids}")
 
     invalidated_rows = (
-        session.execute(select(Question).where(Question.stable_id.in_(EXPECTED_INVALIDATED_STABLE_IDS)))
-        .scalars()
-        .all()
+        session.execute(select(Question).where(Question.stable_id.in_(EXPECTED_INVALIDATED_STABLE_IDS))).scalars().all()
     )
     invalidated_by_stable_id = {question.stable_id: question for question in invalidated_rows}
     for stable_id in sorted(EXPECTED_INVALIDATED_STABLE_IDS):
