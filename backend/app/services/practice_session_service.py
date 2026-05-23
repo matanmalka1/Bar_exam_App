@@ -311,11 +311,6 @@ def complete_session(session: Session, session_id: int, user_id: int) -> Session
     answers = answer_repository.list_session_answers(session, session_id)
     correct_count = sum(1 for a in answers if a.is_correct)
     score_denominator = _score_denominator(ps, rows)
-    score = (
-        (Decimal(correct_count * 100) / Decimal(score_denominator)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        if score_denominator > 0
-        else Decimal("0.00")
-    )
     now = datetime.now(UTC)
     part_breakdown: dict[str, PartBreakdown] | None = None
     mistakes: list[ExamMistakeOut] | None = None
@@ -326,6 +321,13 @@ def complete_session(session: Session, session_id: int, user_id: int) -> Session
         mistakes = _build_exam_mistakes(rows, answers_by_qid)
         part_breakdown_json = json.dumps(
             {k: v.model_dump(mode="json") for k, v in part_breakdown.items()}
+        )
+        score = _exam_score(part_breakdown)
+    else:
+        score = (
+            (Decimal(correct_count * 100) / Decimal(score_denominator)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            if score_denominator > 0
+            else Decimal("0.00")
         )
 
     practice_session_repository.complete_session(
@@ -361,6 +363,22 @@ def abandon_session(session: Session, session_id: int, user_id: int) -> None:
         raise SessionError(409, f"session is {ps.status}")
     practice_session_repository.abandon_session(session, session_id)
     session.commit()
+
+
+def _exam_score(part_breakdown: dict[str, PartBreakdown]) -> Decimal:
+    parts = list(part_breakdown.values())
+    if len(parts) == 2:
+        # Full exam: B (50%) + C (50%), each part scored out of 40
+        score_b = Decimal(parts[0].correct * 50) / Decimal(parts[0].total) if parts[0].total > 0 else Decimal("0")
+        score_c = Decimal(parts[1].correct * 50) / Decimal(parts[1].total) if parts[1].total > 0 else Decimal("0")
+        return (score_b + score_c).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    # Single-part exam: score out of 100
+    p = parts[0]
+    return (
+        (Decimal(p.correct * 100) / Decimal(p.total)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        if p.total > 0
+        else Decimal("0.00")
+    )
 
 
 def _build_part_breakdown(rows: list, answers_by_qid: dict) -> dict[str, PartBreakdown]:
