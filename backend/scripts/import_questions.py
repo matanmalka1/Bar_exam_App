@@ -22,12 +22,17 @@ if str(BACKEND_DIR) not in sys.path:
 
 from app.models.question import Question  # noqa: E402
 
-EXPECTED_TOTAL = 320
-EXPECTED_ACTIVE = 319
-EXPECTED_INVALIDATED = 1
-EXPECTED_EXAM_PARTS = 8
+EXPECTED_TOTAL = 480
+EXPECTED_ACTIVE = 476
+EXPECTED_INVALIDATED = 4
+EXPECTED_EXAM_PARTS = 12
 EXPECTED_PART_COUNT = 40
-EXPECTED_INVALIDATED_STABLE_ID = "2025-12_B_020"
+EXPECTED_INVALIDATED_STABLE_IDS = {
+    "2024-02_B_020",
+    "2024-02_B_037",
+    "2024-02_C_009",
+    "2025-12_B_020",
+}
 OPTION_KEYS = ("א", "ב", "ג", "ד")
 ANSWER_TO_DB = {"א": "A", "ב": "B", "ג": "C", "ד": "D"}
 VALID_PARTS = {"B": "דין דיוני", "C": "דין מהותי"}
@@ -350,18 +355,25 @@ def run_post_import_validation(session: Session) -> dict[str, Any]:
     if duplicate_stable_ids:
         errors.append(f"duplicate stable_id rows found: {duplicate_stable_ids}")
 
-    invalidated = session.scalar(select(Question).where(Question.stable_id == EXPECTED_INVALIDATED_STABLE_ID))
-    if invalidated is None:
-        errors.append(f"missing invalidated question {EXPECTED_INVALIDATED_STABLE_ID}")
-    else:
+    invalidated_rows = (
+        session.execute(select(Question).where(Question.stable_id.in_(EXPECTED_INVALIDATED_STABLE_IDS)))
+        .scalars()
+        .all()
+    )
+    invalidated_by_stable_id = {question.stable_id: question for question in invalidated_rows}
+    for stable_id in sorted(EXPECTED_INVALIDATED_STABLE_IDS):
+        invalidated = invalidated_by_stable_id.get(stable_id)
+        if invalidated is None:
+            errors.append(f"missing invalidated question {stable_id}")
+            continue
         if invalidated.status != "invalidated":
-            errors.append(f"{EXPECTED_INVALIDATED_STABLE_ID}: status must be invalidated")
+            errors.append(f"{stable_id}: status must be invalidated")
         if invalidated.correct_answer is not None:
-            errors.append(f"{EXPECTED_INVALIDATED_STABLE_ID}: correct_answer must be null")
+            errors.append(f"{stable_id}: correct_answer must be null")
         if not is_non_empty_text(invalidated.invalidation_note):
-            errors.append(f"{EXPECTED_INVALIDATED_STABLE_ID}: invalidation_note must be non-empty")
+            errors.append(f"{stable_id}: invalidation_note must be non-empty")
         if not is_non_empty_text(invalidated.reference):
-            errors.append(f"{EXPECTED_INVALIDATED_STABLE_ID}: reference must be non-empty")
+            errors.append(f"{stable_id}: reference must be non-empty")
 
     artifact_filters = []
     for artifact in FORBIDDEN_ARTIFACTS:
