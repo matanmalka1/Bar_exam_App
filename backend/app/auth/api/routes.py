@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, Request, Response, status
+from fastapi import APIRouter, Body, Cookie, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import CurrentUser
@@ -84,9 +84,10 @@ async def login(
 @router.post("/refresh", response_model=RefreshResponse)
 def refresh(
     session: Annotated[Session, Depends(get_session)],
-    refresh_token: Annotated[str | None, Cookie(alias=REFRESH_COOKIE_NAME)] = None,
+    cookie_token: Annotated[str | None, Cookie(alias=REFRESH_COOKIE_NAME)] = None,
+    body_token: Annotated[str | None, Body(alias="refresh_token", embed=True)] = None,
 ) -> RefreshResponse:
-    return auth_service.refresh(session, refresh_token)
+    return auth_service.refresh(session, body_token or cookie_token)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

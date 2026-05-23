@@ -62,7 +62,7 @@ def _issue_bundle(user: User) -> AuthBundle:
     access = create_access_token(user_id=user.id, token_version=user.token_version)
     refresh = create_refresh_token(user_id=user.id, token_version=user.token_version)
     return AuthBundle(
-        response=TokenResponse(access_token=access, user=AuthUserOut.model_validate(user)),
+        response=TokenResponse(access_token=access, refresh_token=refresh, user=AuthUserOut.model_validate(user)),
         refresh_token=refresh,
     )
 
