@@ -7,7 +7,7 @@ from app.repositories import question_repository
 from app.schemas.question import ExamSummary, QuestionOptions, QuestionPracticeOut, QuestionReviewOut
 
 PART_NAMES = {"B": "דין דיוני", "C": "דין מהותי"}
-MONTH_LABELS = {"04": "אפריל", "06": "יוני", "12": "דצמבר"}
+MONTH_LABELS = {"02": "פברואר", "04": "אפריל", "06": "יוני", "09": "ספטמבר", "12": "דצמבר"}
 ANSWER_LABELS = {"A": "א", "B": "ב", "C": "ג", "D": "ד"}
 
 
