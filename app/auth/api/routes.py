@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Cookie, Depends, Request, Response, status
+from fastapi import APIRouter, Cookie, Depends, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import CurrentUser
@@ -19,35 +19,29 @@ from app.auth.schemas.password_reset import (
 )
 from app.auth.services import auth_service, password_reset_service
 from app.auth.services.auth_service import AuthBundle
-from app.core.config import (
-    AUTH_REFRESH_TOKEN_EXPIRE_DAYS,
-    REFRESH_COOKIE_NAME,
-    REFRESH_COOKIE_PATH,
-    REFRESH_COOKIE_SAMESITE,
-    REFRESH_COOKIE_SECURE,
-)
+from app.core.config import settings
 from app.core.rate_limit import get_email_key, limiter
 from app.db.deps import get_session
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-_REFRESH_MAX_AGE = AUTH_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+_REFRESH_MAX_AGE = settings.AUTH_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 
 
 def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
     response.set_cookie(
-        key=REFRESH_COOKIE_NAME,
+        key=settings.REFRESH_COOKIE_NAME,
         value=refresh_token,
         max_age=_REFRESH_MAX_AGE,
-        path=REFRESH_COOKIE_PATH,
+        path=settings.REFRESH_COOKIE_PATH,
         httponly=True,
-        secure=REFRESH_COOKIE_SECURE,
-        samesite=REFRESH_COOKIE_SAMESITE,
+        secure=settings.REFRESH_COOKIE_SECURE,
+        samesite=settings.REFRESH_COOKIE_SAMESITE,
     )
 
 
 def _clear_refresh_cookie(response: Response) -> None:
-    response.delete_cookie(key=REFRESH_COOKIE_NAME, path=REFRESH_COOKIE_PATH)
+    response.delete_cookie(key=settings.REFRESH_COOKIE_NAME, path=settings.REFRESH_COOKIE_PATH)
 
 
 def _respond(response: Response, bundle: AuthBundle) -> TokenResponse:
@@ -84,16 +78,15 @@ async def login(
 @router.post("/refresh", response_model=RefreshResponse)
 def refresh(
     session: Annotated[Session, Depends(get_session)],
-    cookie_token: Annotated[str | None, Cookie(alias=REFRESH_COOKIE_NAME)] = None,
-    body_token: Annotated[str | None, Body(alias="refresh_token", embed=True)] = None,
+    cookie_token: Annotated[str | None, Cookie(alias=settings.REFRESH_COOKIE_NAME)] = None,
 ) -> RefreshResponse:
-    return auth_service.refresh(session, body_token or cookie_token)
+    return auth_service.refresh(session, cookie_token)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(
     session: Annotated[Session, Depends(get_session)],
-    refresh_token: Annotated[str | None, Cookie(alias=REFRESH_COOKIE_NAME)] = None,
+    refresh_token: Annotated[str | None, Cookie(alias=settings.REFRESH_COOKIE_NAME)] = None,
 ) -> Response:
     auth_service.logout_by_refresh_token(session, refresh_token)
     response = Response(status_code=status.HTTP_204_NO_CONTENT)

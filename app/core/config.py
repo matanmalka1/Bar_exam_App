@@ -10,6 +10,12 @@ SameSitePolicy = Literal["lax", "strict", "none"]
 _UNSAFE_SECRET = "dev-secret-change-me"
 
 
+def normalize_database_url(database_url: str) -> str:
+    if database_url.startswith("postgresql://"):
+        return database_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return database_url
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -61,6 +67,9 @@ class Settings(BaseSettings):
     SENTRY_ENVIRONMENT: str = "development"
     SENTRY_TRACES_SAMPLE_RATE: float = 0.0
 
+    # ── static / SPA ──────────────────────────────────────────────────────────
+    STATIC_DIR: str = ""
+
     # ── rate limiting ────────────────────────────────────────────────────────
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_STORAGE_URI: str = "memory://"
@@ -102,36 +111,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-# ── module-level aliases (keep existing imports working) ──────────────────────
-DATABASE_URL = settings.DATABASE_URL
-CORS_ORIGINS: list[str] = settings.cors_origins_list()
-
-AUTH_SECRET_KEY = settings.AUTH_SECRET_KEY
-AUTH_ALGORITHM = settings.AUTH_ALGORITHM
-AUTH_ACCESS_TOKEN_EXPIRE_MINUTES = settings.AUTH_ACCESS_TOKEN_EXPIRE_MINUTES
-AUTH_REFRESH_TOKEN_EXPIRE_DAYS = settings.AUTH_REFRESH_TOKEN_EXPIRE_DAYS
-
-REFRESH_COOKIE_NAME = settings.REFRESH_COOKIE_NAME
-REFRESH_COOKIE_PATH = settings.REFRESH_COOKIE_PATH
-REFRESH_COOKIE_SECURE = settings.REFRESH_COOKIE_SECURE
-REFRESH_COOKIE_SAMESITE = settings.REFRESH_COOKIE_SAMESITE
-
-PASSWORD_RESET_TOKEN_EXPIRE_MINUTES = settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES
-FRONTEND_PASSWORD_RESET_URL = settings.FRONTEND_PASSWORD_RESET_URL
-PASSWORD_RESET_DEV_LOG = settings.PASSWORD_RESET_DEV_LOG
-
-BREVO_API_KEY = settings.BREVO_API_KEY
-BREVO_SENDER_EMAIL = settings.BREVO_SENDER_EMAIL
-BREVO_SENDER_NAME = settings.BREVO_SENDER_NAME
-BREVO_TEMPLATE_PASSWORD_RESET = settings.BREVO_TEMPLATE_PASSWORD_RESET
-
-RATE_LIMIT_ENABLED = settings.RATE_LIMIT_ENABLED
-RATE_LIMIT_STORAGE_URI = settings.RATE_LIMIT_STORAGE_URI
-
-LOG_LEVEL = settings.LOG_LEVEL
-OBSERVABILITY_JSON_LOGS = settings.OBSERVABILITY_JSON_LOGS
-SENTRY_ENABLED = settings.SENTRY_ENABLED
-SENTRY_DSN = settings.SENTRY_DSN
-SENTRY_ENVIRONMENT = settings.SENTRY_ENVIRONMENT
-SENTRY_TRACES_SAMPLE_RATE = settings.SENTRY_TRACES_SAMPLE_RATE

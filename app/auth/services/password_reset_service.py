@@ -7,11 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.security import hash_password
 from app.auth.services.auth_service import AuthError
-from app.core.config import (
-    FRONTEND_PASSWORD_RESET_URL,
-    PASSWORD_RESET_DEV_LOG,
-    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES,
-)
+from app.core.config import settings
 from app.core.email_service import send_password_reset_email
 from app.repositories import password_reset_token_repository, user_repository
 
@@ -45,7 +41,7 @@ def request_password_reset(
     password_reset_token_repository.invalidate_unused_tokens_for_user(session, user.id)
 
     raw = secrets.token_urlsafe(32)
-    expires_at = datetime.now(UTC) + timedelta(minutes=PASSWORD_RESET_TOKEN_EXPIRE_MINUTES)
+    expires_at = datetime.now(UTC) + timedelta(minutes=settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES)
     password_reset_token_repository.create(
         session,
         user_id=user.id,
@@ -56,11 +52,11 @@ def request_password_reset(
     )
     session.commit()
 
-    if PASSWORD_RESET_DEV_LOG:
-        url = f"{FRONTEND_PASSWORD_RESET_URL}?token={raw}"
+    if settings.PASSWORD_RESET_DEV_LOG:
+        url = f"{settings.FRONTEND_PASSWORD_RESET_URL}?token={raw}"
         logger.info("[DEV ONLY] Password reset URL: %s", url)
 
-    reset_url = f"{FRONTEND_PASSWORD_RESET_URL}?token={raw}"
+    reset_url = f"{settings.FRONTEND_PASSWORD_RESET_URL}?token={raw}"
     first_name = user.full_name.split()[0] if user.full_name else user.email
     try:
         send_password_reset_email(user.email, first_name, reset_url)

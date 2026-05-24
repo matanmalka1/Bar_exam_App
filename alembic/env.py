@@ -5,6 +5,7 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 from app.auth.models.password_reset_token import PasswordResetToken  # noqa: F401
+from app.core.config import normalize_database_url
 from app.db.base import Base
 from app.models import (  # noqa: F401
     BookmarkedQuestion,
@@ -27,7 +28,7 @@ def get_url() -> str:
     database_url = os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
     if database_url is None:
         raise RuntimeError("DATABASE_URL or sqlalchemy.url must be configured")
-    return database_url
+    return normalize_database_url(database_url)
 
 
 def run_migrations_offline() -> None:

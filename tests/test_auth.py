@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.auth.security import create_access_token, create_refresh_token, hash_password
-from app.core.config import REFRESH_COOKIE_NAME
+from app.core.config import settings
 from app.models.user import User
 
 ClientBuilder = Callable[[Callable[[Session], None]], AbstractContextManager[TestClient]]
@@ -124,7 +124,7 @@ def test_register_creates_user_and_returns_token_and_cookie(client_builder: Clie
         assert body["user"]["email"] == "new@mail.com"
         assert body["user"]["full_name"] == "New Person"
         assert "password_hash" not in body["user"]
-        assert REFRESH_COOKIE_NAME in r.cookies
+        assert settings.REFRESH_COOKIE_NAME in r.cookies
 
 
 def test_register_then_login_works(client_builder: ClientBuilder) -> None:
@@ -220,13 +220,13 @@ def test_login_sets_refresh_cookie(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_user()) as client:
         r = client.post("/api/v1/auth/login", json={"email": EMAIL, "password": PASSWORD})
         assert r.status_code == 200
-        assert REFRESH_COOKIE_NAME in r.cookies
+        assert settings.REFRESH_COOKIE_NAME in r.cookies
 
 
 def test_refresh_with_valid_cookie_returns_new_access(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_user()) as client:
         login = client.post("/api/v1/auth/login", json={"email": EMAIL, "password": PASSWORD})
-        assert REFRESH_COOKIE_NAME in login.cookies
+        assert settings.REFRESH_COOKIE_NAME in login.cookies
         r = client.post("/api/v1/auth/refresh")
         assert r.status_code == 200, r.text
         body = r.json()
@@ -243,7 +243,7 @@ def test_refresh_without_cookie_returns_401(client_builder: ClientBuilder) -> No
 
 def test_refresh_invalid_token_returns_401(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_user()) as client:
-        client.cookies.set(REFRESH_COOKIE_NAME, "garbage")
+        client.cookies.set(settings.REFRESH_COOKIE_NAME, "garbage")
         r = client.post("/api/v1/auth/refresh")
         assert r.status_code == 401
 
@@ -251,7 +251,7 @@ def test_refresh_invalid_token_returns_401(client_builder: ClientBuilder) -> Non
 def test_refresh_rejects_access_token_as_refresh(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_user()) as client:
         token = create_access_token(user_id=1, token_version=0)
-        client.cookies.set(REFRESH_COOKIE_NAME, token)
+        client.cookies.set(settings.REFRESH_COOKIE_NAME, token)
         r = client.post("/api/v1/auth/refresh")
         assert r.status_code == 401
 
@@ -271,7 +271,7 @@ def test_logout_without_auth_but_with_cookie_clears_and_revokes(
     with client_builder(_seed_user()) as client:
         login = client.post("/api/v1/auth/login", json={"email": EMAIL, "password": PASSWORD})
         access = login.json()["access_token"]
-        assert REFRESH_COOKIE_NAME in client.cookies
+        assert settings.REFRESH_COOKIE_NAME in client.cookies
 
         r = client.post("/api/v1/auth/logout")
         assert r.status_code == 204
@@ -291,13 +291,11 @@ def test_logout_with_no_cookie_returns_204(client_builder: ClientBuilder) -> Non
 def test_access_token_without_type_is_rejected(client_builder: ClientBuilder) -> None:
     import jwt as _jwt
 
-    from app.core.config import AUTH_ALGORITHM, AUTH_SECRET_KEY
-
     with client_builder(_seed_user()) as client:
         token = _jwt.encode(
             {"sub": "1", "token_version": 0, "exp": 9999999999},
-            AUTH_SECRET_KEY,
-            algorithm=AUTH_ALGORITHM,
+            settings.AUTH_SECRET_KEY,
+            algorithm=settings.AUTH_ALGORITHM,
         )
         r = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
         assert r.status_code == 401
@@ -322,6 +320,6 @@ def test_register_trims_and_lowercases_email_with_whitespace(client_builder: Cli
 def test_refresh_stale_token_version_rejected(client_builder: ClientBuilder) -> None:
     with client_builder(_seed_user()) as client:
         bad = create_refresh_token(user_id=1, token_version=999)
-        client.cookies.set(REFRESH_COOKIE_NAME, bad)
+        client.cookies.set(settings.REFRESH_COOKIE_NAME, bad)
         r = client.post("/api/v1/auth/refresh")
         assert r.status_code == 401

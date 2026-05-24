@@ -4,12 +4,7 @@ from typing import Any
 import bcrypt
 import jwt
 
-from app.core.config import (
-    AUTH_ACCESS_TOKEN_EXPIRE_MINUTES,
-    AUTH_ALGORITHM,
-    AUTH_REFRESH_TOKEN_EXPIRE_DAYS,
-    AUTH_SECRET_KEY,
-)
+from app.core.config import settings
 
 ACCESS_TOKEN_TYPE = "access"
 REFRESH_TOKEN_TYPE = "refresh"
@@ -29,7 +24,7 @@ def verify_password(plain_password: str, password_hash: str) -> bool:
 
 
 def _encode(payload: dict[str, Any]) -> str:
-    return jwt.encode(payload, AUTH_SECRET_KEY, algorithm=AUTH_ALGORITHM)
+    return jwt.encode(payload, settings.AUTH_SECRET_KEY, algorithm=settings.AUTH_ALGORITHM)
 
 
 def create_access_token(*, user_id: int, token_version: int) -> str:
@@ -40,7 +35,7 @@ def create_access_token(*, user_id: int, token_version: int) -> str:
             "token_version": token_version,
             "type": ACCESS_TOKEN_TYPE,
             "iat": int(now.timestamp()),
-            "exp": int((now + timedelta(minutes=AUTH_ACCESS_TOKEN_EXPIRE_MINUTES)).timestamp()),
+            "exp": int((now + timedelta(minutes=settings.AUTH_ACCESS_TOKEN_EXPIRE_MINUTES)).timestamp()),
         }
     )
 
@@ -53,20 +48,20 @@ def create_refresh_token(*, user_id: int, token_version: int) -> str:
             "token_version": token_version,
             "type": REFRESH_TOKEN_TYPE,
             "iat": int(now.timestamp()),
-            "exp": int((now + timedelta(days=AUTH_REFRESH_TOKEN_EXPIRE_DAYS)).timestamp()),
+            "exp": int((now + timedelta(days=settings.AUTH_REFRESH_TOKEN_EXPIRE_DAYS)).timestamp()),
         }
     )
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
-    payload = jwt.decode(token, AUTH_SECRET_KEY, algorithms=[AUTH_ALGORITHM])
+    payload = jwt.decode(token, settings.AUTH_SECRET_KEY, algorithms=[settings.AUTH_ALGORITHM])
     if payload.get("type") != ACCESS_TOKEN_TYPE:
         raise jwt.InvalidTokenError("wrong token type")
     return payload
 
 
 def decode_refresh_token(token: str) -> dict[str, Any]:
-    payload = jwt.decode(token, AUTH_SECRET_KEY, algorithms=[AUTH_ALGORITHM])
+    payload = jwt.decode(token, settings.AUTH_SECRET_KEY, algorithms=[settings.AUTH_ALGORITHM])
     if payload.get("type") != REFRESH_TOKEN_TYPE:
         raise jwt.InvalidTokenError("wrong token type")
     return payload
