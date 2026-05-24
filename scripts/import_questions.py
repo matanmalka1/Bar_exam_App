@@ -20,6 +20,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
+from app.core.config import normalize_database_url  # noqa: E402
 from app.models.question import Question  # noqa: E402
 
 EXPECTED_TOTAL = 480
@@ -411,7 +412,7 @@ def main() -> int:
 
     try:
         rows = load_and_validate(args.input_dir)
-        engine = create_engine(database_url)
+        engine = create_engine(normalize_database_url(database_url))
         with Session(engine) as session:
             with session.begin():
                 upsert_questions(session, rows)
