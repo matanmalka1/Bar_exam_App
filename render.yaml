@@ -6,7 +6,7 @@ services:
     branch: main
     autoDeploy: true
     buildCommand: pip install -r requirements.txt
-    startCommand: alembic upgrade head && python scripts/import_questions.py --input-dir outputs && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: python -m alembic -c alembic.ini upgrade head && python scripts/import_questions.py --input-dir outputs && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: ENV
