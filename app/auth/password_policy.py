@@ -4,7 +4,6 @@ _PASSWORD_RE = re.compile(r"^(?=.*[A-Z])(?=.*[a-z])(?=.*[^a-zA-Z0-9]).{8,}$")
 
 
 def validate_password(v: str) -> str:
-    """Raise ValueError if password fails requirements. Returns v unchanged (no strip)."""
     if not v or not v.strip():
         raise ValueError("הסיסמה לא יכולה להיות ריקה")
     if len(v) < 8:
