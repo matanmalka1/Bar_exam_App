@@ -32,7 +32,7 @@ services:
       - key: REFRESH_COOKIE_SECURE
         value: "true"
       - key: REFRESH_COOKIE_SAMESITE
-        value: none
+        value: lax
       - key: PASSWORD_RESET_TOKEN_EXPIRE_MINUTES
         value: "30"
       - key: FRONTEND_PASSWORD_RESET_URL
