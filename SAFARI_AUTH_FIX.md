@@ -1,93 +1,92 @@
-# Safari iOS Auth Fix — Refresh Token in Body
+# Mobile Auth Fix — Same-Origin Proxy via Render Static Site
 
 ## הבעיה
 
-Safari iOS חוסם third-party cookies (ITP).
-פרונטאנד ובקאנד על דומיינים שונים ב-Render = cross-site.
-ה-refresh token cookie לא נשלח → refresh נכשל → logout בכל רענון.
+Safari iOS ו-Chrome iOS (WebKit) חוסמים cross-site cookies (ITP).
+פרונטאנד ובקאנד היו על שני origins שונים ב-Render:
+
+- `https://bar-exam-frontend.onrender.com`
+- `https://bar-exam-api.onrender.com`
+
+ה-refresh token cookie נשלח מהבקאנד, אבל הדפדפן במובייל דחה אותו כ-third-party.
+תוצאה: `POST /api/v1/auth/refresh → 401` בכל רענון דף.
 
 ---
 
-## מה שונה
+## הפתרון
 
-### בקאנד (`bar_exam_study`)
+Render Static Site תומך ב-rewrite rules שמשמשים כ-reverse proxy אמיתי (לא redirect).
+הוספת rule ב-`render.yaml` של הפרונטאנד:
 
-**`app/auth/schemas/auth.py`**
-- `TokenResponse` — נוסף שדה `refresh_token: str`
-
-**`app/auth/services/auth_service.py`**
-- `_issue_bundle` — מעביר `refresh_token` ל-`TokenResponse`
-
-**`app/auth/api/routes.py`**
-- endpoint `POST /refresh` — מקבל `refresh_token` מ-body (בנוסף ל-cookie לתאימות אחורה)
-- עדיפות: body token → cookie token
-
-### פרונטאנד (`Bar_exam_frontend`)
-
-**`src/features/auth/authStorage.ts`**
-- נוסף `getRefreshToken` / `setRefreshToken`
-- נוסף `clearTokens` (מוחק גם access וגם refresh)
-
-**`src/lib/api.ts`**
-- `requestNewAccessToken` — שולח `refresh_token` ב-body
-- כל `clearAccessToken` הוחלף ב-`clearTokens`
-
-**`src/features/auth/AuthProvider.tsx`**
-- login/register — שומרים `setRefreshToken(res.refresh_token)`
-- logout/error handlers — קוראים ל-`clearTokens()`
-
-**`src/features/auth/schemas.ts`**
-- `LoginResponseSchema` — נוסף `refresh_token: z.string()`
-
----
-
-## מה צריך לעשות ב-Render Dashboard (ידנית)
-
-### בקאנד — env vars לעדכן:
-
-| Key | ערך נוכחי | ערך חדש |
-|-----|-----------|---------|
-| `REFRESH_COOKIE_SAMESITE` | `none` | `lax` |
-
-> ה-cookie עדיין נשלח (לדפדפנים שתומכים), אבל כבר לא מסתמכים עליו.
-> `SameSite=none` לא נחוץ כי הפרונטאנד שולח token ב-body.
-
-### פרונטאנד — env vars:
-
-| Key | ערך |
-|-----|-----|
-| `VITE_API_BASE_URL` | `https://bar-exam-api.onrender.com/api/v1` |
-
-> חובה! בלי זה הפרונטאנד קורא ל-`/api/v1` על עצמו (static site) ומקבל 404.
-
----
-
-## Deploy
-
-```bash
-# בקאנד
-cd /Users/matanmalka/Desktop/bar_exam_study
-git add backend/app/auth/schemas/auth.py \
-        backend/app/auth/services/auth_service.py \
-        backend/app/auth/api/routes.py
-git commit -m "fix: return refresh_token in body for Safari iOS cross-site cookie fix"
-git push
-
-# פרונטאנד
-cd /Users/matanmalka/Desktop/Bar_exam_frontend
-git add frontend/src/features/auth/authStorage.ts \
-        frontend/src/features/auth/AuthProvider.tsx \
-        frontend/src/features/auth/schemas.ts \
-        frontend/src/lib/api.ts
-git commit -m "fix: store and send refresh_token via localStorage/body instead of cookie"
-git push
+```yaml
+routes:
+  - type: rewrite
+    source: /api/v1/*
+    destination: https://bar-exam-api.onrender.com/api/v1/*
+  - type: rewrite
+    source: /*
+    destination: /index.html
 ```
 
+הדפדפן קורא ל-`https://bar-exam-frontend.onrender.com/api/v1/...`.
+Render מעביר את הבקשה לבקאנד ברקע — same-origin מנקודת מבט הדפדפן.
+
+`VITE_API_BASE_URL=/api/v1` מוגדר ב-Render Dashboard כ-env var לbuild.
+
 ---
 
-## הערת אבטחה
+## מה השתנה
 
-`localStorage` חשוף ל-XSS בניגוד ל-HttpOnly cookie.
-הסיכון נמוך לאפליקציה זו — אין third-party scripts ואין data רגיש מאוד.
-הפתרון המלא לטווח ארוך: custom domain משותף לפרונטאנד ובקאנד
-(`app.domain.com` + `api.domain.com` על אותו apex) — אז cookie עובד גם ב-Safari.
+### Frontend (`Bar_exam_frontend`)
+
+**`render.yaml`**
+- נוסף rewrite `/api/v1/*` → `https://bar-exam-api.onrender.com/api/v1/*` לפני SPA fallback.
+- `VITE_API_BASE_URL=/api/v1` (במקום URL ישיר לבקאנד).
+
+**`src/features/auth/authStorage.ts`**
+- Access token שמור ב-memory בלבד (לא localStorage).
+
+**`src/lib/api.ts`**
+- `baseURL` = `import.meta.env.VITE_API_BASE_URL ?? "/api/v1"` — same-origin בפרודקשן ובlocalhost.
+
+**`src/features/auth/AuthProvider.tsx`**
+- Bootstrap: קורא `/auth/refresh` → אם מצליח, שומר access token ב-memory וקורא `/auth/me`.
+- אין תלות ב-localStorage.
+
+### Backend (`bar_exam_study`)
+
+**`render.yaml`**
+- `REFRESH_COOKIE_SAMESITE=lax` (מספיק כי הבקשות הן same-site כעת).
+
+---
+
+## אימות
+
+```bash
+# Login → מחזיר Set-Cookie על bar-exam-frontend.onrender.com
+curl -c cookies.txt -X POST https://bar-exam-frontend.onrender.com/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"...","password":"..."}'
+
+# Refresh → cookie נשלח, מחזיר access_token חדש
+curl -b cookies.txt -X POST https://bar-exam-frontend.onrender.com/api/v1/auth/refresh
+```
+
+תוצאות שאומתו:
+- Cookie domain: `bar-exam-frontend.onrender.com` (same-origin).
+- Cookie path: `/api/v1/auth`.
+- `POST /api/v1/auth/refresh` → 200 + `access_token` חדש.
+- Response header `x-render-origin-server: uvicorn` — מוכיח proxy אמיתי, לא redirect.
+- `Set-Cookie` לא נבלע על ידי Render rewrite.
+
+---
+
+## dev local
+
+אין שינוי. Vite dev server מגדיר proxy ב-`vite.config.ts`:
+
+```
+/api/* → http://localhost:8000
+```
+
+אין צורך ב-`VITE_API_BASE_URL` ב-`.env.local` לפיתוח רגיל.
