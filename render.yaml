@@ -14,9 +14,7 @@ services:
       - key: PYTHON_VERSION
         value: "3.13.4"
       - key: DATABASE_URL
-        fromDatabase:
-          name: bar-exam-db
-          property: connectionString
+        sync: false
       - key: CORS_ORIGINS
         value: https://bar-exam-frontend.onrender.com
       - key: AUTH_SECRET_KEY
@@ -49,9 +47,3 @@ services:
         value: "איפוס סיסמה - בר עורכי דין"
       - key: BREVO_TEMPLATE_PASSWORD_RESET
         value: "4"
-
-databases:
-  - name: bar-exam-db
-    databaseName: bar_exam_study
-    user: bar_exam_user
-    plan: free
