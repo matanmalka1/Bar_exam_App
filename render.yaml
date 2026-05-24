@@ -10,10 +10,16 @@ services:
     startCommand: alembic upgrade head && python scripts/import_questions.py --input-dir outputs && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
+      - key: ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: "3.13.4"
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: bar-exam-db
+          property: connectionString
       - key: CORS_ORIGINS
-        sync: false
+        value: https://bar-exam-frontend.onrender.com
       - key: AUTH_SECRET_KEY
         generateValue: true
       - key: AUTH_ALGORITHM
@@ -33,7 +39,7 @@ services:
       - key: PASSWORD_RESET_TOKEN_EXPIRE_MINUTES
         value: "30"
       - key: FRONTEND_PASSWORD_RESET_URL
-        sync: false
+        value: https://bar-exam-frontend.onrender.com/reset-password
       - key: PASSWORD_RESET_DEV_LOG
         value: "false"
       - key: BREVO_API_KEY
@@ -44,3 +50,9 @@ services:
         value: "איפוס סיסמה - בר עורכי דין"
       - key: BREVO_TEMPLATE_PASSWORD_RESET
         value: "4"
+
+databases:
+  - name: bar-exam-db
+    databaseName: bar_exam_study
+    user: bar_exam_user
+    plan: free
