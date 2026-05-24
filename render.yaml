@@ -2,7 +2,6 @@ services:
   - type: web
     name: bar-exam-api
     runtime: python
-    rootDir: backend
     plan: free
     branch: main
     autoDeploy: true
