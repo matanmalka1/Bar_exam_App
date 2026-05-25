@@ -37,6 +37,7 @@ def get_my_mistakes(
     current_user: CurrentUser,
     session: Annotated[Session, Depends(get_session)],
 ) -> list[MistakeOut]:
+    # Naturally bounded: at most one entry per unique question (≤319 total).
     return answer_service.list_mistakes(session, current_user.id)
 
 

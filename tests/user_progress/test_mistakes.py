@@ -120,6 +120,7 @@ def test_mistakes_mode_no_pool_returns_422(client: TestClient):
         json={"mode": "mistakes"},
     )
     assert response.status_code == 422
+    assert "no active mistakes" in response.json()["error"]["details"]
 
 
 def test_mistakes_mode_question_count_limits_pool(client: TestClient):

@@ -54,6 +54,7 @@ def test_bookmarks_mode_no_pool_returns_422(client: TestClient):
         json={"mode": "bookmarks"},
     )
     assert response.status_code == 422
+    assert "no bookmarked" in response.json()["error"]["details"]
 
 
 def test_bookmarks_mode_question_count_overflow_returns_422(client: TestClient):
