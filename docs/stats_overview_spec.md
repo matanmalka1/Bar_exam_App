@@ -51,7 +51,7 @@ It requires a bearer access token and returns stats for the authenticated user o
 - `repeated_mistakes_count`: active questions answered wrong at least twice.
 - `avg_session_duration_seconds`: average completed-session duration based on `started_at` and `completed_at`.
 
-Invalidated questions are included in answer totals and success rates as full-credit answers, but are exposed separately through invalidated-credit fields and never count as active or repeated mistakes.
+Answered invalidated questions are included in answer totals and success rates as full-credit answers, but are exposed separately through invalidated-credit fields and never count as active or repeated mistakes.
 
 ## Implementation
 

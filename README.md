@@ -11,7 +11,7 @@ FastAPI backend for a Hebrew RTL Israeli bar-exam practice app.
 - User-scoped sessions, mistakes, bookmarks, and stats via `/users/me/*`.
 - Read-only question endpoints and answer-review endpoints.
 - Backend forgot-password and reset-password endpoints.
-- Invalidated questions remain visible and answerable in sessions, grant full credit, and are tracked separately from genuinely correct answers.
+- Invalidated questions remain visible and answerable in sessions, grant full credit once answered, and are tracked separately from genuinely correct answers.
 
 ## Requirements
 
@@ -205,7 +205,7 @@ Database and unhandled server errors are logged with stack traces, but client re
 
 Exam and simulation answer keys are hidden until completion. Practice, mistakes, and bookmarks reveal feedback after the question is answered.
 
-Invalidated questions are included wherever they are selected. They are visually/semantically marked as invalidated, the user's selected answer is persisted, they are included in score denominators, and they always grant full credit with `scoring_status = "invalidated"`. They do not count as mistakes. Stats expose invalidated credit separately from genuine correct answers.
+Invalidated questions are included wherever they are selected. They are visually/semantically marked as invalidated, the user's selected answer is persisted, they are included in score denominators, and answered invalidated questions grant full credit with `scoring_status = "invalidated"`. They do not count as mistakes. Stats expose invalidated credit separately from genuine correct answers. Because the official PDFs do not provide a real answer key for invalidated questions, exposed answer payloads use `is_correct = null` and do not show a correct answer.
 
 ## Scoring
 
@@ -245,4 +245,4 @@ vulture
 - Exam metadata is derived from `questions.exam_date` and `questions.part`; there is no `exams` table.
 - There is no separate answer-key table.
 - Invalidated questions remain in the database with `correct_answer = null` and non-empty `invalidation_note`.
-- Invalidated questions are included in session scoring denominators and grant full credit without being counted as mistakes.
+- Invalidated questions are included in session scoring denominators. Once answered, they grant full credit without being counted as mistakes.

@@ -103,13 +103,13 @@ def test_simulation_completion_returns_part_breakdown_and_mistakes(client_exam: 
     )
     body = client_exam.post(f"/api/v1/practice-sessions/{sid}/complete").json()
     active_questions = [q for q in detail["questions"] if q["status"] == "active"]
-    invalidated_questions = [q for q in detail["questions"] if q["status"] == "invalidated"]
     answered_active_correct = 1 if b_q["status"] == "active" else 0
+    answered_invalidated_credit = 1 if b_q["status"] == "invalidated" else 0
     assert set(body["part_breakdown"].keys()) == {"B", "C"}
     assert body["scorable_questions"] == 80
     assert body["part_breakdown"]["B"]["total"] == 40
     assert body["part_breakdown"]["C"]["total"] == 40
-    assert body["correct_count"] == len(invalidated_questions) + answered_active_correct
+    assert body["correct_count"] == answered_active_correct + answered_invalidated_credit
     assert body["mistakes"] is not None
     assert len(body["mistakes"]) == len(active_questions) - answered_active_correct
     sample = body["mistakes"][0]
@@ -126,8 +126,6 @@ def test_simulation_unanswered_counts_as_incorrect(client_exam: TestClient):
     body = client_exam.post(f"/api/v1/practice-sessions/{sid}/complete").json()
     assert body["total_questions"] == 80
     assert body["scorable_questions"] == 80
-    detail = client_exam.get(f"/api/v1/practice-sessions/{sid}").json()
-    invalidated_count = sum(1 for q in detail["questions"] if q["status"] == "invalidated")
-    assert body["correct_count"] == invalidated_count
-    assert float(body["score"]) == pytest.approx(float(invalidated_count), abs=0.01)
+    assert body["correct_count"] == 0
+    assert float(body["score"]) == pytest.approx(0.0, abs=0.01)
     assert body["max_score"] == 80

@@ -44,6 +44,34 @@ def test_submit_answer_upsert(client: TestClient):
     assert q1["answer"]["is_correct"] is True
 
 
+def test_submit_invalidated_practice_answer_persists_selection_without_correctness(
+    client: TestClient,
+):
+    dev_user(client)
+    sid = client.post(
+        "/api/v1/practice-sessions",
+        json={"mode": "practice", "exam_date": "2025-04", "part": "B"},
+    ).json()["id"]
+
+    response = client.post(
+        f"/api/v1/practice-sessions/{sid}/answers",
+        json={"stable_id": "2025-04_B_006", "selected_answer": "ג"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["selected_answer"] == "ג"
+    assert body["is_correct"] is None
+    assert body["scoring_status"] == "invalidated"
+    assert body["correct_answer"] is None
+
+    detail = client.get(f"/api/v1/practice-sessions/{sid}").json()
+    invalidated = next(q for q in detail["questions"] if q["stable_id"] == "2025-04_B_006")
+    assert invalidated["answer"]["selected_answer"] == "ג"
+    assert invalidated["answer"]["is_correct"] is None
+    assert invalidated["answer"]["scoring_status"] == "invalidated"
+
+
 def test_submit_answer_after_complete_returns_409(client: TestClient):
     dev_user(client)
     sid = client.post(
@@ -88,8 +116,8 @@ def test_complete_session_score(client: TestClient):
     assert body["status"] == "completed"
     assert body["total_questions"] == 10
     assert body["scorable_questions"] == 10
-    assert body["correct_count"] == 4
-    assert float(body["score"]) == pytest.approx(4.0, rel=0, abs=0.01)
+    assert body["correct_count"] == 3
+    assert float(body["score"]) == pytest.approx(3.0, rel=0, abs=0.01)
     assert body["max_score"] == 10
 
 

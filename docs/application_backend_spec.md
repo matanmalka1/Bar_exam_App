@@ -86,7 +86,7 @@ Session payloads follow mode-specific visibility:
 
 Invalidated questions are still visible and answerable in sessions. They have `status = "invalidated"` and `invalidation_note`, keep `correct_answer = null`, and are marked with `scoring_status = "invalidated"` whenever scoring details are visible.
 
-Invalidated questions are included in score denominators and always grant full credit. The selected answer is persisted. They are excluded from mistake lists and must remain distinguishable from genuinely correct answers in stats and UI analytics.
+Invalidated questions are included in score denominators. Once answered, they grant full credit. The selected answer is persisted, but exposed answer payloads use `is_correct = null` because there is no official correct answer. They are excluded from mistake lists and must remain distinguishable from genuinely correct answers in stats and UI analytics.
 
 ## Scoring Model
 

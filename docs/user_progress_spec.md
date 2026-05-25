@@ -89,7 +89,7 @@ Request body:
 
 Within an active session, submitting the same question again updates the existing answer row. Completed sessions reject further answer changes.
 
-Invalidated questions are answerable. The submitted answer is persisted like any other answer. The response/session detail uses `scoring_status = "invalidated"` when correctness is visible so clients can separate invalidated credit from genuine correct answers.
+Invalidated questions are answerable. The submitted answer is persisted like any other answer. The response/session detail uses `scoring_status = "invalidated"` and `is_correct = null` when scoring details are visible so clients can separate invalidated credit from genuine correct answers.
 
 ## Completion
 
@@ -97,7 +97,7 @@ Invalidated questions are answerable. The submitted answer is persisted like any
 
 Completion freezes scoring. Exam and simulation completions include `part_breakdown` and a mistake list.
 
-Invalidated questions keep `correct_answer = null`, stay visible in the session, are included in scoring denominators, and always grant full credit. They are excluded from mistake lists even if the user selected an answer that would otherwise be wrong. `correct_count` includes invalidated credit; analytics fields distinguish that credit from genuinely correct answers.
+Invalidated questions keep `correct_answer = null`, stay visible in the session, and are included in scoring denominators. Once answered, they grant full credit. They are excluded from mistake lists even if the user selected an answer that would otherwise be wrong. `correct_count` includes answered invalidated credit; analytics fields distinguish that credit from genuinely correct answers.
 
 ## Scoring Model
 
@@ -111,7 +111,7 @@ Scores are raw points, not percentages.
 
 `PartBreakdown` fields:
 
-- `score` — points earned in this part (each correct answer = 1 point; invalidated questions grant full credit).
+- `score` — points earned in this part (each correct active answer = 1 point; each answered invalidated question grants full credit).
 - `max_score` — always 40 for both Part B and Part C.
 
 The Israeli bar exam also includes Part A (20% of the final grade), which is not implemented in this app. The maximum score in this app is therefore 80 out of the full real-exam grade.
@@ -141,7 +141,7 @@ All are scoped to the authenticated user. `DELETE /users/me/data` resets all pro
 ## Critical Tests Expected
 
 - Exam and simulation sessions do not leak answer keys before completion.
-- Invalidated questions are visible, answerable, included in score denominators, and always grant full credit.
+- Invalidated questions are visible, answerable, included in score denominators, and grant full credit once answered.
 - Invalidated credit is distinguishable from genuinely correct answers in session/stats payloads.
 - Invalidated questions are not counted as mistakes.
 - Mistakes endpoint follows latest-answer semantics.

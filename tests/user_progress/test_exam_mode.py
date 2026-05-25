@@ -164,6 +164,7 @@ def test_exam_invalidated_question_gets_full_credit_and_is_not_a_mistake(client_
     completed_invalidated = next(q for q in completed_detail["questions"] if q["stable_id"] == "2025-12_B_020")
     assert completed_invalidated["status"] == "invalidated"
     assert completed_invalidated["correct_answer"] is None
+    assert completed_invalidated["answer"]["is_correct"] is None
     assert completed_invalidated["answer"]["scoring_status"] == "invalidated"
 
 
@@ -190,7 +191,7 @@ def test_answer_invalidated_exam_question_persists_selected_answer(
     assert invalidated["answer"]["selected_answer"] == "א"
 
 
-def test_completion_counts_unanswered_invalidated_as_credit_not_mistake(
+def test_completion_does_not_credit_unanswered_invalidated_question_or_count_it_as_mistake(
     client_multi: TestClient,
 ):
     dev_user(client_multi)
@@ -202,7 +203,7 @@ def test_completion_counts_unanswered_invalidated_as_credit_not_mistake(
     assert body["total_questions"] == 40
     assert body["scorable_questions"] == 40
     assert body["answered_count"] == 0
-    assert body["correct_count"] == 1
+    assert body["correct_count"] == 0
     assert len(body["mistakes"]) == 39
     assert all(item["stable_id"] != "2025-12_B_020" for item in body["mistakes"])
 

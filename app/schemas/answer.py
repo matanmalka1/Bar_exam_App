@@ -14,7 +14,7 @@ class AnswerSubmitIn(BaseModel):
 class AnswerPracticeOut(BaseModel):
     stable_id: str
     selected_answer: str
-    is_correct: bool
+    is_correct: bool | None
     scoring_status: Literal["correct", "incorrect", "invalidated"]
     correct_answer: str | None
     reference: str | None

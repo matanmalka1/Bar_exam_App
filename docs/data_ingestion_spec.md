@@ -142,7 +142,7 @@ There is no separate `answer_keys` table. `correct_answer` and `reference` are s
 
 Invalidated questions remain in the `questions` table. They keep their stable IDs and are included in source-data QA views, exam metadata counts, practice selection, official exam replay, and simulation selection.
 
-Runtime scoring treats invalidated questions as full-credit questions: they are answerable, included in score denominators, never counted as mistakes, and tracked separately from genuinely correct answers. Import validation still requires `correct_answer = null` and a non-empty `invalidation_note`.
+Runtime scoring treats answered invalidated questions as full-credit questions: they are answerable, included in score denominators, never counted as mistakes, and tracked separately from genuinely correct answers. Import validation still requires `correct_answer = null` and a non-empty `invalidation_note`.
 
 ## 8. Constraints
 

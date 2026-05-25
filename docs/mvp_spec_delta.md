@@ -43,4 +43,4 @@ Invalidated questions keep their stable IDs and remain in the `questions` table.
 
 Invalidated questions are visible and answerable in sessions, including practice, exam, and simulation. They keep `correct_answer = null`, carry a non-empty `invalidation_note`, and must be visually/semantically marked as invalidated.
 
-Invalidated questions are included in scoring denominators and always grant full credit. The user's selected answer is still persisted. They never count as mistakes, and API/stats payloads distinguish invalidated credit from genuinely correct answers with `scoring_status = "invalidated"` and invalidated-credit analytics fields.
+Invalidated questions are included in scoring denominators. Once answered, they grant full credit. The user's selected answer is still persisted. They never count as mistakes, and API/stats payloads distinguish invalidated credit from genuinely correct answers with `scoring_status = "invalidated"`, `is_correct = null` in exposed answer payloads, and invalidated-credit analytics fields.

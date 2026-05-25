@@ -68,7 +68,7 @@ def submit_answer(
         raise AnswerError(422, "question does not belong to this session")
     db_answer = HEBREW_TO_DB[payload.selected_answer]
     scoring_status = _scoring_status(question.status, question.correct_answer, db_answer)
-    is_correct = scoring_status != SCORING_INCORRECT
+    is_correct = scoring_status == SCORING_CORRECT
 
     ua, inserted = answer_repository.insert_user_answer(
         session,
@@ -92,7 +92,7 @@ def submit_answer(
     return AnswerPracticeOut(
         stable_id=payload.stable_id,
         selected_answer=DB_TO_HEBREW[ua.selected_answer],
-        is_correct=ua.is_correct,
+        is_correct=None if scoring_status == SCORING_INVALIDATED else ua.is_correct,
         scoring_status=scoring_status,
         correct_answer=DB_TO_HEBREW[question.correct_answer] if question.correct_answer else None,
         reference=question.reference,

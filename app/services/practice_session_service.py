@@ -264,9 +264,10 @@ def get_session_detail(session: Session, session_id: int, user_id: int) -> Sessi
         expose = _expose_for_question(ps, user_answered=user_answered)
         answer_inline: SessionAnswerInline | None = None
         if ua is not None:
+            is_correct = None if question.status == "invalidated" else ua.is_correct
             answer_inline = SessionAnswerInline(
                 selected_answer=DB_TO_HEBREW[ua.selected_answer],
-                is_correct=ua.is_correct if expose else None,
+                is_correct=is_correct if expose else None,
                 scoring_status=_scoring_status(question, ua) if expose else None,
                 answered_at=ua.answered_at,
             )
@@ -383,7 +384,7 @@ def _build_part_breakdown(rows: list, answers_by_qid: dict) -> dict[str, PartBre
             ua = answers_by_qid.get(q.id)
             if ua is not None:
                 answered += 1
-            if q.status == "invalidated" or (ua is not None and ua.is_correct):
+            if ua is not None and (q.status == "invalidated" or ua.is_correct):
                 correct += 1
         breakdown[part] = PartBreakdown(
             total=total,
@@ -428,7 +429,7 @@ def _scored_correct_count(rows: list, answers_by_qid: dict) -> int:
     correct = 0
     for _, question in rows:
         answer = answers_by_qid.get(question.id)
-        if question.status == "invalidated" or (answer is not None and answer.is_correct):
+        if answer is not None and (question.status == "invalidated" or answer.is_correct):
             correct += 1
     return correct
 
