@@ -276,12 +276,14 @@ def get_session_detail(session: Session, session_id: int, user_id: int) -> Sessi
             stable_id=question.stable_id,
             number=question.number,
             body=question.body,
-            options=QuestionOptions.model_validate({
-                "א": question.option_a,
-                "ב": question.option_b,
-                "ג": question.option_c,
-                "ד": question.option_d,
-            }),
+            options=QuestionOptions.model_validate(
+                {
+                    "א": question.option_a,
+                    "ב": question.option_b,
+                    "ג": question.option_c,
+                    "ד": question.option_d,
+                }
+            ),
             status=question.status,
             invalidation_note=question.invalidation_note,
             answer=answer_inline,
@@ -411,12 +413,14 @@ def _build_exam_mistakes(rows: list, answers_by_qid: dict) -> list[ExamMistakeOu
                 part=q.part,
                 number=q.number,
                 body=q.body,
-                options=QuestionOptions.model_validate({
-                    "א": q.option_a,
-                    "ב": q.option_b,
-                    "ג": q.option_c,
-                    "ד": q.option_d,
-                }),
+                options=QuestionOptions.model_validate(
+                    {
+                        "א": q.option_a,
+                        "ב": q.option_b,
+                        "ג": q.option_c,
+                        "ד": q.option_d,
+                    }
+                ),
                 selected_answer=DB_TO_HEBREW[ua.selected_answer] if ua is not None else None,
                 correct_answer=DB_TO_HEBREW[q.correct_answer],
                 reference=q.reference,

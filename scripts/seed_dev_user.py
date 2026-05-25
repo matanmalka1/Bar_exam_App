@@ -82,9 +82,7 @@ def _upsert_user(db: Session, *, full_name: str, email: str, password: str):
 
 
 def _clear_user_progress(db: Session, user_id: int) -> None:
-    session_ids = list(
-        db.scalars(select(PracticeSession.id).where(PracticeSession.user_id == user_id)).all()
-    )
+    session_ids = list(db.scalars(select(PracticeSession.id).where(PracticeSession.user_id == user_id)).all())
     if session_ids:
         db.execute(delete(UserAnswer).where(UserAnswer.session_id.in_(session_ids)))
         db.execute(delete(PracticeSessionQuestion).where(PracticeSessionQuestion.session_id.in_(session_ids)))
@@ -131,11 +129,7 @@ def _load_question_pool(db: Session) -> dict[str, list[Question]]:
         "invalidated": invalidated,
         "active_b": [q for q in active if q.part == "B"],
         "active_c": [q for q in active if q.part == "C"],
-        "full_exam": [
-            q
-            for q in questions
-            if q.exam_date == full_exam_date and q.part in {"B", "C"}
-        ],
+        "full_exam": [q for q in questions if q.exam_date == full_exam_date and q.part in {"B", "C"}],
     }
 
 

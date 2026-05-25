@@ -119,12 +119,14 @@ def list_mistakes(session: Session, user_id: int) -> list[MistakeOut]:
                 exam_date=question.exam_date.strftime("%Y-%m"),
                 part=question.part,
                 body=question.body,
-                options=QuestionOptions.model_validate({
-                    "א": question.option_a,
-                    "ב": question.option_b,
-                    "ג": question.option_c,
-                    "ד": question.option_d,
-                }),
+                options=QuestionOptions.model_validate(
+                    {
+                        "א": question.option_a,
+                        "ב": question.option_b,
+                        "ג": question.option_c,
+                        "ד": question.option_d,
+                    }
+                ),
                 correct_answer=(DB_TO_HEBREW[question.correct_answer] if question.correct_answer else None),
                 reference=question.reference,
                 times_answered=int(times_answered),
@@ -169,12 +171,14 @@ def list_bookmarks(session: Session, user_id: int) -> list[BookmarkedQuestionOut
                 part=question.part,
                 number=question.number,
                 body=question.body,
-                options=QuestionOptions.model_validate({
-                    "א": question.option_a,
-                    "ב": question.option_b,
-                    "ג": question.option_c,
-                    "ד": question.option_d,
-                }),
+                options=QuestionOptions.model_validate(
+                    {
+                        "א": question.option_a,
+                        "ב": question.option_b,
+                        "ג": question.option_c,
+                        "ד": question.option_d,
+                    }
+                ),
                 status=question.status,
                 correct_answer=(DB_TO_HEBREW[question.correct_answer] if question.correct_answer else None),
                 reference=question.reference,

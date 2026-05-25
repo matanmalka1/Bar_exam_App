@@ -35,8 +35,7 @@ def send_password_reset_email(to_email: str, first_name: str, reset_link: str) -
     except httpx.HTTPStatusError as exc:
         body = exc.response.text[:_MAX_PROVIDER_ERROR_BODY_LENGTH]
         raise EmailDeliveryError(
-            "Brevo rejected password reset email: "
-            f"status={exc.response.status_code} body={body}"
+            f"Brevo rejected password reset email: status={exc.response.status_code} body={body}"
         ) from exc
     except httpx.RequestError as exc:
         raise EmailDeliveryError(f"Brevo password reset email request failed: {exc}") from exc

@@ -58,11 +58,7 @@ def select_candidate_questions(
 
 def select_exam_candidates(session: Session, *, part: str) -> list[Question]:
     """Questions for a given part across all exam dates (simulation pool)."""
-    statement = (
-        select(Question)
-        .where(Question.part == part)
-        .order_by(Question.exam_date.asc(), Question.number.asc())
-    )
+    statement = select(Question).where(Question.part == part).order_by(Question.exam_date.asc(), Question.number.asc())
     return list(session.scalars(statement).all())
 
 
