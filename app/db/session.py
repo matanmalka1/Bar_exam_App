@@ -11,7 +11,11 @@ _SessionLocal: sessionmaker | None = None
 def get_engine() -> Engine:
     global engine
     if engine is None:
-        engine = create_engine(normalize_database_url(settings.DATABASE_URL))
+        engine = create_engine(
+            normalize_database_url(settings.DATABASE_URL),
+            pool_pre_ping=True,
+            pool_recycle=300,
+        )
     return engine
 
 
