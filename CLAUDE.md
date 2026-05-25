@@ -28,6 +28,7 @@ Frontend repository: `/Users/matanmalka/Desktop/Bar_exam_frontend`.
 - Protects user progress, bookmark, mistake, and stats endpoints with bearer auth.
 - Supports practice, exam, simulation, mistakes, and bookmarks sessions.
 - Hides answer keys in exam/simulation sessions until completion.
+- Shows invalidated questions in sessions, allows answers, grants full credit, and tracks that credit separately from genuinely correct answers.
 - Exposes aggregate stats for the authenticated user.
 - Supports backend forgot-password and reset-password endpoints.
 - Uses global exception handlers to return one frontend-safe error envelope.
@@ -46,6 +47,11 @@ Frontend repository: `/Users/matanmalka/Desktop/Bar_exam_frontend`.
 ## Product Rules
 
 - Do not expose `correct_answer` or `reference` in pre-submit practice payloads.
+- Invalidated questions are visible and answerable in all session contexts where they are selected.
+- Invalidated questions are included in score denominators and always grant full credit, even if the selected answer differs from any official key.
+- Persist selected answers for invalidated questions.
+- Use `scoring_status = "invalidated"` to distinguish invalidated-question credit from genuinely correct answers.
+- Invalidated questions must not be counted as active mistakes or repeated mistakes.
 - Do not accept `user_id` from clients for progress APIs. Use the authenticated user from the token.
 - Use `/users/me/*` for user-scoped routes.
 

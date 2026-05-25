@@ -84,6 +84,10 @@ Session payloads follow mode-specific visibility:
 | Active `exam` or `simulation` session | Hidden for every question |
 | Completed `exam` or `simulation` session | Revealed for all questions |
 
+Invalidated questions are still visible and answerable in sessions. They have `status = "invalidated"` and `invalidation_note`, keep `correct_answer = null`, and are marked with `scoring_status = "invalidated"` whenever scoring details are visible.
+
+Invalidated questions are included in score denominators and always grant full credit. The selected answer is persisted. They are excluded from mistake lists and must remain distinguishable from genuinely correct answers in stats and UI analytics.
+
 ## User Scoping
 
 Progress APIs use the authenticated user from the access token. The request body does not accept `user_id`, and legacy `/users/{user_id}/...` routes are not present.

@@ -2,6 +2,7 @@ import json
 import random
 from datetime import UTC, date, datetime
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Literal
 
 from sqlalchemy.orm import Session
 
@@ -20,9 +21,11 @@ from app.repositories import (
     practice_session_repository,
     user_repository,
 )
+from app.schemas.question import QuestionOptions
 from app.schemas.session import (
     ExamMistakeOut,
     PartBreakdown,
+    SessionAnswerInline,
     SessionCompleteOut,
     SessionCreateIn,
     SessionDetailOut,
@@ -32,6 +35,10 @@ from app.schemas.session import (
 from app.services.question_service import ANSWER_LABELS
 
 DB_TO_HEBREW = ANSWER_LABELS
+ScoringStatus = Literal["correct", "incorrect", "invalidated"]
+SCORING_CORRECT = "correct"
+SCORING_INCORRECT = "incorrect"
+SCORING_INVALIDATED = "invalidated"
 
 EXAM_QUESTIONS_PER_PART = 40
 EXAM_TOTAL_QUESTIONS = 80
@@ -76,7 +83,6 @@ def _create_practice_session(session: Session, user_id: int, payload: SessionCre
         session,
         exam_date=exam_date,
         part=payload.part,
-        include_invalidated=payload.include_invalidated,
     )
     if not candidates:
         raise SessionError(422, "no matching questions for session filters")
@@ -149,8 +155,6 @@ def _create_exam_session(session: Session, user_id: int, payload: SessionCreateI
         raise SessionError(422, "exam mode requires exam_date")
     if payload.question_count is not None:
         raise SessionError(422, "exam mode does not accept question_count")
-    if payload.include_invalidated:
-        raise SessionError(422, "exam mode does not accept include_invalidated=true")
 
     exam_date = _parse_exam_date(payload.exam_date)
     rng = _make_rng()
@@ -195,15 +199,13 @@ def _create_simulation_session(session: Session, user_id: int, payload: SessionC
         raise SessionError(422, "simulation mode does not accept part")
     if payload.question_count is not None:
         raise SessionError(422, "simulation mode does not accept question_count")
-    if payload.include_invalidated:
-        raise SessionError(422, "simulation mode does not accept include_invalidated=true")
 
     b_pool = practice_session_repository.select_exam_candidates(session, part="B")
     c_pool = practice_session_repository.select_exam_candidates(session, part="C")
     if len(b_pool) < EXAM_QUESTIONS_PER_PART:
-        raise SessionError(422, "insufficient active part B questions for simulation (need 40)")
+        raise SessionError(422, "insufficient part B questions for simulation (need 40)")
     if len(c_pool) < EXAM_QUESTIONS_PER_PART:
-        raise SessionError(422, "insufficient active part C questions for simulation (need 40)")
+        raise SessionError(422, "insufficient part C questions for simulation (need 40)")
 
     seen_ids = practice_session_repository.list_seen_question_ids(session, user_id)
     b_chosen = _select_questions(b_pool, seen_ids=seen_ids, question_count=EXAM_QUESTIONS_PER_PART)
@@ -246,8 +248,6 @@ def _reject_filters(payload: SessionCreateIn, *, mode: str) -> None:
         raise SessionError(422, f"{mode} mode does not accept exam_date")
     if payload.part is not None:
         raise SessionError(422, f"{mode} mode does not accept part")
-    if payload.include_invalidated:
-        raise SessionError(422, f"{mode} mode does not accept include_invalidated")
 
 
 def get_session_detail(session: Session, session_id: int, user_id: int) -> SessionDetailOut:
@@ -262,25 +262,27 @@ def get_session_detail(session: Session, session_id: int, user_id: int) -> Sessi
         ua = answers.get(question.id)
         user_answered = ua is not None
         expose = _expose_for_question(ps, user_answered=user_answered)
-        answer_inline = None
+        answer_inline: SessionAnswerInline | None = None
         if ua is not None:
-            answer_inline = {
-                "selected_answer": DB_TO_HEBREW[ua.selected_answer],
-                "is_correct": ua.is_correct if expose else None,
-                "answered_at": ua.answered_at,
-            }
+            answer_inline = SessionAnswerInline(
+                selected_answer=DB_TO_HEBREW[ua.selected_answer],
+                is_correct=ua.is_correct if expose else None,
+                scoring_status=_scoring_status(question, ua) if expose else None,
+                answered_at=ua.answered_at,
+            )
         item = SessionQuestionOut(
             position=position,
             stable_id=question.stable_id,
             number=question.number,
             body=question.body,
-            options={
+            options=QuestionOptions.model_validate({
                 "א": question.option_a,
                 "ב": question.option_b,
                 "ג": question.option_c,
                 "ד": question.option_d,
-            },
+            }),
             status=question.status,
+            invalidation_note=question.invalidation_note,
             answer=answer_inline,
             correct_answer=_hebrew_or_none(question.correct_answer) if expose else None,
             reference=question.reference if expose else None,
@@ -309,14 +311,14 @@ def complete_session(session: Session, session_id: int, user_id: int) -> Session
 
     rows = practice_session_repository.get_session_questions(session, session_id)
     answers = answer_repository.list_session_answers(session, session_id)
-    correct_count = sum(1 for a in answers if a.is_correct)
-    score_denominator = _score_denominator(ps, rows)
+    answers_by_qid = {a.question_id: a for a in answers}
+    correct_count = _scored_correct_count(rows, answers_by_qid)
+    score_denominator = ps.total_questions
     now = datetime.now(UTC)
     part_breakdown: dict[str, PartBreakdown] | None = None
     mistakes: list[ExamMistakeOut] | None = None
     part_breakdown_json: str | None = None
     if ps.mode in ("exam", "simulation"):
-        answers_by_qid = {a.question_id: a for a in answers}
         part_breakdown = _build_part_breakdown(rows, answers_by_qid)
         mistakes = _build_exam_mistakes(rows, answers_by_qid)
         part_breakdown_json = json.dumps({k: v.model_dump(mode="json") for k, v in part_breakdown.items()})
@@ -384,7 +386,7 @@ def _exam_score(part_breakdown: dict[str, PartBreakdown]) -> Decimal:
 def _build_part_breakdown(rows: list, answers_by_qid: dict) -> dict[str, PartBreakdown]:
     breakdown: dict[str, PartBreakdown] = {}
     for part in ("B", "C"):
-        part_questions = [q for _, q in rows if q.part == part and q.status == "active"]
+        part_questions = [q for _, q in rows if q.part == part]
         total = len(part_questions)
         if total == 0:
             continue
@@ -394,8 +396,8 @@ def _build_part_breakdown(rows: list, answers_by_qid: dict) -> dict[str, PartBre
             ua = answers_by_qid.get(q.id)
             if ua is not None:
                 answered += 1
-                if ua.is_correct:
-                    correct += 1
+            if q.status == "invalidated" or (ua is not None and ua.is_correct):
+                correct += 1
         score = (
             (Decimal(correct * 100) / Decimal(total)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             if total > 0
@@ -408,12 +410,11 @@ def _build_part_breakdown(rows: list, answers_by_qid: dict) -> dict[str, PartBre
 def _build_exam_mistakes(rows: list, answers_by_qid: dict) -> list[ExamMistakeOut]:
     mistakes: list[ExamMistakeOut] = []
     for _, q in rows:
-        if q.status != "active":
+        if q.status == "invalidated":
             continue
         ua = answers_by_qid.get(q.id)
         if ua is not None and ua.is_correct:
             continue
-        # Exam/simulation scoring excludes invalidated, so active rows have answer keys.
         assert q.correct_answer is not None
         mistakes.append(
             ExamMistakeOut(
@@ -421,12 +422,12 @@ def _build_exam_mistakes(rows: list, answers_by_qid: dict) -> list[ExamMistakeOu
                 part=q.part,
                 number=q.number,
                 body=q.body,
-                options={
+                options=QuestionOptions.model_validate({
                     "א": q.option_a,
                     "ב": q.option_b,
                     "ג": q.option_c,
                     "ד": q.option_d,
-                },
+                }),
                 selected_answer=DB_TO_HEBREW[ua.selected_answer] if ua is not None else None,
                 correct_answer=DB_TO_HEBREW[q.correct_answer],
                 reference=q.reference,
@@ -435,10 +436,13 @@ def _build_exam_mistakes(rows: list, answers_by_qid: dict) -> list[ExamMistakeOu
     return mistakes
 
 
-def _score_denominator(ps: PracticeSession, rows: list) -> int:
-    if ps.mode == "exam":
-        return sum(1 for _, q in rows if q.status == "active")
-    return ps.total_questions
+def _scored_correct_count(rows: list, answers_by_qid: dict) -> int:
+    correct = 0
+    for _, question in rows:
+        answer = answers_by_qid.get(question.id)
+        if question.status == "invalidated" or (answer is not None and answer.is_correct):
+            correct += 1
+    return correct
 
 
 def _select_questions(
@@ -491,6 +495,12 @@ def _hebrew_or_none(db_letter: str | None) -> str | None:
     if db_letter is None:
         return None
     return DB_TO_HEBREW[db_letter]
+
+
+def _scoring_status(question: Question, answer) -> ScoringStatus:
+    if question.status == "invalidated":
+        return SCORING_INVALIDATED
+    return SCORING_CORRECT if answer.is_correct else SCORING_INCORRECT
 
 
 def _parse_exam_date(value: str) -> date:

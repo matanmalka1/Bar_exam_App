@@ -21,15 +21,6 @@ def test_exam_mode_rejects_question_count(client_multi: TestClient):
     assert r.status_code == 422
 
 
-def test_exam_mode_rejects_include_invalidated_true(client_multi: TestClient):
-    dev_user(client_multi)
-    r = client_multi.post(
-        "/api/v1/practice-sessions",
-        json={"mode": "exam", "exam_date": "2025-04", "include_invalidated": True},
-    )
-    assert r.status_code == 422
-
-
 def test_exam_full_returns_40b_40c_from_single_exam_date(client_multi: TestClient):
     dev_user(client_multi)
     r = client_multi.post(
@@ -140,7 +131,7 @@ def test_exam_part_b_completion_breakdown_only_b(client_multi: TestClient):
     assert body["part_breakdown"]["B"]["total"] == 40
 
 
-def test_exam_invalidated_question_excluded_from_score_and_mistakes(client_multi: TestClient):
+def test_exam_invalidated_question_gets_full_credit_and_is_not_a_mistake(client_multi: TestClient):
     dev_user(client_multi)
     sid = client_multi.post(
         "/api/v1/practice-sessions",
@@ -151,29 +142,29 @@ def test_exam_invalidated_question_excluded_from_score_and_mistakes(client_multi
     assert invalidated["status"] == "invalidated"
 
     for q in detail["questions"]:
-        if q["status"] == "active":
-            client_multi.post(
-                f"/api/v1/practice-sessions/{sid}/answers",
-                json={"stable_id": q["stable_id"], "selected_answer": "א"},
-            )
+        client_multi.post(
+            f"/api/v1/practice-sessions/{sid}/answers",
+            json={"stable_id": q["stable_id"], "selected_answer": "א"},
+        )
 
     body = client_multi.post(f"/api/v1/practice-sessions/{sid}/complete").json()
     assert body["total_questions"] == 40
-    assert body["scorable_questions"] == 39
-    assert body["correct_count"] == 39
+    assert body["scorable_questions"] == 40
+    assert body["correct_count"] == 40
     assert float(body["score_percent"]) == 100.0
-    assert body["part_breakdown"]["B"]["total"] == 39
-    assert body["part_breakdown"]["B"]["answered"] == 39
-    assert body["part_breakdown"]["B"]["correct"] == 39
+    assert body["part_breakdown"]["B"]["total"] == 40
+    assert body["part_breakdown"]["B"]["answered"] == 40
+    assert body["part_breakdown"]["B"]["correct"] == 40
     assert body["mistakes"] == []
 
     completed_detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
     completed_invalidated = next(q for q in completed_detail["questions"] if q["stable_id"] == "2025-12_B_020")
     assert completed_invalidated["status"] == "invalidated"
     assert completed_invalidated["correct_answer"] is None
+    assert completed_invalidated["answer"]["scoring_status"] == "invalidated"
 
 
-def test_answer_invalidated_exam_question_returns_422_and_does_not_increment_answered_count(
+def test_answer_invalidated_exam_question_persists_selected_answer(
     client_multi: TestClient,
 ):
     dev_user(client_multi)
@@ -188,16 +179,15 @@ def test_answer_invalidated_exam_question_returns_422_and_does_not_increment_ans
         f"/api/v1/practice-sessions/{sid}/answers",
         json={"stable_id": "2025-12_B_020", "selected_answer": "א"},
     )
-    assert response.status_code == 422
-    assert response.json()["error"]["code"] == "unprocessable_entity"
+    assert response.status_code == 200
 
     after = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()
-    assert after["answered_count"] == 0
+    assert after["answered_count"] == 1
     invalidated = next(q for q in after["questions"] if q["stable_id"] == "2025-12_B_020")
-    assert invalidated["answer"] is None
+    assert invalidated["answer"]["selected_answer"] == "א"
 
 
-def test_completion_still_excludes_invalidated_from_score_and_mistakes_after_rejected_answer(
+def test_completion_counts_unanswered_invalidated_as_credit_not_mistake(
     client_multi: TestClient,
 ):
     dev_user(client_multi)
@@ -205,16 +195,11 @@ def test_completion_still_excludes_invalidated_from_score_and_mistakes_after_rej
         "/api/v1/practice-sessions",
         json={"mode": "exam", "exam_date": "2025-12", "part": "B"},
     ).json()["id"]
-    client_multi.post(
-        f"/api/v1/practice-sessions/{sid}/answers",
-        json={"stable_id": "2025-12_B_020", "selected_answer": "א"},
-    )
-
     body = client_multi.post(f"/api/v1/practice-sessions/{sid}/complete").json()
     assert body["total_questions"] == 40
-    assert body["scorable_questions"] == 39
+    assert body["scorable_questions"] == 40
     assert body["answered_count"] == 0
-    assert body["correct_count"] == 0
+    assert body["correct_count"] == 1
     assert len(body["mistakes"]) == 39
     assert all(item["stable_id"] != "2025-12_B_020" for item in body["mistakes"])
 

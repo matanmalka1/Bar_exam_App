@@ -46,24 +46,21 @@ def select_candidate_questions(
     *,
     exam_date: date | None,
     part: str | None,
-    include_invalidated: bool,
 ) -> list[Question]:
     statement = select(Question)
     if exam_date is not None:
         statement = statement.where(Question.exam_date == exam_date)
     if part is not None:
         statement = statement.where(Question.part == part)
-    if not include_invalidated:
-        statement = statement.where(Question.status == "active")
     statement = statement.order_by(Question.exam_date.asc(), Question.part.asc(), Question.number.asc())
     return list(session.scalars(statement).all())
 
 
 def select_exam_candidates(session: Session, *, part: str) -> list[Question]:
-    """Active questions for a given part across all exam dates (simulation pool)."""
+    """Questions for a given part across all exam dates (simulation pool)."""
     statement = (
         select(Question)
-        .where(Question.part == part, Question.status == "active")
+        .where(Question.part == part)
         .order_by(Question.exam_date.asc(), Question.number.asc())
     )
     return list(session.scalars(statement).all())

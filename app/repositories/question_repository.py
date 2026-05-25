@@ -11,9 +11,8 @@ def get_exams(session: Session) -> list[Row]:
         select(
             Question.exam_date,
             Question.part,
-            func.count(Question.id).label("active_count"),
+            func.count(Question.id).label("question_count"),
         )
-        .where(Question.status == "active")
         .group_by(Question.exam_date, Question.part)
         .order_by(Question.exam_date.asc(), Question.part.asc())
     )

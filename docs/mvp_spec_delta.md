@@ -39,4 +39,8 @@ There is no separate answer-key table. `questions.correct_answer` and `questions
 
 ## Invalidated Questions
 
-Invalidated questions keep their stable IDs and remain in the `questions` table. Official exam mode includes them to preserve source order, but scoring excludes them.
+Invalidated questions keep their stable IDs and remain in the `questions` table.
+
+Invalidated questions are visible and answerable in sessions, including practice, exam, and simulation. They keep `correct_answer = null`, carry a non-empty `invalidation_note`, and must be visually/semantically marked as invalidated.
+
+Invalidated questions are included in scoring denominators and always grant full credit. The user's selected answer is still persisted. They never count as mistakes, and API/stats payloads distinguish invalidated credit from genuinely correct answers with `scoring_status = "invalidated"` and invalidated-credit analytics fields.

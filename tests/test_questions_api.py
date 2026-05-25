@@ -82,7 +82,7 @@ def test_cors_allows_vite_localhost(client: TestClient):
     assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
 
 
-def test_get_exams_returns_labels_and_active_counts(client: TestClient):
+def test_get_exams_returns_labels_and_question_counts(client: TestClient):
     response = client.get("/api/v1/exams")
 
     assert response.status_code == 200
@@ -106,7 +106,7 @@ def test_get_exams_returns_labels_and_active_counts(client: TestClient):
             "part": "B",
             "part_name": "דין דיוני",
             "label": "דצמבר 2025",
-            "question_count": 39,
+            "question_count": 40,
         },
     ]
 

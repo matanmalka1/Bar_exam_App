@@ -28,6 +28,11 @@ FastAPI backend for the Bar Exam Study app. The app serves original Israeli Bar 
 ## Non-Negotiable Product Rules
 
 - Do not expose answer keys before a user is allowed to see them.
+- Invalidated questions are visible and answerable in sessions.
+- Invalidated questions are included in score denominators and always grant full credit.
+- Persist the user's selected answer for invalidated questions.
+- Invalidated-question credit must be distinguishable from genuinely correct answers in API/UI analytics.
+- Invalidated questions must not count as mistakes.
 - Do not accept client-provided `user_id` for user progress.
 - Use `/users/me/*` for authenticated user data.
 

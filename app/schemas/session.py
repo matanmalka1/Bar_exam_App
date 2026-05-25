@@ -12,7 +12,6 @@ class SessionCreateIn(BaseModel):
     exam_date: str | None = Field(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
     part: Literal["B", "C"] | None = None
     question_count: int | None = Field(default=None, gt=0)
-    include_invalidated: bool = False
 
     model_config = ConfigDict(extra="forbid")
 
@@ -39,6 +38,7 @@ class SessionSummaryOut(BaseModel):
 class SessionAnswerInline(BaseModel):
     selected_answer: str
     is_correct: bool | None = None
+    scoring_status: Literal["correct", "incorrect", "invalidated"] | None = None
     answered_at: datetime
 
 
@@ -49,6 +49,7 @@ class SessionQuestionOut(BaseModel):
     body: str
     options: QuestionOptions
     status: str
+    invalidation_note: str | None = None
     answer: SessionAnswerInline | None
     correct_answer: str | None = None
     reference: str | None = None

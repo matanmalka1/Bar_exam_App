@@ -1,4 +1,4 @@
-from sqlalchemy import Row, case, func, select
+from sqlalchemy import Row, case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.practice_session import PracticeSession
@@ -10,14 +10,33 @@ def get_answer_totals(session: Session, user_id: int) -> Row:
     statement = (
         select(
             func.count(UserAnswer.id).label("total_answered"),
-            func.coalesce(func.sum(case((UserAnswer.is_correct.is_(True), 1), else_=0)), 0).label("correct_answered"),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (or_(UserAnswer.is_correct.is_(True), Question.status == "invalidated"), 1),
+                        else_=0,
+                    )
+                ),
+                0,
+            ).label("correct_answered"),
+            func.coalesce(
+                func.sum(
+                    case(
+                        ((UserAnswer.is_correct.is_(True)) & (Question.status == "active"), 1),
+                        else_=0,
+                    )
+                ),
+                0,
+            ).label("genuine_correct"),
+            func.coalesce(func.sum(case((Question.status == "invalidated", 1), else_=0)), 0).label(
+                "invalidated_credit"
+            ),
         )
         .join(PracticeSession, PracticeSession.id == UserAnswer.session_id)
         .join(Question, Question.id == UserAnswer.question_id)
         .where(
             PracticeSession.user_id == user_id,
             PracticeSession.status == "completed",
-            Question.status == "active",
         )
     )
     return session.execute(statement).one()
@@ -28,14 +47,33 @@ def get_answer_totals_by_part(session: Session, user_id: int) -> list[Row]:
         select(
             Question.part.label("part"),
             func.count(UserAnswer.id).label("total_answered"),
-            func.coalesce(func.sum(case((UserAnswer.is_correct.is_(True), 1), else_=0)), 0).label("correct_answered"),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (or_(UserAnswer.is_correct.is_(True), Question.status == "invalidated"), 1),
+                        else_=0,
+                    )
+                ),
+                0,
+            ).label("correct_answered"),
+            func.coalesce(
+                func.sum(
+                    case(
+                        ((UserAnswer.is_correct.is_(True)) & (Question.status == "active"), 1),
+                        else_=0,
+                    )
+                ),
+                0,
+            ).label("genuine_correct"),
+            func.coalesce(func.sum(case((Question.status == "invalidated", 1), else_=0)), 0).label(
+                "invalidated_credit"
+            ),
         )
         .join(PracticeSession, PracticeSession.id == UserAnswer.session_id)
         .join(Question, Question.id == UserAnswer.question_id)
         .where(
             PracticeSession.user_id == user_id,
             PracticeSession.status == "completed",
-            Question.status == "active",
         )
         .group_by(Question.part)
     )
@@ -109,6 +147,7 @@ def get_mastery_totals(session: Session, user_id: int) -> Row:
         select(
             UserAnswer.question_id.label("qid"),
             UserAnswer.is_correct.label("is_correct"),
+            Question.status.label("question_status"),
             UserAnswer.answered_at.label("answered_at"),
             UserAnswer.id.label("ua_id"),
         )
@@ -117,7 +156,6 @@ def get_mastery_totals(session: Session, user_id: int) -> Row:
         .where(
             PracticeSession.user_id == user_id,
             PracticeSession.status == "completed",
-            Question.status == "active",
         )
         .subquery()
     )
@@ -125,6 +163,7 @@ def get_mastery_totals(session: Session, user_id: int) -> Row:
         select(
             user_answers.c.qid,
             user_answers.c.is_correct,
+            user_answers.c.question_status,
             func.row_number()
             .over(
                 partition_by=user_answers.c.qid,
@@ -133,10 +172,30 @@ def get_mastery_totals(session: Session, user_id: int) -> Row:
             .label("rn"),
         )
     ).subquery()
-    latest = select(ranked.c.qid, ranked.c.is_correct).where(ranked.c.rn == 1).subquery()
+    latest = select(ranked.c.qid, ranked.c.is_correct, ranked.c.question_status).where(ranked.c.rn == 1).subquery()
     statement = select(
         func.count().label("unique_answered"),
-        func.coalesce(func.sum(case((latest.c.is_correct.is_(True), 1), else_=0)), 0).label("latest_correct"),
+        func.coalesce(
+            func.sum(
+                case(
+                    (or_(latest.c.is_correct.is_(True), latest.c.question_status == "invalidated"), 1),
+                    else_=0,
+                )
+            ),
+            0,
+        ).label("latest_correct"),
+        func.coalesce(
+            func.sum(
+                case(
+                    ((latest.c.is_correct.is_(True)) & (latest.c.question_status == "active"), 1),
+                    else_=0,
+                )
+            ),
+            0,
+        ).label("latest_genuine_correct"),
+        func.coalesce(func.sum(case((latest.c.question_status == "invalidated", 1), else_=0)), 0).label(
+            "latest_invalidated_credit"
+        ),
     ).select_from(latest)
     return session.execute(statement).one()
 

@@ -4,6 +4,8 @@ from pydantic import BaseModel
 class PartStatsOut(BaseModel):
     total_answered: int
     success_rate: float | None
+    genuine_correct_answers: int
+    invalidated_credit_answers: int
 
 
 class StatsOverviewOut(BaseModel):
@@ -13,6 +15,10 @@ class StatsOverviewOut(BaseModel):
     unique_answered_questions: int
     total_answer_attempts: int
     latest_correct_answers: int
+    genuine_correct_answers: int
+    invalidated_credit_answers: int
+    latest_genuine_correct_answers: int
+    latest_invalidated_credit_answers: int
     part_b: PartStatsOut
     part_c: PartStatsOut
     simulations_completed: int

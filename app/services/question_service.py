@@ -21,7 +21,7 @@ def list_exams(session: Session) -> list[ExamSummary]:
                 part=row.part,
                 part_name=_part_name(row.part),
                 label=_exam_label(exam_date),
-                question_count=row.active_count,
+                question_count=row.question_count,
             )
         )
     return exams

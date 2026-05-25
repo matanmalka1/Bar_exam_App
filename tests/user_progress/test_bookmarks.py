@@ -115,7 +115,6 @@ def test_bookmarks_mode_rejects_filter_args(client: TestClient):
     for payload in (
         {"mode": "bookmarks", "exam_date": "2025-04"},
         {"mode": "bookmarks", "part": "B"},
-        {"mode": "bookmarks", "include_invalidated": True},
     ):
         r = client.post("/api/v1/practice-sessions", json=payload)
         assert r.status_code == 422, payload

@@ -29,15 +29,23 @@ def get_overview(session: Session, user_id: int) -> StatsOverviewOut:
     if user_repository.get_by_id(session, user_id) is None:
         raise StatsError(404, "user not found")
 
-    total_answered, correct_answered = stats_repository.get_answer_totals(session, user_id)
+    answer_totals = stats_repository.get_answer_totals(session, user_id)
+    total_answered = answer_totals.total_answered
+    correct_answered = answer_totals.correct_answered
+    genuine_correct = int(answer_totals.genuine_correct)
+    invalidated_credit = int(answer_totals.invalidated_credit)
     mastery_row = stats_repository.get_mastery_totals(session, user_id)
     unique_answered = int(mastery_row.unique_answered)
     latest_correct = int(mastery_row.latest_correct)
+    latest_genuine_correct = int(mastery_row.latest_genuine_correct)
+    latest_invalidated_credit = int(mastery_row.latest_invalidated_credit)
     part_rows = stats_repository.get_answer_totals_by_part(session, user_id)
     parts = {
         row.part: PartStatsOut(
             total_answered=int(row.total_answered),
             success_rate=_success_rate(int(row.correct_answered), int(row.total_answered)),
+            genuine_correct_answers=int(row.genuine_correct),
+            invalidated_credit_answers=int(row.invalidated_credit),
         )
         for row in part_rows
     }
@@ -55,8 +63,18 @@ def get_overview(session: Session, user_id: int) -> StatsOverviewOut:
         unique_answered_questions=unique_answered,
         total_answer_attempts=total_answered_int,
         latest_correct_answers=latest_correct,
-        part_b=parts.get("B", PartStatsOut(total_answered=0, success_rate=None)),
-        part_c=parts.get("C", PartStatsOut(total_answered=0, success_rate=None)),
+        genuine_correct_answers=genuine_correct,
+        invalidated_credit_answers=invalidated_credit,
+        latest_genuine_correct_answers=latest_genuine_correct,
+        latest_invalidated_credit_answers=latest_invalidated_credit,
+        part_b=parts.get(
+            "B",
+            PartStatsOut(total_answered=0, success_rate=None, genuine_correct_answers=0, invalidated_credit_answers=0),
+        ),
+        part_c=parts.get(
+            "C",
+            PartStatsOut(total_answered=0, success_rate=None, genuine_correct_answers=0, invalidated_credit_answers=0),
+        ),
         simulations_completed=int(session_counts.simulations_completed),
         active_mistakes_count=stats_repository.count_active_mistakes(session, user_id),
         repeated_mistakes_count=stats_repository.count_repeated_mistakes(session, user_id),

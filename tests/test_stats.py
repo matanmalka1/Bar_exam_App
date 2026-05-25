@@ -99,8 +99,22 @@ def test_user_with_no_completed_sessions_returns_empty_stats(
         "unique_answered_questions": 0,
         "total_answer_attempts": 0,
         "latest_correct_answers": 0,
-        "part_b": {"total_answered": 0, "success_rate": None},
-        "part_c": {"total_answered": 0, "success_rate": None},
+        "genuine_correct_answers": 0,
+        "invalidated_credit_answers": 0,
+        "latest_genuine_correct_answers": 0,
+        "latest_invalidated_credit_answers": 0,
+        "part_b": {
+            "total_answered": 0,
+            "success_rate": None,
+            "genuine_correct_answers": 0,
+            "invalidated_credit_answers": 0,
+        },
+        "part_c": {
+            "total_answered": 0,
+            "success_rate": None,
+            "genuine_correct_answers": 0,
+            "invalidated_credit_answers": 0,
+        },
         "simulations_completed": 0,
         "active_mistakes_count": 0,
         "repeated_mistakes_count": 0,
@@ -146,8 +160,20 @@ def test_total_answered_counts_answer_events_and_rounds_success_rate(
 
     assert body["total_answered"] == 3
     assert body["overall_success_rate"] == 33.33
-    assert body["part_b"] == {"total_answered": 3, "success_rate": 33.33}
-    assert body["part_c"] == {"total_answered": 0, "success_rate": None}
+    assert body["genuine_correct_answers"] == 1
+    assert body["invalidated_credit_answers"] == 0
+    assert body["part_b"] == {
+        "total_answered": 3,
+        "success_rate": 33.33,
+        "genuine_correct_answers": 1,
+        "invalidated_credit_answers": 0,
+    }
+    assert body["part_c"] == {
+        "total_answered": 0,
+        "success_rate": None,
+        "genuine_correct_answers": 0,
+        "invalidated_credit_answers": 0,
+    }
 
 
 def test_part_stats_use_question_part_when_session_part_is_null(
@@ -170,11 +196,21 @@ def test_part_stats_use_question_part_when_session_part_is_null(
     with client_builder(seed) as client:
         body = _stats(client)
 
-    assert body["part_b"] == {"total_answered": 1, "success_rate": 100.0}
-    assert body["part_c"] == {"total_answered": 1, "success_rate": 0.0}
+    assert body["part_b"] == {
+        "total_answered": 1,
+        "success_rate": 100.0,
+        "genuine_correct_answers": 1,
+        "invalidated_credit_answers": 0,
+    }
+    assert body["part_c"] == {
+        "total_answered": 1,
+        "success_rate": 0.0,
+        "genuine_correct_answers": 0,
+        "invalidated_credit_answers": 0,
+    }
 
 
-def test_invalidated_questions_are_excluded_from_totals_rates_and_repeated_mistakes(
+def test_invalidated_questions_are_counted_as_credit_but_not_genuine_correct_or_mistakes(
     client_builder: ClientBuilder, make_question: QuestionFactory
 ) -> None:
     def seed(session: Session) -> None:
@@ -207,8 +243,14 @@ def test_invalidated_questions_are_excluded_from_totals_rates_and_repeated_mista
     with client_builder(seed) as client:
         body = _stats(client)
 
-    assert body["total_answered"] == 1
+    assert body["total_answered"] == 3
     assert body["overall_success_rate"] == 100.0
+    assert body["genuine_correct_answers"] == 1
+    assert body["invalidated_credit_answers"] == 2
+    assert body["latest_correct_answers"] == 2
+    assert body["latest_genuine_correct_answers"] == 1
+    assert body["latest_invalidated_credit_answers"] == 1
+    assert body["active_mistakes_count"] == 0
     assert body["repeated_mistakes_count"] == 0
 
 

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -14,6 +15,7 @@ class AnswerPracticeOut(BaseModel):
     stable_id: str
     selected_answer: str
     is_correct: bool
+    scoring_status: Literal["correct", "incorrect", "invalidated"]
     correct_answer: str | None
     reference: str | None
     answered_at: datetime
@@ -22,6 +24,7 @@ class AnswerPracticeOut(BaseModel):
 class AnswerExamOut(BaseModel):
     stable_id: str
     selected_answer: str
+    scoring_status: Literal["correct", "incorrect", "invalidated"] | None = None
     answered_at: datetime
 
 

@@ -11,6 +11,7 @@ FastAPI backend for a Hebrew RTL Israeli bar-exam practice app.
 - User-scoped sessions, mistakes, bookmarks, and stats via `/users/me/*`.
 - Read-only question endpoints and answer-review endpoints.
 - Backend forgot-password and reset-password endpoints.
+- Invalidated questions remain visible and answerable in sessions, grant full credit, and are tracked separately from genuinely correct answers.
 
 ## Requirements
 
@@ -196,13 +197,15 @@ Database and unhandled server errors are logged with stack traces, but client re
 
 | Mode | Behavior |
 | --- | --- |
-| `practice` | Active questions filtered by optional `exam_date`, `part`, `question_count`, and `include_invalidated` |
+| `practice` | Questions filtered by optional `exam_date`, `part`, and `question_count` |
 | `exam` | Official exam replay for one `exam_date`; full 80-question exam or a single 40-question part |
-| `simulation` | Mixed 80-question session: 40 Part B and 40 Part C from the active pool |
+| `simulation` | Mixed 80-question session: 40 Part B and 40 Part C from the full question pool |
 | `mistakes` | Current user's active mistakes |
 | `bookmarks` | Current user's bookmarked questions |
 
 Exam and simulation answer keys are hidden until completion. Practice, mistakes, and bookmarks reveal feedback after the question is answered.
+
+Invalidated questions are included wherever they are selected. They are visually/semantically marked as invalidated, the user's selected answer is persisted, they are included in score denominators, and they always grant full credit with `scoring_status = "invalidated"`. They do not count as mistakes. Stats expose invalidated credit separately from genuine correct answers.
 
 ## Observability
 
@@ -229,4 +232,5 @@ vulture
 - API responses use Hebrew answer labels `א`/`ב`/`ג`/`ד`.
 - Exam metadata is derived from `questions.exam_date` and `questions.part`; there is no `exams` table.
 - There is no separate answer-key table.
-- Invalidated questions remain in the database, are included in official exam replay, and are excluded from scoring denominators.
+- Invalidated questions remain in the database with `correct_answer = null` and non-empty `invalidation_note`.
+- Invalidated questions are included in session scoring denominators and grant full credit without being counted as mistakes.

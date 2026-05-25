@@ -1,3 +1,5 @@
+from typing import Literal
+
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import (
@@ -22,10 +24,15 @@ from app.schemas.answer import (
     BookmarkOut,
     MistakeOut,
 )
+from app.schemas.question import QuestionOptions
 from app.services.question_service import ANSWER_LABELS
 
 HEBREW_TO_DB = {v: k for k, v in ANSWER_LABELS.items()}
 DB_TO_HEBREW = ANSWER_LABELS
+ScoringStatus = Literal["correct", "incorrect", "invalidated"]
+SCORING_CORRECT = "correct"
+SCORING_INCORRECT = "incorrect"
+SCORING_INVALIDATED = "invalidated"
 
 
 class AnswerError(AppError):
@@ -59,11 +66,9 @@ def submit_answer(
     link = practice_session_repository.get_session_question_link(session, session_id, question.id)
     if link is None:
         raise AnswerError(422, "question does not belong to this session")
-    if question.status != "active":
-        raise AnswerError(422, "cannot answer invalidated question")
-
     db_answer = HEBREW_TO_DB[payload.selected_answer]
-    is_correct = question.correct_answer is not None and question.correct_answer == db_answer
+    scoring_status = _scoring_status(question.status, question.correct_answer, db_answer)
+    is_correct = scoring_status != SCORING_INCORRECT
 
     ua, inserted = answer_repository.insert_user_answer(
         session,
@@ -81,16 +86,24 @@ def submit_answer(
         return AnswerExamOut(
             stable_id=payload.stable_id,
             selected_answer=DB_TO_HEBREW[ua.selected_answer],
+            scoring_status=None,
             answered_at=ua.answered_at,
         )
     return AnswerPracticeOut(
         stable_id=payload.stable_id,
         selected_answer=DB_TO_HEBREW[ua.selected_answer],
         is_correct=ua.is_correct,
+        scoring_status=scoring_status,
         correct_answer=DB_TO_HEBREW[question.correct_answer] if question.correct_answer else None,
         reference=question.reference,
         answered_at=ua.answered_at,
     )
+
+
+def _scoring_status(question_status: str, correct_answer: str | None, selected_answer: str) -> ScoringStatus:
+    if question_status == "invalidated":
+        return SCORING_INVALIDATED
+    return SCORING_CORRECT if correct_answer == selected_answer else SCORING_INCORRECT
 
 
 def list_mistakes(session: Session, user_id: int) -> list[MistakeOut]:
@@ -106,12 +119,12 @@ def list_mistakes(session: Session, user_id: int) -> list[MistakeOut]:
                 exam_date=question.exam_date.strftime("%Y-%m"),
                 part=question.part,
                 body=question.body,
-                options={
+                options=QuestionOptions.model_validate({
                     "א": question.option_a,
                     "ב": question.option_b,
                     "ג": question.option_c,
                     "ד": question.option_d,
-                },
+                }),
                 correct_answer=(DB_TO_HEBREW[question.correct_answer] if question.correct_answer else None),
                 reference=question.reference,
                 times_answered=int(times_answered),
@@ -156,12 +169,12 @@ def list_bookmarks(session: Session, user_id: int) -> list[BookmarkedQuestionOut
                 part=question.part,
                 number=question.number,
                 body=question.body,
-                options={
+                options=QuestionOptions.model_validate({
                     "א": question.option_a,
                     "ב": question.option_b,
                     "ג": question.option_c,
                     "ד": question.option_d,
-                },
+                }),
                 status=question.status,
                 correct_answer=(DB_TO_HEBREW[question.correct_answer] if question.correct_answer else None),
                 reference=question.reference,

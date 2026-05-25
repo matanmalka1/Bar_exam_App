@@ -112,4 +112,4 @@ def test_unseen_pool_insufficient_fills_from_seen(client: TestClient):
     assert len(ids2) == 5
     assert len(set(ids2)) == 5
     overlap = seen & set(ids2)
-    assert len(overlap) == 3
+    assert len(overlap) == 2

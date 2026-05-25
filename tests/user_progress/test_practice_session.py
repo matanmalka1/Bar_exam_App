@@ -16,23 +16,23 @@ def test_create_session_basic(client: TestClient):
     assert response.status_code == 201
     body = response.json()
     assert body["status"] == "active"
-    assert body["total_questions"] == 9  # 10 part-B questions minus 1 invalidated
+    assert body["total_questions"] == 10
     assert body["answered_count"] == 0
 
 
-def test_create_session_includes_invalidated_when_requested(client: TestClient):
+def test_create_session_marks_invalidated_questions(client: TestClient):
     dev_user(client)
-    response = client.post(
+    sid = client.post(
         "/api/v1/practice-sessions",
         json={
             "mode": "practice",
             "exam_date": "2025-04",
             "part": "B",
-            "include_invalidated": True,
         },
-    )
-    assert response.status_code == 201
-    assert response.json()["total_questions"] == 10
+    ).json()["id"]
+    detail = client.get(f"/api/v1/practice-sessions/{sid}").json()
+    invalidated = next(q for q in detail["questions"] if q["status"] == "invalidated")
+    assert invalidated["invalidation_note"] == "נפסלה"
 
 
 def test_session_question_order_stable(client: TestClient):

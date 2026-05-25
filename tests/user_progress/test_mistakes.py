@@ -149,13 +149,12 @@ def test_mistakes_mode_rejects_filter_args(client: TestClient):
     for payload in (
         {"mode": "mistakes", "exam_date": "2025-04"},
         {"mode": "mistakes", "part": "B"},
-        {"mode": "mistakes", "include_invalidated": True},
     ):
         r = client.post("/api/v1/practice-sessions", json=payload)
         assert r.status_code == 422, payload
 
 
-def test_mistakes_mode_excludes_invalidated_questions(client: TestClient):
+def test_mistakes_mode_does_not_treat_invalidated_credit_as_mistake(client: TestClient):
     dev_user(client)
     sid = client.post(
         "/api/v1/practice-sessions",
@@ -163,7 +162,6 @@ def test_mistakes_mode_excludes_invalidated_questions(client: TestClient):
             "mode": "practice",
             "exam_date": "2025-04",
             "part": "B",
-            "include_invalidated": True,
         },
     ).json()["id"]
     client.post(
