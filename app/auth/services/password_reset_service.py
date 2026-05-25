@@ -9,6 +9,7 @@ from app.auth.security import hash_password
 from app.auth.services.auth_service import AuthError
 from app.core.config import settings
 from app.core.email_service import send_password_reset_email
+from app.models.user import User
 from app.repositories import password_reset_token_repository, user_repository
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,26 @@ def request_password_reset(
     if user is None or not user.is_active:
         return _FORGOT_MESSAGE
 
+    _create_password_reset_token(session, user, requested_ip, user_agent)
+    return _FORGOT_MESSAGE
+
+
+def request_password_reset_for_user(
+    session: Session,
+    user: User,
+    requested_ip: str | None,
+    user_agent: str | None,
+) -> str:
+    _create_password_reset_token(session, user, requested_ip, user_agent)
+    return _FORGOT_MESSAGE
+
+
+def _create_password_reset_token(
+    session: Session,
+    user: User,
+    requested_ip: str | None,
+    user_agent: str | None,
+) -> None:
     password_reset_token_repository.invalidate_unused_tokens_for_user(session, user.id)
 
     raw = secrets.token_urlsafe(32)
@@ -62,8 +83,6 @@ def request_password_reset(
         send_password_reset_email(user.email, first_name, reset_url)
     except Exception:
         logger.exception("Failed to send password reset email to %s", user.email)
-
-    return _FORGOT_MESSAGE
 
 
 def reset_password(session: Session, token: str, new_password: str) -> str:

@@ -113,6 +113,24 @@ async def forgot_password(
     return ForgotPasswordResponse(message=message)
 
 
+@router.post("/me/password-reset", response_model=ForgotPasswordResponse)
+@limiter.limit("5/minute")
+async def request_my_password_reset(
+    request: Request,
+    current_user: CurrentUser,
+    session: Annotated[Session, Depends(get_session)],
+) -> ForgotPasswordResponse:
+    requested_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+    message = password_reset_service.request_password_reset_for_user(
+        session,
+        current_user,
+        requested_ip,
+        user_agent,
+    )
+    return ForgotPasswordResponse(message=message)
+
+
 @router.post("/reset-password", response_model=ResetPasswordResponse)
 @limiter.limit("10/minute")
 async def reset_password(

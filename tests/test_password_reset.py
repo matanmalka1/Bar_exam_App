@@ -2,6 +2,7 @@ import hashlib
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import UTC, datetime, timedelta
+from urllib.parse import parse_qs, urlparse
 
 import httpx
 import pytest
@@ -21,6 +22,7 @@ NEW_PASSWORD = "NewPass99!"
 
 FORGOT_URL = "/api/v1/auth/forgot-password"
 RESET_URL = "/api/v1/auth/reset-password"
+PROFILE_RESET_URL = "/api/v1/auth/me/password-reset"
 
 
 def _seed_user(*, is_active: bool = True) -> Callable[[Session], None]:
@@ -109,6 +111,42 @@ def test_forgot_password_existing_user_creates_token_row(client_builder: ClientB
     with client_builder(seed) as client:
         r = client.post(FORGOT_URL, json={"email": EMAIL})
         assert r.status_code == 200
+
+
+def test_profile_password_reset_requires_auth(client_builder: ClientBuilder) -> None:
+    with client_builder(_seed_user()) as client:
+        r = client.post(PROFILE_RESET_URL)
+        assert r.status_code == 401
+
+
+def test_profile_password_reset_creates_token_for_current_user(
+    client_builder: ClientBuilder,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_links: list[str] = []
+
+    def fake_send_password_reset_email(_email: str, _first_name: str, reset_link: str) -> None:
+        reset_links.append(reset_link)
+
+    monkeypatch.setattr(
+        "app.auth.services.password_reset_service.send_password_reset_email",
+        fake_send_password_reset_email,
+    )
+
+    with client_builder(_seed_user()) as client:
+        login = client.post("/api/v1/auth/login", json={"email": EMAIL, "password": PASSWORD})
+        token = login.json()["access_token"]
+
+        r = client.post(PROFILE_RESET_URL, headers={"Authorization": f"Bearer {token}"})
+
+        assert r.status_code == 200, r.text
+        assert "message" in r.json()
+        assert len(reset_links) == 1
+
+        reset_token = parse_qs(urlparse(reset_links[0]).query)["token"][0]
+        reset = client.post(RESET_URL, json={"token": reset_token, "new_password": NEW_PASSWORD})
+        assert reset.status_code == 200
+        assert client.post("/api/v1/auth/login", json={"email": EMAIL, "password": NEW_PASSWORD}).status_code == 200
 
 
 def test_token_stored_as_hash_not_raw(client_builder: ClientBuilder) -> None:
