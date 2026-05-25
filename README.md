@@ -207,6 +207,18 @@ Exam and simulation answer keys are hidden until completion. Practice, mistakes,
 
 Invalidated questions are included wherever they are selected. They are visually/semantically marked as invalidated, the user's selected answer is persisted, they are included in score denominators, and they always grant full credit with `scoring_status = "invalidated"`. They do not count as mistakes. Stats expose invalidated credit separately from genuine correct answers.
 
+## Scoring
+
+Scores are raw points, not percentages. The completion response returns `score` and `max_score`.
+
+| Session type | max score |
+| --- | --- |
+| Full exam / simulation (B + C) | 80 |
+| Single-part exam or simulation | 40 |
+| Practice / mistakes / bookmarks | question count in session |
+
+Each correct answer (including invalidated-question credit) contributes 1 point. Part A of the real exam is not in this app — the maximum score here is 80, representing 80% of the real exam grade.
+
 ## Observability
 
 - Structured JSON logs via `LOG_LEVEL` and `OBSERVABILITY_JSON_LOGS`. Set `OBSERVABILITY_JSON_LOGS=false` for human-readable dev output.

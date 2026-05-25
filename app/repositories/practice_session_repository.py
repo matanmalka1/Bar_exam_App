@@ -141,7 +141,7 @@ def complete_session(
     session_id: int,
     *,
     correct_count: int,
-    score_percent: Decimal,
+    score: Decimal,
     completed_at: datetime,
     part_breakdown_json: str | None = None,
 ) -> None:
@@ -151,7 +151,7 @@ def complete_session(
         .values(
             status="completed",
             correct_count=correct_count,
-            score_percent=score_percent,
+            score=score,
             completed_at=completed_at,
             part_breakdown_json=part_breakdown_json,
         )

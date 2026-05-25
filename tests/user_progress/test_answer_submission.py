@@ -89,7 +89,8 @@ def test_complete_session_score(client: TestClient):
     assert body["total_questions"] == 10
     assert body["scorable_questions"] == 10
     assert body["correct_count"] == 4
-    assert float(body["score_percent"]) == pytest.approx(40.0, rel=0, abs=0.01)
+    assert float(body["score"]) == pytest.approx(4.0, rel=0, abs=0.01)
+    assert body["max_score"] == 10
 
 
 def test_complete_twice_returns_409(client: TestClient):

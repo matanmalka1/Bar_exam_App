@@ -36,6 +36,16 @@ FastAPI backend for the Bar Exam Study app. The app serves original Israeli Bar 
 - Do not accept client-provided `user_id` for user progress.
 - Use `/users/me/*` for authenticated user data.
 
+## Scoring Model
+
+Scores are raw points, not percentages. API fields are `score` and `max_score`.
+
+- Full exam / simulation (B + C): max 80. Each part contributes up to 40 points (1 per question).
+- Single-part exam: max 40.
+- Practice / mistakes / bookmarks: `score` = correct count; `max_score` = question count in session.
+- `PartBreakdown.score` = points earned in that part; `PartBreakdown.max_score` = 40.
+- Part A of the real Israeli bar exam is not in this app. Maximum achievable score is 80.
+
 ## Development Rules
 
 - Router handles HTTP only.

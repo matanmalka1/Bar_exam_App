@@ -151,10 +151,13 @@ def test_exam_invalidated_question_gets_full_credit_and_is_not_a_mistake(client_
     assert body["total_questions"] == 40
     assert body["scorable_questions"] == 40
     assert body["correct_count"] == 40
-    assert float(body["score_percent"]) == 100.0
+    assert float(body["score"]) == 40.0
+    assert body["max_score"] == 40
     assert body["part_breakdown"]["B"]["total"] == 40
     assert body["part_breakdown"]["B"]["answered"] == 40
     assert body["part_breakdown"]["B"]["correct"] == 40
+    assert float(body["part_breakdown"]["B"]["score"]) == 40.0
+    assert body["part_breakdown"]["B"]["max_score"] == 40
     assert body["mistakes"] == []
 
     completed_detail = client_multi.get(f"/api/v1/practice-sessions/{sid}").json()

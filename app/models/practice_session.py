@@ -31,7 +31,7 @@ class PracticeSession(Base):
     total_questions: Mapped[int] = mapped_column(Integer, nullable=False)
     answered_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     correct_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    score_percent: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
+    score: Mapped[Decimal | None] = mapped_column(Numeric(5, 2), nullable=True)
     part_breakdown_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

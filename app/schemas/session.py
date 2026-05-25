@@ -26,7 +26,8 @@ class SessionSummaryOut(BaseModel):
     total_questions: int
     answered_count: int
     correct_count: int | None
-    score_percent: Decimal | None
+    score: Decimal | None
+    max_score: int | None
     started_at: datetime
     completed_at: datetime | None
     created_at: datetime
@@ -63,7 +64,8 @@ class PartBreakdown(BaseModel):
     total: int
     answered: int
     correct: int
-    score_percent: Decimal
+    score: Decimal
+    max_score: int
 
 
 class ExamMistakeOut(BaseModel):
@@ -84,7 +86,8 @@ class SessionCompleteOut(BaseModel):
     scorable_questions: int
     answered_count: int
     correct_count: int
-    score_percent: Decimal
+    score: Decimal
+    max_score: int
     completed_at: datetime
     part_breakdown: dict[str, PartBreakdown] | None = None
     mistakes: list[ExamMistakeOut] | None = None

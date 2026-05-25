@@ -88,6 +88,18 @@ Invalidated questions are still visible and answerable in sessions. They have `s
 
 Invalidated questions are included in score denominators and always grant full credit. The selected answer is persisted. They are excluded from mistake lists and must remain distinguishable from genuinely correct answers in stats and UI analytics.
 
+## Scoring Model
+
+Scores are raw points, not percentages.
+
+- Full exam or simulation (B + C): `score` is the sum of correct points across both parts; `max_score` is 80.
+- Single-part exam: `score` is correct points in that part; `max_score` is 40.
+- Practice, mistakes, bookmarks: `score` is the correct count; `max_score` is the session question count.
+
+`SessionCompleteOut` and `SessionSummaryOut` both carry `score` and `max_score`. `PartBreakdown` carries per-part `score` (points) and `max_score` (always 40).
+
+Part A of the Israeli bar exam (20% of the full grade) is not part of this app. The maximum achievable score in this app is 80.
+
 ## User Scoping
 
 Progress APIs use the authenticated user from the access token. The request body does not accept `user_id`, and legacy `/users/{user_id}/...` routes are not present.

@@ -322,21 +322,16 @@ def complete_session(session: Session, session_id: int, user_id: int) -> Session
         part_breakdown = _build_part_breakdown(rows, answers_by_qid)
         mistakes = _build_exam_mistakes(rows, answers_by_qid)
         part_breakdown_json = json.dumps({k: v.model_dump(mode="json") for k, v in part_breakdown.items()})
-        score = _exam_score(part_breakdown)
+        score, max_score = _exam_score(part_breakdown)
     else:
-        score = (
-            (Decimal(correct_count * 100) / Decimal(score_denominator)).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_UP
-            )
-            if score_denominator > 0
-            else Decimal("0.00")
-        )
+        score = Decimal(correct_count)
+        max_score = score_denominator
 
     practice_session_repository.complete_session(
         session,
         session_id,
         correct_count=correct_count,
-        score_percent=score,
+        score=score,
         completed_at=now,
         part_breakdown_json=part_breakdown_json,
     )
@@ -350,7 +345,8 @@ def complete_session(session: Session, session_id: int, user_id: int) -> Session
         scorable_questions=score_denominator,
         answered_count=ps.answered_count,
         correct_count=ps.correct_count or 0,
-        score_percent=ps.score_percent or Decimal("0.00"),
+        score=ps.score or Decimal("0.00"),
+        max_score=max_score,
         completed_at=ps.completed_at or now,
         part_breakdown=part_breakdown,
         mistakes=mistakes,
@@ -367,20 +363,11 @@ def abandon_session(session: Session, session_id: int, user_id: int) -> None:
     session.commit()
 
 
-def _exam_score(part_breakdown: dict[str, PartBreakdown]) -> Decimal:
-    parts = list(part_breakdown.values())
-    if len(parts) == 2:
-        # Full exam: B (50%) + C (50%), each part scored out of 40
-        score_b = Decimal(parts[0].correct * 50) / Decimal(parts[0].total) if parts[0].total > 0 else Decimal("0")
-        score_c = Decimal(parts[1].correct * 50) / Decimal(parts[1].total) if parts[1].total > 0 else Decimal("0")
-        return (score_b + score_c).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-    # Single-part exam: score out of 100
-    p = parts[0]
-    return (
-        (Decimal(p.correct * 100) / Decimal(p.total)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        if p.total > 0
-        else Decimal("0.00")
-    )
+def _exam_score(part_breakdown: dict[str, PartBreakdown]) -> tuple[Decimal, int]:
+    """Returns (score, max_score). Each part contributes up to 40 points (1 point per question)."""
+    total_score = sum((p.score for p in part_breakdown.values()), Decimal("0"))
+    max_score = len(part_breakdown) * EXAM_QUESTIONS_PER_PART
+    return total_score.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP), max_score
 
 
 def _build_part_breakdown(rows: list, answers_by_qid: dict) -> dict[str, PartBreakdown]:
@@ -398,12 +385,13 @@ def _build_part_breakdown(rows: list, answers_by_qid: dict) -> dict[str, PartBre
                 answered += 1
             if q.status == "invalidated" or (ua is not None and ua.is_correct):
                 correct += 1
-        score = (
-            (Decimal(correct * 100) / Decimal(total)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            if total > 0
-            else Decimal("0.00")
+        breakdown[part] = PartBreakdown(
+            total=total,
+            answered=answered,
+            correct=correct,
+            score=Decimal(correct),
+            max_score=EXAM_QUESTIONS_PER_PART,
         )
-        breakdown[part] = PartBreakdown(total=total, answered=answered, correct=correct, score_percent=score)
     return breakdown
 
 
@@ -467,6 +455,11 @@ def _summary(ps: PracticeSession) -> SessionSummaryOut:
     if ps.part_breakdown_json:
         raw = json.loads(ps.part_breakdown_json)
         part_breakdown = {k: PartBreakdown(**v) for k, v in raw.items()}
+    max_score: int | None = None
+    if ps.status == "completed" and part_breakdown is not None:
+        max_score = len(part_breakdown) * EXAM_QUESTIONS_PER_PART
+    elif ps.status == "completed":
+        max_score = ps.total_questions
     return SessionSummaryOut(
         id=ps.id,
         user_id=ps.user_id,
@@ -477,7 +470,8 @@ def _summary(ps: PracticeSession) -> SessionSummaryOut:
         total_questions=ps.total_questions,
         answered_count=ps.answered_count,
         correct_count=ps.correct_count,
-        score_percent=ps.score_percent,
+        score=ps.score,
+        max_score=max_score,
         started_at=ps.started_at,
         completed_at=ps.completed_at,
         created_at=ps.created_at,

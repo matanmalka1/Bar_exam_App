@@ -129,4 +129,5 @@ def test_simulation_unanswered_counts_as_incorrect(client_exam: TestClient):
     detail = client_exam.get(f"/api/v1/practice-sessions/{sid}").json()
     invalidated_count = sum(1 for q in detail["questions"] if q["status"] == "invalidated")
     assert body["correct_count"] == invalidated_count
-    assert float(body["score_percent"]) == pytest.approx(invalidated_count / 80 * 100, abs=0.01)
+    assert float(body["score"]) == pytest.approx(float(invalidated_count), abs=0.01)
+    assert body["max_score"] == 80

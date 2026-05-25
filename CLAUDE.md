@@ -55,6 +55,20 @@ Frontend repository: `/Users/matanmalka/Desktop/Bar_exam_frontend`.
 - Do not accept `user_id` from clients for progress APIs. Use the authenticated user from the token.
 - Use `/users/me/*` for user-scoped routes.
 
+## Scoring Model
+
+Scores are raw points, not percentages. Never use `score_percent`; the API fields are `score` and `max_score`.
+
+| Session type | `score` | `max_score` |
+| --- | --- | --- |
+| Full exam / simulation (B + C) | sum of points across both parts | 80 |
+| Single-part exam | correct points in that part | 40 |
+| Practice / mistakes / bookmarks | correct count | question count in session |
+
+`PartBreakdown.score` = points earned (1 per correct/invalidated answer). `PartBreakdown.max_score` = 40.
+
+Part A of the real Israeli bar exam is not in this app. Maximum achievable score is 80.
+
 ## API Surface
 
 Health:

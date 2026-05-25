@@ -99,6 +99,23 @@ Completion freezes scoring. Exam and simulation completions include `part_breakd
 
 Invalidated questions keep `correct_answer = null`, stay visible in the session, are included in scoring denominators, and always grant full credit. They are excluded from mistake lists even if the user selected an answer that would otherwise be wrong. `correct_count` includes invalidated credit; analytics fields distinguish that credit from genuinely correct answers.
 
+## Scoring Model
+
+Scores are raw points, not percentages.
+
+| Session type | `score` | `max_score` |
+| --- | --- | --- |
+| Full exam / simulation (B + C) | sum of correct points across both parts | 80 |
+| Single-part exam (B or C only) | correct points in that part | 40 |
+| Practice / mistakes / bookmarks | correct count | total questions in session |
+
+`PartBreakdown` fields:
+
+- `score` — points earned in this part (each correct answer = 1 point; invalidated questions grant full credit).
+- `max_score` — always 40 for both Part B and Part C.
+
+The Israeli bar exam also includes Part A (20% of the final grade), which is not implemented in this app. The maximum score in this app is therefore 80 out of the full real-exam grade.
+
 ## Mistakes Semantics
 
 - Mistake history is preserved; old answer rows are not deleted when a later session fixes a question.
