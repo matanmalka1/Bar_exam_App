@@ -9,7 +9,7 @@ from collections.abc import Sequence
 
 from alembic import op
 
-revision: str = "0002_rename_score_percent_to_score"
+revision: str = "0002_score_rename"
 down_revision: str | None = "0001_initial"
 branch_labels: Sequence[str] | None = None
 depends_on: Sequence[str] | None = None
