@@ -3,11 +3,14 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import UTC, datetime, timedelta
 
+import httpx
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.auth.models.password_reset_token import PasswordResetToken
 from app.auth.security import hash_password
+from app.core.email_service import EmailDeliveryError, send_password_reset_email
 from app.models.user import User
 
 ClientBuilder = Callable[[Callable[[Session], None]], AbstractContextManager[TestClient]]
@@ -202,3 +205,29 @@ def test_reset_password_short_password_returns_422(client_builder: ClientBuilder
     with client_builder(_seed_user_with_token(raw_token=raw)) as client:
         r = client.post(RESET_URL, json={"token": raw, "new_password": "short"})
         assert r.status_code == 422
+
+
+# ── email provider diagnostics ────────────────────────────────────────────────
+
+
+def test_send_password_reset_email_requires_brevo_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("app.core.email_service.settings.BREVO_API_KEY", "")
+
+    with pytest.raises(EmailDeliveryError, match="BREVO_API_KEY"):
+        send_password_reset_email("user@example.com", "User", "https://example.com/reset")
+
+
+def test_send_password_reset_email_reports_provider_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("app.core.email_service.settings.BREVO_API_KEY", "test-key")
+
+    def fake_post(*_args: object, **_kwargs: object) -> httpx.Response:
+        request = httpx.Request("POST", "https://api.brevo.com/v3/smtp/email")
+        return httpx.Response(401, request=request, text='{"message":"unauthorized"}')
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+
+    with pytest.raises(EmailDeliveryError) as exc:
+        send_password_reset_email("user@example.com", "User", "https://example.com/reset")
+
+    assert "status=401" in str(exc.value)
+    assert "unauthorized" in str(exc.value)
