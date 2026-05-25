@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable, Generator, Iterator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -66,7 +66,7 @@ def make_question() -> QuestionFactory:
 
 
 @pytest.fixture
-def client_builder() -> Callable[[SeedDatabase], Iterator[TestClient]]:
+def client_builder() -> Callable[[SeedDatabase], AbstractContextManager[TestClient]]:
     @contextmanager
     def _build_client(seed_database: SeedDatabase) -> Iterator[TestClient]:
         from fastapi.testclient import TestClient

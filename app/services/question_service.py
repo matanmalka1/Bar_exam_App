@@ -1,4 +1,5 @@
 from datetime import date
+from typing import TypedDict
 
 from sqlalchemy.orm import Session
 
@@ -9,6 +10,19 @@ from app.schemas.question import ExamSummary, QuestionOptions, QuestionPracticeO
 PART_NAMES = {"B": "דין דיוני", "C": "דין מהותי"}
 MONTH_LABELS = {"02": "פברואר", "04": "אפריל", "06": "יוני", "09": "ספטמבר", "12": "דצמבר"}
 ANSWER_LABELS = {"A": "א", "B": "ב", "C": "ג", "D": "ד"}
+
+
+class _QuestionBaseFields(TypedDict):
+    stable_id: str
+    exam_date: str
+    part: str
+    part_name: str
+    label: str
+    number: int
+    body: str
+    options: QuestionOptions
+    status: str
+    invalidation_note: str | None
 
 
 def list_exams(session: Session) -> list[ExamSummary]:
@@ -68,47 +82,38 @@ def _parse_exam_date(value: str) -> date | None:
 
 
 def _build_question_practice_out(question: Question) -> QuestionPracticeOut:
-    exam_date = question.exam_date.strftime("%Y-%m")
     return QuestionPracticeOut(
-        stable_id=question.stable_id,
-        exam_date=exam_date,
-        part=question.part,
-        part_name=_part_name(question.part),
-        label=_exam_label(exam_date),
-        number=question.number,
-        body=question.body,
-        options=QuestionOptions(
-            א=question.option_a,
-            ב=question.option_b,
-            ג=question.option_c,
-            ד=question.option_d,
-        ),
-        status=question.status,
-        invalidation_note=question.invalidation_note,
+        **_question_base_fields(question),
     )
 
 
 def _build_question_review_out(question: Question) -> QuestionReviewOut:
-    exam_date = question.exam_date.strftime("%Y-%m")
     return QuestionReviewOut(
-        stable_id=question.stable_id,
-        exam_date=exam_date,
-        part=question.part,
-        part_name=_part_name(question.part),
-        label=_exam_label(exam_date),
-        number=question.number,
-        body=question.body,
-        options=QuestionOptions(
+        **_question_base_fields(question),
+        correct_answer=_answer_label(question.correct_answer),
+        reference=question.reference,
+    )
+
+
+def _question_base_fields(question: Question) -> _QuestionBaseFields:
+    exam_date = question.exam_date.strftime("%Y-%m")
+    return {
+        "stable_id": question.stable_id,
+        "exam_date": exam_date,
+        "part": question.part,
+        "part_name": _part_name(question.part),
+        "label": _exam_label(exam_date),
+        "number": question.number,
+        "body": question.body,
+        "options": QuestionOptions(
             א=question.option_a,
             ב=question.option_b,
             ג=question.option_c,
             ד=question.option_d,
         ),
-        status=question.status,
-        correct_answer=_answer_label(question.correct_answer),
-        reference=question.reference,
-        invalidation_note=question.invalidation_note,
-    )
+        "status": question.status,
+        "invalidation_note": question.invalidation_note,
+    }
 
 
 def _part_name(part: str) -> str:

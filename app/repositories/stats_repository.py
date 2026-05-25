@@ -201,7 +201,7 @@ def get_mastery_totals(session: Session, user_id: int) -> Row:
 
 
 def count_repeated_mistakes(session: Session, user_id: int) -> int:
-    wrong_count = func.sum(case((UserAnswer.is_correct.is_(False), 1), else_=0))
+    wrong_answer = case((UserAnswer.is_correct.is_(False), 1), else_=0)
     repeated = (
         select(UserAnswer.question_id.label("qid"))
         .join(PracticeSession, PracticeSession.id == UserAnswer.session_id)
@@ -212,7 +212,7 @@ def count_repeated_mistakes(session: Session, user_id: int) -> int:
             Question.status == "active",
         )
         .group_by(UserAnswer.question_id)
-        .having(wrong_count >= 2)
+        .having(func.sum(wrong_answer) >= 2)
         .subquery()
     )
     statement = select(func.count()).select_from(repeated)

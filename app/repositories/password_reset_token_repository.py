@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
+from typing import cast
 
 from sqlalchemy import select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 
 from app.auth.models.password_reset_token import PasswordResetToken
@@ -52,14 +54,17 @@ def invalidate_unused_tokens_for_user(session: Session, user_id: int) -> None:
 
 def mark_used_atomic(session: Session, token_id: int) -> bool:
     now = datetime.now(UTC)
-    result = session.execute(
-        update(PasswordResetToken)
-        .where(
-            PasswordResetToken.id == token_id,
-            PasswordResetToken.used_at.is_(None),
-            PasswordResetToken.expires_at > now,
-        )
-        .values(used_at=now)
-        .execution_options(synchronize_session="fetch")
+    result = cast(
+        CursorResult,
+        session.execute(
+            update(PasswordResetToken)
+            .where(
+                PasswordResetToken.id == token_id,
+                PasswordResetToken.used_at.is_(None),
+                PasswordResetToken.expires_at > now,
+            )
+            .values(used_at=now)
+            .execution_options(synchronize_session="fetch")
+        ),
     )
     return result.rowcount == 1

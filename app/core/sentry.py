@@ -13,10 +13,11 @@ def configure_sentry(settings: Settings) -> None:
     import sentry_sdk
     from sentry_sdk.integrations.fastapi import FastApiIntegration
     from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+    from sentry_sdk.types import Event, Hint
 
     from app.core.logging_context import get_request_id
 
-    def _before_send(event: dict, _hint: object) -> dict:  # type: ignore[type-arg]
+    def _before_send(event: Event, _hint: Hint) -> Event | None:
         event.setdefault("tags", {})["request_id"] = get_request_id()
         return event
 
