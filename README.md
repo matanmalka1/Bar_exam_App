@@ -54,6 +54,25 @@ Expected import summary:
 }
 ```
 
+## Development Seed User
+
+After migrations and question import, create or refresh a deterministic local user with representative progress data:
+
+```bash
+python -m scripts.seed_dev_user
+```
+
+Default login:
+
+```text
+email: dev@example.com
+password: DevPass123!
+```
+
+The seed is safe to rerun for local development: it updates that user's name/password, clears only that user's
+progress/bookmarks, and recreates sessions for practice, exam, simulation, mistakes, and bookmarks. The script uses
+the imported official questions already in the database, including invalidated questions.
+
 ## Run API
 
 ```bash
